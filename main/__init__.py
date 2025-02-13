@@ -1,7 +1,7 @@
 from datetime import date, datetime, time, timedelta
 import os
 from flask import Flask, render_template
-from models import AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability, Item, ManagerConfig, Message, Notification, User, db
+from .models import AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability, Item, ManagerConfig, Message, Notification, User, db
 
 def create_app():
     app = Flask(__name__)
