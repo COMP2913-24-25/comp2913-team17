@@ -1,7 +1,7 @@
 from datetime import date, datetime, time, timedelta
 import os
 from flask import Flask, render_template
-from .models import AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability, Item, ManagerConfig, Message, Notification, User, db
+from .models import AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability, Item, ManagerConfig, Message, Notification, Payment, User, db
 
 def create_app():
     app = Flask(__name__)
@@ -115,7 +115,7 @@ def populate_db(app):
         db.session.commit()
 
         # Payment (for bid1)
-        payment1 = payment1(
+        payment1 = Payment(
             bid_id=bid1.bid_id,
             user_id=user2.id,
             card_details="encrypted_card_info",
