@@ -19,6 +19,8 @@ def create_app():
     with app.app_context():
         # Creates tables if they don't exist
         db.create_all()
+        # Populate dummy data if it doesn't already exist
+        populate_db(app)
 
     # Import and registers the blueprints
     from .admin_page import admin_page 
