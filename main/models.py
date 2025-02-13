@@ -78,6 +78,7 @@ class Bid(db.Model):
         return f"<Bid {self.bid_id} on Item {self.item_id}>"
 
 # Payment Model
+class Payment(db.Model):
     __tablename__ = 'payments'
     
     payment_id = db.Column(db.Integer, primary_key=True)
