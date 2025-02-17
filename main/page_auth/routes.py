@@ -1,8 +1,10 @@
 """Authentication related routes."""
 
-from flask import render_template, redirect, url_for, flash, request
+import secrets
+import requests
+from flask import render_template, redirect, url_for, flash, request, current_app, session, abort
 from flask_login import login_user, logout_user, current_user
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 from . import auth_page
 from .forms import LoginForm, RegisterForm
 from ..models import db, User
@@ -41,7 +43,11 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('home_page.index'))
 
+    # Pre-fill the email field if it was provided in the query string
     form = RegisterForm()
+    if request.args.get('email'):
+        form.email.data = request.args['email']
+
     if form.validate_on_submit():
         username = form.username.data
         email = form.email.data
@@ -68,4 +74,92 @@ def logout():
     """Log the user out."""
     if current_user.is_authenticated:
         logout_user()
+    return redirect(url_for('home_page.index'))
+
+
+@auth_page.route('/authorize/<provider>')
+def oauth2_authorise(provider):
+    """Redirect the user to the OAuth2 provider authorisation URL."""
+    if not current_user.is_anonymous:
+        return redirect(url_for('home_page.index'))
+
+    provider_data = current_app.config['OAUTH2_PROVIDERS'].get(provider)
+    if provider_data is None:
+        abort(404)
+
+    # Generate a random string for the state parameter
+    session['oauth2_state'] = secrets.token_urlsafe(16)
+
+    # create a query string with all the OAuth2 parameters
+    qs = urlencode({
+        'client_id': provider_data['client_id'],
+        'redirect_uri': url_for('auth_page.oauth2_callback', provider=provider,
+                                _external=True),
+        'response_type': 'code',
+        'scope': " ".join(provider_data['scopes']),
+        'state': session['oauth2_state'],
+        'prompt': 'select_account'
+    })
+
+    # Redirect the user to the OAuth2 provider authorisation URL
+    return redirect(provider_data['authorize_url'] + "?" + qs)
+
+
+@auth_page.route('/callback/<provider>')
+def oauth2_callback(provider):
+    """Handle the OAuth2 provider callback."""
+    if not current_user.is_anonymous:
+        return redirect(url_for('home_page.index'))
+
+    provider_data = current_app.config['OAUTH2_PROVIDERS'].get(provider)
+    if provider_data is None:
+        abort(404)
+
+    # If there was an authentication error, flash the error messages and exit
+    if 'error' in request.args:
+        for k, v in request.args.items():
+            if k.startswith('error'):
+                flash(f'{k}: {v}')
+        return redirect(url_for('auth_page.login'))
+
+    # Enure that the state parameter matches the one in the auth request
+    if request.args['state'] != session.get('oauth2_state'):
+        abort(401)
+
+    # Ensure that the auth code is present
+    if 'code' not in request.args:
+        abort(401)
+
+    # Exchange the auth code for an access token
+    response = requests.post(provider_data['token_url'], data={
+        'client_id': provider_data['client_id'],
+        'client_secret': provider_data['client_secret'],
+        'code': request.args['code'],
+        'grant_type': 'authorization_code',
+        'redirect_uri': url_for("auth_page.oauth2_callback", provider=provider,
+                                _external=True),
+    }, headers={'Accept': 'application/json'})
+    if response.status_code != 200:
+        abort(401)
+    oauth2_token = response.json().get('access_token')
+    if not oauth2_token:
+        abort(401)
+
+    # Use the access token to get the user's email address
+    response = requests.get(provider_data['userinfo']['url'], headers={
+        'Authorization': 'Bearer ' + oauth2_token,
+        'Accept': 'application/json',
+    })
+    if response.status_code != 200:
+        abort(401)
+    email = provider_data['userinfo']['email'](response.json())
+
+    # Find the user in the database or redirect them to the registration page
+    user = db.session.query(User).filter_by(email=email).first()
+    if user is None:
+        flash('You must register before using Google login')
+        return redirect(url_for('auth_page.register', email=email))
+
+    # Log the user in
+    login_user(user)
     return redirect(url_for('home_page.index'))
