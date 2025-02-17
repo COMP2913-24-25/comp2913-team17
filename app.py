@@ -1,4 +1,4 @@
-from main import create_app # Import flask app from main folder
+from main import create_app  # Import flask app from main folder
 
 app = create_app()
 
