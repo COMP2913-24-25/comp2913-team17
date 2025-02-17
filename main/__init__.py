@@ -1,19 +1,35 @@
+"""Configures the Flask app."""
+
 import os
+from dotenv import load_dotenv
 from flask import Flask, render_template
+from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 from .models import db
 from .init_db import populate_db
 
 def create_app():
     app = Flask(__name__, static_url_path='', static_folder='static')
 
-    app.config['SECRET_KEY'] = 'sacrebleu'
-
-    # This configuers the database
+    # Load environment variables
     basedir = os.path.abspath(os.path.dirname(__file__))
+    parentdir = os.path.dirname(basedir)
+    load_dotenv(os.path.join(parentdir, '.env'))
+
+    # Configure the secret key
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+
+    # Configure the database
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    # Initialises the database
+    # Initialise security features
+    csrf = CSRFProtect(app)
+    login_manager = LoginManager(app)
+    login_manager.login_view = 'user_page.login'
+    login_manager.login_message = 'Please log in to access this page.'
+
+    # Initialise the database
     db.init_app(app)
 
     with app.app_context():
@@ -23,21 +39,21 @@ def create_app():
         populate_db(app)
 
     # Import and registers the blueprints
-    from .admin_page import admin_page
-    from .bidding_page import bidding_page
-    from .home_page import home_page
-    from .item_page import item_page
-    from .user_page import user_page
+    from .page_home import home_page
+    from .page_admin import admin_page
+    from .page_bidding import bidding_page
+    from .page_item import item_page
+    from .page_user import user_page
 
+    app.register_blueprint(home_page)
     app.register_blueprint(admin_page, url_prefix='/admin')
     app.register_blueprint(bidding_page, url_prefix='/bidding')
-    app.register_blueprint(home_page, url_prefix='/home')
     app.register_blueprint(item_page, url_prefix='/item')
     app.register_blueprint(user_page, url_prefix='/user')
 
-    # Defines the main route
-    @app.route('/')
-    def main():
-        return render_template('home.html')
+    @login_manager.user_loader
+    def load_user(user_id):
+        from .models import User
+        return db.session.query(User).get(id)
 
     return app

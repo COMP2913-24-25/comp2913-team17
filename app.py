@@ -1,4 +1,6 @@
-from main import create_app  # Import flask app from main folder
+"""Launches the Flask app."""
+
+from main import create_app
 
 app = create_app()
 

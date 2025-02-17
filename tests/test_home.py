@@ -1,6 +1,6 @@
 def test_home_page(client):
-    response = client.get('/home/')
+    response = client.get('/')
     assert response.status_code == 200
-    assert b'Home Page' in response.data
+    assert b'Home page' in response.data
 
 # Add any additional tests below similar to the one above
