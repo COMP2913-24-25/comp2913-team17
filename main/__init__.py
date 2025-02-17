@@ -4,7 +4,7 @@ from .models import db
 from .init_db import populate_db
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_url_path='', static_folder='static')
 
     app.config['SECRET_KEY'] = 'sacrebleu'
 
