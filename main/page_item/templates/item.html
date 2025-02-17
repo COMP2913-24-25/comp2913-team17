@@ -1,10 +1,89 @@
 {% extends "base.html" %}
 
-{% block title %}Items{% endblock %}
+{% block title %}{{ item.title }}{% endblock %}
 
 {% block content %}
 
-<h1>Item page</h1>
-<p>Welcome to the item page.</p>
+<div class="container mt-5">
+  <div class="row">
+    <!-- Image Column -->
+    <div class="col-md-6 mb-4">
+      {% if item.image %}
+      <img src="{{ item.image }}" 
+        alt="{{ item.title }}" 
+        class="img-fluid rounded"
+      >
+      {% else %}
+      <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px">
+        <p class="text-muted">No image available</p>
+      </div>
+      {% endif %}
+    </div>
+    <!-- Details Column -->
+    <div class="col-md-6">
+      <h1 class="mb-4">{{ item.title }}</h1>
+      <!-- Auction Status -->
+      <div class="mb-4">
+        <h5>Auction Status</h5>
+        <div class="d-flex gap-3">
+          <span class="badge {% if item.locked %}bg-danger{% else %}bg-success{% endif %} p-2">
+            {{ "Locked" if item.locked else "Open" }}
+          </span>
+          <span class="badge {% if item.authentication_status == 1 %}bg-secondary
+            {% elif item.authentication_status == 2 %}bg-warning
+            {% elif item.authentication_status == 3 %}bg-success
+            {% else %}bg-danger{% endif %} p-2"
+          >
+            {% if item.authentication_status == 1 %}
+                Not Authenticated
+            {% elif item.authentication_status == 2 %}
+                Authentication Pending
+            {% elif item.authentication_status == 3 %}
+                Authenticated
+            {% else %}
+                Authentication Declined
+            {% endif %}
+          </span>
+        </div>
+      </div>
+      <!-- Price -->
+      <div class="mb-4">
+        <h5>Minimum Price</h5>
+        <p class="h3 text-primary">£{{ "%.2f"|format(item.minimum_price) }}</p>
+      </div>
+      <!-- Auction Times -->
+      <div class="mb-4">
+        <h5>Auction Period</h5>
+        <div class="row">
+          <div class="col">
+            <small class="text-muted">Start Time</small>
+            <p>{{ item.auction_start.strftime('%Y-%m-%d %H:%M') }}</p>
+          </div>
+          <div class="col">
+            <small class="text-muted">End Time</small>
+            <p>{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</p>
+          </div>
+        </div>
+      </div>
+      <!-- Description -->
+      <div class="mb-4">
+        <h5>Description</h5>
+        <p class="text-break">{{ item.description }}</p>
+      </div>
+      <!-- Seller Info -->
+      <div class="mb-4">
+        <h5>Seller Information</h5>
+        <p>Posted by: {{ item.seller.username }}</p>
+        <p><small class="text-muted">Upload date: {{ item.upload_date.strftime('%Y-%m-%d %H:%M') }}</small></p>
+      </div>
+      <!-- Action Buttons -->
+      <div class="d-grid gap-2">
+        <button class="btn btn-primary btn-lg">Place Bid</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
 
 {% endblock %}

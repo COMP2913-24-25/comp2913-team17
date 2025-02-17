@@ -4,7 +4,21 @@
 
 {% block content %}
 
-<h1>Home page</h1>
-<p>Welcome to the home page.</p>
+<div class="container mt-5">
+  <h1>Current Auctions</h1>
+  {% if items %}
+  <ul>
+    {% for item in items %}
+    <li>
+      <a href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>No auctions available.</p>
+  {% endif %}
+</div>
+
+<!-- Scripts -->
 
 {% endblock %}

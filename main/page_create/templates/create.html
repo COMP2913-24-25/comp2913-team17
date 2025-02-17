@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Create Auction{% endblock %}
+
+{% block content %}
+
+<!-- Heading -->
+<h1 class="mt-5 mb-4 text-center">Create Auction</h1>
+
+<div id="auction-form">
+  <form action="#" method="POST" name="CreateAuction" id="create-auction-form" enctype="multipart/form-data">
+    {{ form.csrf_token }}
+    <!-- Title -->
+    <div class="form-group">
+      <label for="enter-title" class="form-label">Title</label>
+      {{ form.title(class_="form-control required-field", placeholder="Enter item title", id_="enter-title", maxlength_="256") }}
+      {% for error in form.title.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <!-- Description -->
+    <div class="form-group">
+      <label for="enter-description" class="form-label">Description</label>
+      {{ form.description(class_="form-control required-field", placeholder="Enter item description", id_="enter-description", rows="5") }}
+      {% for error in form.description.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <!-- Auction Start Time -->
+    <div class="form-group">
+      <label for="enter-start-time" class="form-label">Auction Start Time</label>
+      {{ form.auction_start(class_="form-control required-field", id_="enter-start-time", type="datetime-local") }}
+      {% for error in form.auction_start.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <!-- Auction End Time -->
+    <div class="form-group">
+      <label for="enter-end-time" class="form-label">Auction End Time</label>
+      {{ form.auction_end(class_="form-control required-field", id_="enter-end-time", type="datetime-local") }}
+      {% for error in form.auction_end.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <!-- Minimum Price -->
+    <div class="form-group">
+      <label for="enter-price" class="form-label">Minimum Price (£)</label>
+      {{ form.minimum_price(class_="form-control required-field", id_="enter-price", default_="0.00", min="0.00", step="0.01") }}
+      {% for error in form.minimum_price.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <!-- Image Upload -->
+    <div class="form-group">
+      <label for="upload-image" class="form-label">Item Image</label>
+      {{ form.image(class_="form-control", id_="upload-image", accept="image/*") }}
+      <small class="form-text text-muted">Accepted formats: JPG, JPEG, PNG. Maximum size: 1MB</small>
+      {% for error in form.image.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <!-- Submit -->
+    <div class="form-group">
+      {{ form.submit(class_="form-control required-field btn btn-primary", id_="submit-auction") }}
+    </div>
+  </form>
+</div>
+
+<!-- Scripts -->
+
+{% endblock %}

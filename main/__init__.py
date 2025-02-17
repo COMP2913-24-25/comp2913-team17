@@ -26,8 +26,8 @@ def create_app():
     # Initialise security features
     csrf = CSRFProtect(app)
     login_manager = LoginManager(app)
-    login_manager.login_view = 'user_page.login'
-    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_view = 'auth_page.login'
+    login_manager.login_message = 'Please log in to access this page'
 
     # Initialise the database
     db.init_app(app)
@@ -40,17 +40,15 @@ def create_app():
 
     # Import and registers the blueprints
     from .page_home import home_page
-    from .page_admin import admin_page
-    from .page_bidding import bidding_page
     from .page_item import item_page
-    from .page_user import user_page
+    from .page_create import create_page
+    from .page_dashboard import dashboard_page
     from .page_auth import auth_page
 
     app.register_blueprint(home_page)
-    app.register_blueprint(admin_page, url_prefix='/admin')
-    app.register_blueprint(bidding_page, url_prefix='/bidding')
     app.register_blueprint(item_page, url_prefix='/item')
-    app.register_blueprint(user_page, url_prefix='/user')
+    app.register_blueprint(create_page, url_prefix='/create')
+    app.register_blueprint(dashboard_page, url_prefix='/dashboard')
     app.register_blueprint(auth_page)
 
     @login_manager.user_loader
