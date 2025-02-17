@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
@@ -13,10 +14,11 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
+    username = db.Column(db.String(50), unique=True, nullable=False, index=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), nullable=False)  # e.g., 'general', 'expert', 'manager'
+    # Roles: 1 = General User, 2 = Expert, 3 = Manager
+    role = db.Column(db.Integer, nullable=False, default=1)
     created_at = db.Column(db.DateTime, default=datetime.now())
     updated_at = db.Column(db.DateTime,
                            default=datetime.now(),
@@ -35,25 +37,38 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f"<User {self.username}>"
 
+    def set_password(self, password):
+        """Set the password for the user."""
+        self.password_hash = generate_password_hash(password, method="pbkdf2")
+
+    def check_password(self, password):
+        """Check the password for the user."""
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
+
 # Item Model
 class Item(db.Model):
     __tablename__ = 'items'
 
     item_id = db.Column(db.Integer, primary_key=True)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    title = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String(256), nullable=False)
     description = db.Column(db.Text, nullable=False)
+    image = db.Column(db.String(256))
     upload_date = db.Column(db.DateTime, default=datetime.now())
     auction_start = db.Column(db.DateTime, nullable=False)
     auction_end = db.Column(db.DateTime, nullable=False)
     minimum_price = db.Column(db.Numeric(10, 2), nullable=False)
-    locked = db.Column(db.Boolean, default=False)  # if someone has bid set to true
+    # Auction cannot be modified if a bid has been placed
+    locked = db.Column(db.Boolean, default=False)
+    # Authentication status: 1 = Not Requested, 2 = Pending, 3 = Approved, 4 = Declined
     authentication_status = db.Column(
-        db.String(20),
+        db.Integer,
         nullable=False,
-        default='not_requested'  # other values: 'pending', 'approved', 'declined'
+        default=1
     )
-
+    
     # Relationships:
     bids = db.relationship('Bid', backref='item', lazy=True)
     authentication_requests = db.relationship('AuthenticationRequest', backref='item', lazy=True)
@@ -84,16 +99,20 @@ class Payment(db.Model):
     payment_id = db.Column(db.Integer, primary_key=True)
     bid_id = db.Column(db.Integer, db.ForeignKey('bids.bid_id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    # For now, store card details as a string,  will probably delete later, not a good idea to store
     card_details = db.Column(
         db.String(255),
         nullable=False
-    )  # change, will probably delete later, not a good idea to store
+    )
+    # Payment status: 1 = Pending, 2 = Completed, 3 = Failed
     payment_status = db.Column(
-        db.String(20),
+        db.Integer,
         nullable=False,
-        default='pending'  # e.g., 'pending', 'completed', 'failed'
+        default=1
     )
     payment_time = db.Column(db.DateTime, default=datetime.now())
+    platform_fee_percent = db.Column(db.Numeric(4, 2), nullable=False)
+    platform_fee_amount = db.Column(db.Numeric(10, 2), nullable=False)
 
     def __repr__(self):
         return f"<Payment {self.payment_id} for Bid {self.bid_id}>"
@@ -107,10 +126,11 @@ class AuthenticationRequest(db.Model):
     requester_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     request_date = db.Column(db.DateTime, default=datetime.now())
     fee_percent = db.Column(db.Numeric(4, 2), nullable=False, default=5.00)
+    # Request status: 1 = Pending, 2 = Approved, 3 = Declined
     status = db.Column(
-        db.String(20),
+        db.Integer,
         nullable=False,
-        default='pending'  # e.g., 'pending', 'approved', 'declined'
+        default=1
     )
     updated_at = db.Column(db.DateTime,
                            default=datetime.now(),
@@ -130,10 +150,11 @@ class ExpertAssignment(db.Model):
     request_id = db.Column(db.Integer, db.ForeignKey('authentication_requests.request_id'), nullable=False)
     expert_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     assigned_date = db.Column(db.DateTime, default=datetime.now())
+    # Assignment status: 1 = Notified, 2 = In Review, 3 = Awaiting Info, 4 = Completed 
     status = db.Column(
-        db.String(20),
+        db.Integer,
         nullable=False,
-        default='notified'  # e.g., 'notified', 'in_review', 'awaiting_info', 'completed'
+        default=1
     )
 
     # Relationship to messages
@@ -151,11 +172,7 @@ class ExpertAvailability(db.Model):
     day = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
-    status = db.Column(
-        db.String(20),
-        nullable=False,
-        default='available'  # e.g., 'available', 'unavailable'
-    )
+    status = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
         return f"<ExpertAvailability {self.availability_id} for Expert {self.expert_id} on {self.day}>"
@@ -190,9 +207,24 @@ class Notification(db.Model):
 class ManagerConfig(db.Model):
     __tablename__ = 'manager_config'
 
+    # Stores the configuration key and value for example, 'base_platform_fee' = '5.0'
     config_key = db.Column(db.String, primary_key=True)
     config_value = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
+
+    # Default configuration keys for fees
+    BASE_FEE_KEY = 'base_platform_fee'
+    AUTHENTICATED_FEE_KEY = 'authenticated_platform_fee'
+    MAX_DURATION_KEY = 'max_auction_duration'
+
+    @classmethod
+    def get_fee_percentage(cls, is_authenticated=False):
+        """Get the appropriate fee percentage based on item authentication status."""
+        if is_authenticated:
+            fee = cls.query.filter_by(config_key=cls.AUTHENTICATED_FEE_KEY).first()
+            return float(fee.config_value if fee else 5.0)
+        fee = cls.query.filter_by(config_key=cls.BASE_FEE_KEY).first()
+        return float(fee.config_value if fee else 1.0)
 
     def __repr__(self):
         return f"<ManagerConfig {self.config_key}>"

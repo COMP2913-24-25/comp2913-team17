@@ -15,14 +15,18 @@ def populate_db(app):
         now = datetime.now()
 
         # Users
-        user1 = User(username='alice', email='alice@example.com',
-                     password_hash='hashed_pw1', role='general')
-        user2 = User(username='bob', email='bob@example.com',
-                     password_hash='hashed_pw2', role='general')
-        user3 = User(username='charlie', email='charlie@example.com',
-                     password_hash='hashed_pw3', role='expert')
-        user4 = User(username='diana', email='diana@example.com',
-                     password_hash='hashed_pw4', role='manager')
+        user1 = User(username='alice', email='alice@example.com', role=1)
+        user1.set_password('alice123')
+
+        user2 = User(username='bob', email='bob@example.com', role=1)
+        user2.set_password('bob123')
+
+        user3 = User(username='charlie', email='charlie@example.com', role=2)
+        user3.set_password('charlie123')
+
+        user4 = User(username='diana', email='diana@example.com', role=3)
+        user4.set_password('diana123')
+
         db.session.add_all([user1, user2, user3, user4])
         db.session.commit()
 
@@ -33,19 +37,19 @@ def populate_db(app):
             description='An antique clock from 1900',
             upload_date=now,
             auction_start=now,
-            auction_end=now + timedelta(days=7),
+            auction_end=now + timedelta(days=3),
             minimum_price=100.00,
-            authentication_status='not_requested'
+            authentication_status=1
         )
         item2 = Item(
             seller_id=user2.id,
             title='Art Painting',
-            description='A modern art painting with vibrant colors',
+            description='A modern art painting with vibrant colours',
             upload_date=now,
             auction_start=now,
-            auction_end=now + timedelta(days=10),
+            auction_end=now + timedelta(days=5),
             minimum_price=200.00,
-            authentication_status='not_requested'
+            authentication_status=2
         )
         db.session.add_all([item1, item2])
         db.session.commit()
@@ -55,51 +59,40 @@ def populate_db(app):
             item_id=item1.item_id,
             bidder_id=user2.id,
             bid_amount=120.00,
-            bid_time=now + timedelta(days=1)
+            bid_time=now
         )
         bid2 = Bid(
             item_id=item1.item_id,
             bidder_id=user3.id,
             bid_amount=130.00,
-            bid_time=now + timedelta(days=2)
+            bid_time=now
         )
         bid3 = Bid(
             item_id=item2.item_id,
             bidder_id=user1.id,
             bid_amount=210.00,
-            bid_time=now + timedelta(days=3)
+            bid_time=now
         )
         db.session.add_all([bid1, bid2, bid3])
-        db.session.commit()
-
-        # Payment (for bid1)
-        payment1 = Payment(
-            bid_id=bid1.bid_id,
-            user_id=user2.id,
-            card_details='encrypted_card_info',
-            payment_status='completed',
-            payment_time=now + timedelta(days=1, hours=2)
-        )
-        db.session.add(payment1)
         db.session.commit()
 
         # Authentication Request (for item2)
         auth_req = AuthenticationRequest(
             item_id=item2.item_id,
             requester_id=user2.id,
-            request_date=now + timedelta(days=1),
+            request_date=now,
             fee_percent=5.00,
-            status='pending'
+            status=1
         )
         db.session.add(auth_req)
         db.session.commit()
 
-        # Dummy Expert Assignment (for the authentication request)
+        # Expert Assignment (for the authentication request)
         expert_assignment = ExpertAssignment(
             request_id=auth_req.request_id,
             expert_id=user3.id,
-            assigned_date=now + timedelta(days=1, minutes=30),
-            status='notified'
+            assigned_date=now,
+            status=1
         )
         db.session.add(expert_assignment)
         db.session.commit()
@@ -110,14 +103,14 @@ def populate_db(app):
             day=date.today(),
             start_time=time(9, 0),
             end_time=time(12, 0),
-            status='available'
+            status=False
         )
         availability2 = ExpertAvailability(
             expert_id=user3.id,
             day=date.today(),
             start_time=time(13, 0),
             end_time=time(17, 0),
-            status='available'
+            status=True
         )
         db.session.add_all([availability1, availability2])
         db.session.commit()
@@ -127,13 +120,13 @@ def populate_db(app):
             assignment_id=expert_assignment.assignment_id,
             sender_id=user3.id,
             message_text='I have reviewed the request.',
-            sent_at=now + timedelta(days=1, minutes=35)
+            sent_at=now + timedelta(hours=1)
         )
         message2 = Message(
             assignment_id=expert_assignment.assignment_id,
             sender_id=user2.id,
             message_text='Thanks for the update.',
-            sent_at=now + timedelta(days=1, minutes=40)
+            sent_at=now + timedelta(hours=2)
         )
         db.session.add_all([message1, message2])
         db.session.commit()
@@ -149,12 +142,24 @@ def populate_db(app):
         db.session.commit()
 
         # Manager Config
-        manager_config = ManagerConfig(
-            config_key='max_auction_duration',
-            config_value='5',
-            description='Maximum auction duration in days'
-        )
-        db.session.add(manager_config)
+        configs = [
+            ManagerConfig(
+                config_key='base_platform_fee',
+                config_value='1.0',
+                description='Base platform fee percentage for standard items'
+            ),
+            ManagerConfig(
+                config_key='authenticated_platform_fee',
+                config_value='5.0',
+                description='Platform fee percentage for authenticated items'
+            ),
+            ManagerConfig(
+                config_key='max_auction_duration',
+                config_value='5',
+                description='Maximum auction duration in days'
+            )
+        ]
+        db.session.add_all(configs)
         db.session.commit()
 
         print('Database populated with dummy data!')
