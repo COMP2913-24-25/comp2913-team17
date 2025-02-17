@@ -46,6 +46,11 @@ def create_app():
         }
     }
 
+    # Configure AWS S3
+    app.config['AWS_ACCESS_KEY'] = os.environ.get('AWS_ACCESS_KEY')
+    app.config['AWS_SECRET_KEY'] = os.environ.get('AWS_SECRET_KEY')
+    app.config['AWS_BUCKET'] = os.environ.get('AWS_BUCKET')
+
     # Initialise the database
     db.init_app(app)
 
