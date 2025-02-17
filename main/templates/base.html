@@ -14,6 +14,56 @@
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 </head>
 <body>
+  <!-- Flashes -->
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-10 col-lg-8">
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        {% for category, message in messages[::-1] %}
+        <div class="alert alert-{{ 'danger' if category == 'message' else category }} alert-dismissible fade show text-center mt-3" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+      {% if current_user.is_authenticated %}
+      <div class="ms-auto d-flex">
+        <div class="nav-item me-2">
+          <a class="btn btn-primary" href="#" title="Create Auction">
+            Create Auction
+          </a>
+        </div>
+          <div class="nav-item">
+            <a class="btn btn-secondary" href="{{ url_for('auth_page.logout') }}" title="Logout">
+              Logout
+            </a>
+          </div>
+        </div>
+      {% else %}
+      <!-- Registration Links -->
+      <div class="ms-auto d-flex">
+        <div class="nav-item me-2">
+          <a class="btn btn-primary" href="{{ url_for('auth_page.login') }}" title="Login">
+            Login
+          </a>
+        </div>
+          <div class="nav-item">
+            <a class="btn btn-secondary" href="{{ url_for('auth_page.register') }}" title="Register">
+              Register
+            </a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </nav>
   <div class="container-fluid">
     {% block content %}{% endblock %}
   </div>

@@ -44,12 +44,14 @@ def create_app():
     from .page_bidding import bidding_page
     from .page_item import item_page
     from .page_user import user_page
+    from .page_auth import auth_page
 
     app.register_blueprint(home_page)
     app.register_blueprint(admin_page, url_prefix='/admin')
     app.register_blueprint(bidding_page, url_prefix='/bidding')
     app.register_blueprint(item_page, url_prefix='/item')
     app.register_blueprint(user_page, url_prefix='/user')
+    app.register_blueprint(auth_page)
 
     @login_manager.user_loader
     def load_user(user_id):
