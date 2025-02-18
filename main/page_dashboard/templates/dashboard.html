@@ -4,6 +4,53 @@
 
 {% block content %}
 
-<h1>Dashboard</h1>
+<div class="container mt-4">
+  <h1>Dashboard</h1>
+  {% if users %}
+  <div class="card mt-4">
+    <div class="card-header">
+      <h2 class="mb-0">Management Interface</h2>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Joined</th>
+            <th>Last Updated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr data-user-id="{{ user.id }}">
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td class="role-cell">{{ 'Expert' if user.role == 2 else 'User' }}</td>
+            <td>{{ user.created_at.strftime('%a, %d %b %Y %H:%M:%S GMT') }}</td>
+            <td class="updated-cell">{{ user.updated_at.strftime('%a, %d %b %Y %H:%M:%S GMT') }}</td>
+            <td>
+              <select class="form-select form-select-sm role-select" style="width: auto; display: inline-block;">
+                <option value="1" {{ 'selected' if user.role == 1 else '' }}>User</option>
+                <option value="2" {{ 'selected' if user.role == 2 else '' }}>Expert</option>
+                <option value="3">Manager</option>
+              </select>
+              <button class="btn btn-sm btn-outline-primary update-role-btn my-sm-1">
+                Update
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Scripts -->
+<script src="{{ url_for('static', filename='js/updateRole.js') }}"></script> 
 
 {% endblock %}
