@@ -1,6 +1,5 @@
 """Auction creation routes."""
 
-import os
 import boto3
 from botocore.exceptions import ClientError
 from flask import render_template, redirect, url_for, flash, current_app
@@ -28,7 +27,7 @@ def upload_s3(file, filename, folder=None):
 
     try:
         filepath = f'{folder}/{filename}' if folder else filename
-        
+
         s3.upload_fileobj(
             file,
             bucket,
@@ -68,7 +67,7 @@ def index():
                 flash('Error uploading image')
 
         item = Item(
-            seller_id = current_user.id,
+            seller_id=current_user.id,
             title=title,
             description=description,
             auction_start=start,
@@ -78,7 +77,7 @@ def index():
         )
         db.session.add(item)
         db.session.commit()
-        
+
         flash('Auction created successfully!', 'success')
         return redirect(url_for('item_page.index', url=item.url))
 
