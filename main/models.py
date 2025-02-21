@@ -28,7 +28,10 @@ class User(UserMixin, db.Model):
                            onupdate=datetime.now())
 
     # Relationships to other tables:
-    items = db.relationship('Item', backref='seller', lazy=True)
+    items = db.relationship('Item', 
+                          backref='seller',
+                          lazy=True,
+                          foreign_keys='Item.seller_id')
     bids = db.relationship('Bid', backref='bidder', lazy=True)
     payments = db.relationship('Payment', backref='user', lazy=True)
     authentication_requests = db.relationship('AuthenticationRequest', backref='requester', lazy=True)
@@ -86,58 +89,46 @@ class Item(db.Model):
         nullable=False,
         default=1
     )
-
-    # Relationships:
-    bids = db.relationship('Bid', backref='item', lazy=True)
-    authentication_requests = db.relationship('AuthenticationRequest', backref='item', lazy=True)
-
-    winning_bid_id = db.Column(db.Integer, db.ForeignKey('bids.bid_id'), nullable=True)
-    winning_bid = db.relationship('Bid', foreign_keys=[winning_bid_id], backref='winning_item', uselist=False)
-
-    def finalise_auction(self):
-        """Finalise the auction by setting the winning bid and notifying the winner."""
-        if datetime.now() >= self.auction_end and self.winning_bid_id is None:
-            winning_bid = Bid.query.filter_by(item_id=self.item_id).filter(Bid.bid_amount >= self.minimum_price).order_by(Bid.bid_amount.desc()).first()
-
-            if winning_bid:
-                self.winning_bid_id = winning_bid.bid_id
-                
-                # Create a notification for the winner
-                winning_notification = Notification(
-                    user_id=winning_bid.bidder_id,
-                    message=f"Congratulations! You won the auction for {self.title}.",
-                    created_at=datetime.now()
-                )
-                db.session.add(winning_notification)
-                
-                # Create a notification for the seller
-                seller_notification = Notification(
-                    user_id=self.seller_id,
-                    message=f"Your item '{self.title}' has been sold!",
-                    created_at=datetime.now()
-                )
-                db.session.add(seller_notification)
-                
-            else:
-                # Notify seller that item didn't sell
-                seller_notification = Notification(
-                    user_id=self.seller_id,
-                    message=f"Your item '{self.title}' did not sell.",
-                    created_at=datetime.now()
-                )
-                db.session.add(seller_notification)
-            
-            db.session.commit()
-
+    winning_bid_id = db.Column(
+        db.Integer, 
+        db.ForeignKey('bids.bid_id', use_alter=True, name='fk_winning_bid'),
+        nullable=True
+    )
+    # Define relationships
+    winning_bid = db.relationship(
+        'Bid',
+        foreign_keys=[winning_bid_id],
+        uselist=False,
+        post_update=True
+    )
+    bids = db.relationship(
+        'Bid', 
+        backref='item', 
+        lazy=True, 
+        foreign_keys='Bid.item_id',
+        primaryjoin="Item.item_id==Bid.item_id"
+    )
+    
     def __repr__(self):
         return f"<Item {self.title} (ID: {self.item_id})>"
+
+    # Add method to get highest bid
+    def highest_bid(self):
+        """Get the highest bid for this item"""
+        return Bid.query.filter_by(item_id=self.item_id)\
+                       .order_by(Bid.bid_amount.desc())\
+                       .first()
 
 # Bid Model
 class Bid(db.Model):
     __tablename__ = 'bids'
 
     bid_id = db.Column(db.Integer, primary_key=True)
-    item_id = db.Column(db.Integer, db.ForeignKey('items.item_id'), nullable=False)
+    item_id = db.Column(
+        db.Integer, 
+        db.ForeignKey('items.item_id', ondelete='CASCADE'),
+        nullable=False
+    )
     bidder_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     bid_amount = db.Column(db.Numeric(10, 2), nullable=False)
     bid_time = db.Column(db.DateTime, default=datetime.now())
