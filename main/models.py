@@ -1,4 +1,6 @@
-from datetime import datetime
+from calendar import c
+from datetime import date, datetime
+from turtle import back
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
@@ -48,6 +50,19 @@ class User(UserMixin, db.Model):
             return False
         return check_password_hash(self.password_hash, password)
 
+    # Grab the user's winning items from the database
+    def get_won_items(self):
+        # Get items won by the winner
+        return Item.query.join(Bid).filter(Item.winning_bid_id == Bid.bid_id).filter(Bid.bidder_id == self.id).all()
+
+    # Schedule a task to automate checking and finalising auctions that have ended
+    def schedule_auction_finalisation(self):
+        # Check for finished auctions and set the winner
+        finished_items = Item.query.filter(Item.auction_end <= datetime.now(),
+                                           Item.winning_bid_id.is_(None)).all()
+        for item in finished_items:
+            item.finalise_auction()
+
 # Item Model
 class Item(db.Model):
     __tablename__ = 'items'
@@ -71,10 +86,48 @@ class Item(db.Model):
         nullable=False,
         default=1
     )
-    
+
     # Relationships:
     bids = db.relationship('Bid', backref='item', lazy=True)
     authentication_requests = db.relationship('AuthenticationRequest', backref='item', lazy=True)
+
+    winning_bid_id = db.Column(db.Integer, db.ForeignKey('bids.bid_id'), nullable=True)
+    winning_bid = db.relationship('Bid', foreign_keys=[winning_bid_id], backref='winning_item', uselist=False)
+
+    def finalise_auction(self):
+        """Finalise the auction by setting the winning bid and notifying the winner."""
+        if datetime.now() >= self.auction_end and self.winning_bid_id is None:
+            winning_bid = Bid.query.filter_by(item_id=self.item_id).filter(Bid.bid_amount >= self.minimum_price).order_by(Bid.bid_amount.desc()).first()
+
+            if winning_bid:
+                self.winning_bid_id = winning_bid.bid_id
+                
+                # Create a notification for the winner
+                winning_notification = Notification(
+                    user_id=winning_bid.bidder_id,
+                    message=f"Congratulations! You won the auction for {self.title}.",
+                    created_at=datetime.now()
+                )
+                db.session.add(winning_notification)
+                
+                # Create a notification for the seller
+                seller_notification = Notification(
+                    user_id=self.seller_id,
+                    message=f"Your item '{self.title}' has been sold!",
+                    created_at=datetime.now()
+                )
+                db.session.add(seller_notification)
+                
+            else:
+                # Notify seller that item didn't sell
+                seller_notification = Notification(
+                    user_id=self.seller_id,
+                    message=f"Your item '{self.title}' did not sell.",
+                    created_at=datetime.now()
+                )
+                db.session.add(seller_notification)
+            
+            db.session.commit()
 
     def __repr__(self):
         return f"<Item {self.title} (ID: {self.item_id})>"
@@ -153,7 +206,7 @@ class ExpertAssignment(db.Model):
     request_id = db.Column(db.Integer, db.ForeignKey('authentication_requests.request_id'), nullable=False)
     expert_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     assigned_date = db.Column(db.DateTime, default=datetime.now())
-    # Assignment status: 1 = Notified, 2 = In Review, 3 = Awaiting Info, 4 = Completed 
+    # Assignment status: 1 = Notified, 2 = In Review, 3 = Awaiting Info, 4 = Completed
     status = db.Column(
         db.Integer,
         nullable=False,
