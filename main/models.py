@@ -5,6 +5,9 @@ from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import current_app
+from flask_mail import Message
+from .tasks import send_winner_email
 
 db = SQLAlchemy()
 
@@ -118,6 +121,48 @@ class Item(db.Model):
         return Bid.query.filter_by(item_id=self.item_id)\
                        .order_by(Bid.bid_amount.desc())\
                        .first()
+
+    # Method for outbid notification
+    def notify_outbid(self, outbid_user):
+        """Create notification for outbid user"""
+        notification = Notification(
+            user_id=outbid_user.id,
+            message=f"You have been outbid on {self.title}",
+            is_read=False,
+            created_at=datetime.now()
+        )
+        db.session.add(notification)
+        db.session.commit()
+
+    def notify_winner(self):
+        """Create notification for auction winner"""
+        winning_bid = self.highest_bid()
+        if winning_bid:
+            notification = Notification(
+                user_id=winning_bid.bidder_id,
+                message=f"Congratulations! You won the auction for {self.title}",
+                is_read=False,
+                created_at=datetime.now()
+            )
+            db.session.add(notification)
+            db.session.commit()
+
+    def notify_winner_email(self):
+        """Queue async email notification to winner"""
+        if self.winning_bid:
+            # Using SQLAlchemy 2.0 pattern
+            winner = db.session.get(User, self.winning_bid.bidder_id)
+            if winner:
+                try:
+                    from .tasks import send_winner_email
+                    send_winner_email.delay(
+                        recipient=winner.email,
+                        item_title=self.title,
+                        bid_amount=self.winning_bid.bid_amount,
+                        end_date=self.auction_end.strftime('%Y-%m-%d %H:%M')
+                    )
+                except Exception as e:
+                    print(f"Error sending winner email: {str(e)}")
 
 # Bid Model
 class Bid(db.Model):

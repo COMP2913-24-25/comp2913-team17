@@ -16,6 +16,8 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <!-- CSRF Helper -->
   <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+  <!-- Notifications JS -->
+  <script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>
 </head>
 <body>
   <!-- Navbar -->
@@ -31,6 +33,33 @@
       </div>
       {% if current_user.is_authenticated %}
       <div class="ms-auto d-flex">
+        <!-- Add this notification dropdown -->
+        <div class="nav-item dropdown me-2">
+          <button class="btn btn-light position-relative" data-bs-toggle="dropdown">
+            Notifications
+            {% set unread = current_user.notifications|selectattr('is_read', 'equalto', false)|list|length %}
+            {% if unread > 0 %}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              {{ unread }}
+            </span>
+            {% endif %}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" style="width: 300px;">
+            {% if current_user.notifications %}
+              {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true) %}
+              <li>
+                <div class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %}">
+                  <small class="text-muted d-block">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                  {{ notification.message }}
+                </div>
+              </li>
+              {% endfor %}
+            {% else %}
+              <li><div class="dropdown-item">No notifications</div></li>
+            {% endif %}
+          </ul>
+        </div>
+        <!-- Existing buttons -->
         <div class="nav-item me-2">
           <a class="btn btn-primary" href="{{ url_for('create_page.index' )}}" title="Create Auction">
             Create Auction
