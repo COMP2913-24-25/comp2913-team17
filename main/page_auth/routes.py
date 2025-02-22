@@ -9,6 +9,8 @@ from . import auth_page
 from .forms import LoginForm, RegisterForm
 from ..models import db, User
 
+from werkzeug.security import check_password_hash, generate_password_hash
+
 @auth_page.route('/login', methods=['GET', 'POST'])
 def login():
     """Render the login page and handle login requests."""
@@ -29,7 +31,7 @@ def login():
 
         if user is None:
             flash('Invalid email address')
-        elif not user.check_password(password):
+        elif not check_password_hash(user.password, password):
             flash('Invalid password')
         else:
             login_user(user)
@@ -59,7 +61,7 @@ def register():
             flash('Username already taken')
         else:
             user = User(username=username, email=email)
-            user.set_password(password)
+            user.set_password(generate_password_hash(password, method='pbkdf2:sha256'))
 
             db.session.add(user)
             db.session.commit()
