@@ -1,4 +1,6 @@
-from datetime import datetime
+from calendar import c
+from datetime import date, datetime
+from turtle import back
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
@@ -26,7 +28,10 @@ class User(UserMixin, db.Model):
                            onupdate=datetime.now())
 
     # Relationships to other tables:
-    items = db.relationship('Item', backref='seller', lazy=True)
+    items = db.relationship('Item', 
+                          backref='seller',
+                          lazy=True,
+                          foreign_keys='Item.seller_id')
     bids = db.relationship('Bid', backref='bidder', lazy=True)
     payments = db.relationship('Payment', backref='user', lazy=True)
     authentication_requests = db.relationship('AuthenticationRequest', backref='requester', lazy=True)
@@ -47,6 +52,19 @@ class User(UserMixin, db.Model):
         if not self.password_hash:
             return False
         return check_password_hash(self.password_hash, password)
+
+    # Grab the user's winning items from the database
+    def get_won_items(self):
+        # Get items won by the winner
+        return Item.query.join(Bid).filter(Item.winning_bid_id == Bid.bid_id).filter(Bid.bidder_id == self.id).all()
+
+    # Schedule a task to automate checking and finalising auctions that have ended
+    def schedule_auction_finalisation(self):
+        # Check for finished auctions and set the winner
+        finished_items = Item.query.filter(Item.auction_end <= datetime.now(),
+                                           Item.winning_bid_id.is_(None)).all()
+        for item in finished_items:
+            item.finalise_auction()
 
 # Item Model
 class Item(db.Model):
@@ -71,20 +89,46 @@ class Item(db.Model):
         nullable=False,
         default=1
     )
+    winning_bid_id = db.Column(
+        db.Integer, 
+        db.ForeignKey('bids.bid_id', use_alter=True, name='fk_winning_bid'),
+        nullable=True
+    )
+    # Define relationships
+    winning_bid = db.relationship(
+        'Bid',
+        foreign_keys=[winning_bid_id],
+        uselist=False,
+        post_update=True
+    )
+    bids = db.relationship(
+        'Bid', 
+        backref='item', 
+        lazy=True, 
+        foreign_keys='Bid.item_id',
+        primaryjoin="Item.item_id==Bid.item_id"
+    )
     
-    # Relationships:
-    bids = db.relationship('Bid', backref='item', lazy=True)
-    authentication_requests = db.relationship('AuthenticationRequest', backref='item', lazy=True)
-
     def __repr__(self):
         return f"<Item {self.title} (ID: {self.item_id})>"
+
+    # Add method to get highest bid
+    def highest_bid(self):
+        """Get the highest bid for this item"""
+        return Bid.query.filter_by(item_id=self.item_id)\
+                       .order_by(Bid.bid_amount.desc())\
+                       .first()
 
 # Bid Model
 class Bid(db.Model):
     __tablename__ = 'bids'
 
     bid_id = db.Column(db.Integer, primary_key=True)
-    item_id = db.Column(db.Integer, db.ForeignKey('items.item_id'), nullable=False)
+    item_id = db.Column(
+        db.Integer, 
+        db.ForeignKey('items.item_id', ondelete='CASCADE'),
+        nullable=False
+    )
     bidder_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     bid_amount = db.Column(db.Numeric(10, 2), nullable=False)
     bid_time = db.Column(db.DateTime, default=datetime.now())
@@ -153,7 +197,7 @@ class ExpertAssignment(db.Model):
     request_id = db.Column(db.Integer, db.ForeignKey('authentication_requests.request_id'), nullable=False)
     expert_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     assigned_date = db.Column(db.DateTime, default=datetime.now())
-    # Assignment status: 1 = Notified, 2 = In Review, 3 = Awaiting Info, 4 = Completed 
+    # Assignment status: 1 = Notified, 2 = In Review, 3 = Awaiting Info, 4 = Completed
     status = db.Column(
         db.Integer,
         nullable=False,
