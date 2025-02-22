@@ -5,6 +5,9 @@ from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import current_app
+from flask_mail import Message
+from .tasks import send_winner_email
 
 db = SQLAlchemy()
 
@@ -143,6 +146,23 @@ class Item(db.Model):
             )
             db.session.add(notification)
             db.session.commit()
+
+    def notify_winner_email(self):
+        """Queue async email notification to winner"""
+        if self.winning_bid:
+            # Using SQLAlchemy 2.0 pattern
+            winner = db.session.get(User, self.winning_bid.bidder_id)
+            if winner:
+                try:
+                    from .tasks import send_winner_email
+                    send_winner_email.delay(
+                        recipient=winner.email,
+                        item_title=self.title,
+                        bid_amount=self.winning_bid.bid_amount,
+                        end_date=self.auction_end.strftime('%Y-%m-%d %H:%M')
+                    )
+                except Exception as e:
+                    print(f"Error sending winner email: {str(e)}")
 
 # Bid Model
 class Bid(db.Model):

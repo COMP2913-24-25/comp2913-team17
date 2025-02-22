@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, render_template
 from flask_login import LoginManager
+from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
 from .models import db
 from .init_db import populate_db
@@ -50,6 +51,17 @@ def create_app():
     app.config['AWS_ACCESS_KEY'] = os.environ.get('AWS_ACCESS_KEY')
     app.config['AWS_SECRET_KEY'] = os.environ.get('AWS_SECRET_KEY')
     app.config['AWS_BUCKET'] = os.environ.get('AWS_BUCKET')
+
+    # Configure email settings for Flask-Mail
+    app.config.update(
+        MAIL_SERVER = 'smtp.gmail.com',
+        MAIL_PORT = 587,
+        MAIL_USE_TLS = True,
+        MAIL_USERNAME = os.environ.get('EMAIL_USER'),
+        MAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+    )
+    
+    mail = Mail(app)
 
     # Initialise the database
     db.init_app(app)

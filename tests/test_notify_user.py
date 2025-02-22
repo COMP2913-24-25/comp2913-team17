@@ -1,8 +1,10 @@
+# Test file for notify user and send confirmation email to winner
 import unittest
 from datetime import datetime, timedelta
 from main import create_app
 from main.models import db, User, Item, Bid, Notification
 from flask import url_for
+from unittest.mock import patch
 
 class TestNotifications(unittest.TestCase):
     def setUp(self):
@@ -115,21 +117,49 @@ class TestNotifications(unittest.TestCase):
         self.assertIsNotNone(notification)
         self.assertIn('won', notification.message.lower())
 
+    @patch('main.tasks.send_winner_email.delay')  # Update the mock target
+    def test_winner_email_notification(self, mock_send):
+        """Test that winner receives email notification"""
+        # Create test item that's ended
+        item = Item(
+            seller_id=self.seller.id,
+            title='Test Item',
+            description='Test Description',
+            minimum_price=100.00,
+            auction_start=datetime.now() - timedelta(days=1),
+            auction_end=datetime.now() - timedelta(minutes=1),
+            url='test-item-ending'
+        )
+        db.session.add(item)
+        db.session.commit()
+
+        # Create winning bid
+        bid = Bid(
+            item_id=item.item_id,
+            bidder_id=self.bidder1.id,
+            bid_amount=150.00
+        )
+        db.session.add(bid)
+        db.session.commit()
+
+        # Ensure item has no winning bid set initially
+        item.winning_bid_id = None
+        db.session.commit()
+
+        # Simulate auction end
+        with self.client as c:
+            response = c.get('/item/check-ended-auctions')
+            self.assertEqual(response.status_code, 200)
+
+        # Verify email task was called
+        self.assertTrue(mock_send.called)
+        call_kwargs = mock_send.call_args[1]
+        self.assertEqual(call_kwargs['recipient'], self.bidder1.email)
+        self.assertEqual(call_kwargs['item_title'], 'Test Item')
+        self.assertEqual(call_kwargs['bid_amount'], 150.00)
+
     # Clear test data
     def tearDown(self):
         db.session.remove()
         db.drop_all()
         self.app_context.pop()
-
-'''
-- Set WTF_CSRF_ENABLED = False and SECRET_KEY to app config
-- Added url field to test items
-- Modified auction end time in winner test to be in the past
-- Explicitly set winning_bid_id to None before checking ended auctions
-- Add error handling in the route
-- Add User model import
-- Verify user exists before notification
-- Add debug information to the test
-- Create bids directly in the test instead of through HTTP requests
-- Add explicit commit after notification creation
-'''

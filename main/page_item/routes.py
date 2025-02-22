@@ -65,19 +65,27 @@ def place_bid(url):
 @item_page.route('/check-ended-auctions')
 def check_ended_auctions():
     """Check for ended auctions and notify winners"""
-    ended_items = Item.query.filter(
-        Item.auction_end <= datetime.now(),
-        Item.winning_bid_id.is_(None)
-    ).all()
-    
-    for item in ended_items:
-        highest_bid = item.highest_bid()
-        if highest_bid:
-            item.winning_bid_id = highest_bid.bid_id
-            item.notify_winner()
-    
-    db.session.commit()
-    return {'message': 'Ended auctions processed'}
+    try:
+        ended_items = Item.query.filter(
+            Item.auction_end <= datetime.now(),
+            Item.winning_bid_id.is_(None)  # Only process items without winners set
+        ).all()
+        
+        for item in ended_items:
+            highest_bid = item.highest_bid()
+            if highest_bid:
+                # Set winning bid
+                item.winning_bid_id = highest_bid.bid_id
+                # Send notifications
+                item.notify_winner()  # In-app notification
+                item.notify_winner_email()  # Email notification
+                db.session.commit()
+        
+        return {'message': 'Ended auctions processed'}, 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error processing ended auctions: {str(e)}")
+        return {'error': 'Failed to process ended auctions'}, 500
 
 @item_page.route('/notifications/mark-read', methods=['POST'])
 @login_required
