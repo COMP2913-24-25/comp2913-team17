@@ -119,6 +119,31 @@ class Item(db.Model):
                        .order_by(Bid.bid_amount.desc())\
                        .first()
 
+    # Method for outbid notification
+    def notify_outbid(self, outbid_user):
+        """Create notification for outbid user"""
+        notification = Notification(
+            user_id=outbid_user.id,
+            message=f"You have been outbid on {self.title}",
+            is_read=False,
+            created_at=datetime.now()
+        )
+        db.session.add(notification)
+        db.session.commit()
+
+    def notify_winner(self):
+        """Create notification for auction winner"""
+        winning_bid = self.highest_bid()
+        if winning_bid:
+            notification = Notification(
+                user_id=winning_bid.bidder_id,
+                message=f"Congratulations! You won the auction for {self.title}",
+                is_read=False,
+                created_at=datetime.now()
+            )
+            db.session.add(notification)
+            db.session.commit()
+
 # Bid Model
 class Bid(db.Model):
     __tablename__ = 'bids'
