@@ -57,7 +57,7 @@ def index():
         image = form.image.data
 
         # If image, try to upload to S3
-        image_filename = None
+        image_url = None
         if image:
             filename = secure_filename(image.filename)
             image_filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{filename}'
