@@ -7,8 +7,10 @@ from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
 
 class LoginForm(FlaskForm):
     """Form for logging in."""
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=50)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=2, max=50)])
+    email = StringField('Email', validators=[
+                        DataRequired(), Email(), Length(max=50)])
+    password = PasswordField('Password', validators=[
+                        DataRequired(), Length(min=8, max=24)])
     submit = SubmitField('Login')
 
 
@@ -17,7 +19,7 @@ class RegisterForm(FlaskForm):
     username = StringField('Username', validators=[
                            DataRequired(), Length(min=2, max=16)])
     email = StringField('Email', validators=[
-        DataRequired(), Email()])
+                            DataRequired(), Email(), Length(max=50)])
     password = PasswordField('Password', validators=[
                              DataRequired(),
                              Length(min=8, max=24, message='Password must be between 8 and 24 characters.'),
