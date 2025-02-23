@@ -1,4 +1,5 @@
 // Mark notifications as read when dropdown is opened
+
 document.addEventListener('DOMContentLoaded', function() {
   const notificationDropdown = document.querySelector('.notifications-dropdown');
   

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ item.title }}{% endblock %}
+{% block title %}Auction: {{ item.title }}{% endblock %}
 
 {% block content %}
 
@@ -29,19 +29,19 @@
           <span class="badge {% if item.locked %}bg-danger{% else %}bg-success{% endif %} p-2">
             {{ "Locked" if item.locked else "Open" }}
           </span>
-          <span class="badge {% if item.authentication_status == 1 %}bg-secondary
-            {% elif item.authentication_status == 2 %}bg-warning
-            {% elif item.authentication_status == 3 %}bg-success
-            {% else %}bg-danger{% endif %} p-2"
+          <span class="badge {% if authentication == 1 %}bg-warning
+            {% elif item.authentication == 2 %}bg-success
+            {% elif item.authentication == 3 %}bg-danger
+            {% else %}bg-secondary{% endif %} p-2"
           >
-            {% if item.authentication_status == 1 %}
-                Not Authenticated
-            {% elif item.authentication_status == 2 %}
-                Authentication Pending
-            {% elif item.authentication_status == 3 %}
-                Authenticated
+            {% if authentication == 1 %}
+              Authentication Pending
+            {% elif authentication == 2 %}
+              Authenticated
+            {% elif authentication == 3 %}
+              Authentication Declined
             {% else %}
-                Authentication Declined
+              Not Authenticated
             {% endif %}
           </span>
         </div>

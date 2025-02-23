@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 from . import create_page
 from .forms import CreateAuctionForm
-from ..models import db, Item
+from ..models import db, Item, AuthenticationRequest, ManagerConfig
 
 
 def init_s3():
@@ -47,6 +47,21 @@ def upload_s3(file, filename, folder=None):
 @login_required
 def index():
     """Render the auction creation page."""
+    try:
+        base_fee = float(
+            ManagerConfig.query.filter_by(config_key='base_platform_fee').first().config_value
+        )
+        
+    except (ValueError, AttributeError):
+        base_fee = 1.00
+
+    try:
+        authentication_fee = float(
+            ManagerConfig.query.filter_by(config_key='authenticated_platform_fee').first().config_value
+        )
+    except (ValueError, AttributeError):
+        authentication_fee = 5.00
+
     form = CreateAuctionForm()
     if form.validate_on_submit():
         title = form.title.data
@@ -73,12 +88,22 @@ def index():
             auction_start=start,
             auction_end=end,
             minimum_price=min_price,
-            image=image_url
+            image=image_url,
         )
         db.session.add(item)
+        db.session.flush()
+
+        if form.authenticate_item.data:
+            request = AuthenticationRequest(
+                item_id=item.item_id,
+                requester_id=current_user.id,
+                fee_percent=authentication_fee
+            )
+            db.session.add(request)
+
         db.session.commit()
 
         flash('Auction created successfully!', 'success')
         return redirect(url_for('item_page.index', url=item.url))
 
-    return render_template('create.html', form=form)
+    return render_template('create.html', form=form, base_fee=base_fee, authentication_fee=authentication_fee)
