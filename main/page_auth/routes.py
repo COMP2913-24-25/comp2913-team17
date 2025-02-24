@@ -6,7 +6,7 @@ from flask import render_template, redirect, url_for, flash, request, current_ap
 from flask_login import login_user, logout_user, current_user
 from urllib.parse import urlparse, urlencode
 from . import auth_page
-from .forms import LoginForm, RegisterForm
+from .forms import LoginForm, RegisterForm, UpdateForm
 from ..models import db, User
 
 @auth_page.route('/login', methods=['GET', 'POST'])
@@ -74,7 +74,7 @@ def update_user():
     if not current_user.is_authenticated:
         return redirect(url_for('auth_page.login'))
 
-    form = RegisterForm()
+    form = UpdateForm()
 
     # Pre-fill the form with the current user's information on GET requests.
     if request.method == 'GET':
