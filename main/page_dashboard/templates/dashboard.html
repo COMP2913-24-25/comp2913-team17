@@ -50,6 +50,75 @@
       </table>
     </div>
   </div>
+  <div class="card mt-4">
+    <div class="card-header">
+      <h2 class="mb-0">Management: Configuration</h2>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Option</th>
+            <th>Current Value</th>
+            <th>Update Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Base Platform Fee (%)</td>
+            <td class="base-cell">{{ manager['base_fee'] }}</td>
+            <td>
+              <input type="number" 
+                class="form-control form-control-sm base-input" 
+                step="0.01" 
+                min="0.00"
+                max="100.00"
+                value="{{ manager['base_fee'] }}"
+                style="width: auto; display: inline-block;"
+              >
+              <button class="btn btn-sm btn-outline-primary update-base-btn my-sm-1">
+                Update
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>Authenticated Item Fee (%)</td>
+            <td class="auth-cell">{{ manager['authenticated_fee'] }}</td>
+            <td>
+              <input type="number" 
+                class="form-control form-control-sm auth-input" 
+                step="0.01" 
+                min="0.00"
+                max="100.00"
+                value="{{ manager['authenticated_fee'] }}"
+                style="width: auto; display: inline-block;"
+              >
+              <button class="btn btn-sm btn-outline-primary update-auth-btn my-sm-1">
+                Update
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>Maximum Auction Duration (Days)</td>
+            <td class="dur-cell">{{ manager['max_duration'] }}</td>
+            <td>
+              <input type="number" 
+                class="form-control form-control-sm dur-input" 
+                step="1" 
+                min="1"
+                max="365"
+                value="{{ manager['max_duration'] }}"
+                style="width: auto; display: inline-block;"
+              >
+              <button class="btn btn-sm btn-outline-primary update-dur-btn my-sm-1">
+                Update
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
   {% endif %}
   <!-- Manager Expert Assignment Interface -->
   {% if manager['requests'] %}
@@ -168,7 +237,8 @@
 </div>
 
 <!-- Scripts -->
-<script src="{{ url_for('static', filename='js/updateRole.js') }}"></script> 
+<script src="{{ url_for('static', filename='js/updateRole.js') }}"></script>
+<script src="{{ url_for('static', filename='js/updateConfig.js') }}"></script>
 <script src="{{ url_for('static', filename='js/assignExpert.js') }}"></script>
 
 {% endblock %}
