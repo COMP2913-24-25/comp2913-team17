@@ -1,4 +1,5 @@
 // Check if the user wants to authenticate the item before submitting the form
+
 const authFee = $('meta[name="auth-fee"]').attr('content');
 
 $('#create-auction-form').on('submit', (e) => {
