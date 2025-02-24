@@ -5,9 +5,11 @@
 {% block content %}
 
 <div class="container mt-4">
-  <h1>Dashboard</h1>
+  <!-- Manager Dashboard -->
+  {% if manager %}
+  <h1>Management Dashboard</h1>
   <!-- Manager User Role Interface -->
-  {% if users %}
+  {% if manager['users'] %}
   <div class="card mt-4">
     <div class="card-header">
       <h2 class="mb-0">Management: User Roles</h2>
@@ -25,7 +27,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for user in users %}
+          {% for user in manager['users'] %}
           <tr data-user-id="{{ user.id }}">
             <td>{{ user.username }}</td>
             <td>{{ user.email }}</td>
@@ -50,7 +52,7 @@
   </div>
   {% endif %}
   <!-- Manager Expert Assignment Interface -->
-  {% if requests %}
+  {% if manager['requests'] %}
   <div class="card mt-4">
     <div class="card-header">
       <h2 class="mb-0">Management: Pending Authentication Requests</h2>
@@ -65,16 +67,16 @@
           </tr>
         </thead>
         <tbody>
-          {% for request in requests %}
+          {% for request in manager['requests'] %}
           <tr data-request-id="{{ request.request_id }}">
             <td>{{ request.requester.username }}</td>
             <td><a href="/item/{{ request.item.url }}">{{ request.item.title }}</a></td>
             <td>
-              {% if not experts %}
+              {% if not manager['experts'] %}
               <p>No available experts</p>
               {% else %}
               <select class="form-select form-select-sm expert-select" style="width: auto; display: inline-block;">
-                {% for expert in experts %}
+                {% for expert in manager['experts'] %}
                 <option value="{{ expert.id }}">{{ expert.username }}</option>
                 {% endfor %}
               </select>
@@ -90,6 +92,41 @@
     </div>
   </div>
   {% endif %}
+  <!-- Expert Dashboard -->
+  {% elif expert %}
+  <h1>Expert Dashboard</h1>
+  <div class="container mt-5">
+    <h2>Your Authentications</h1>
+    {% if expert['requests'] %}
+    <ul>
+      {% for request in expert['requests'] %}
+      <li>
+        <a href="{{ url_for('item_page.index', url=request.authentication_request.item.url) }}">{{ request.authentication_request.item.title }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No auctions to authenticate.</p>
+    {% endif %}
+  </div>
+  <!-- General User Dashboard -->
+  {% else %}
+  <h1>User Dashboard</h1>
+  {% endif %}
+  <div class="container mt-5">
+    <h2>Your Auctions</h1>
+    {% if user['auctions'] %}
+    <ul>
+      {% for item in user['auctions'] %}
+      <li>
+        <a href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No auctions available.</p>
+    {% endif %}
+  </div>
 </div>
 
 <!-- Scripts -->

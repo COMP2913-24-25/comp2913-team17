@@ -5,31 +5,39 @@ from flask_login import login_required, current_user
 from datetime import datetime
 from sqlalchemy import and_
 from . import dashboard_page
-from ..models import db, User, AuthenticationRequest, ExpertAssignment
+from ..models import db, User, AuthenticationRequest, ExpertAssignment, Item
 
 
 @dashboard_page.route('/')
 @login_required
 def index():
     """Dashboard page."""
-    users = None
+    manager = {}
+    expert = {}
+    user = {}
 
     # Manager interface
     if current_user.role == 3:
         # Get all user roles except managers
-        users = db.session.query(User).filter(User.role != 3).all()
+        manager['users'] = db.session.query(User).filter(User.role != 3).all()
 
         # Get all pending authentication requests without assignments
-        requests = AuthenticationRequest.query\
+        manager['requests'] = AuthenticationRequest.query\
             .filter(and_(
                 AuthenticationRequest.status == 1,
                 ~AuthenticationRequest.expert_assignments.any()
             )).all()
 
         # Get all available experts, for now all experts - add filtering later
-        experts = User.query.filter_by(role=2).all()
+        manager['experts'] = User.query.filter_by(role=2).all()
+    # Expert interface
+    elif current_user.role == 2:
+        expert['requests'] = ExpertAssignment.query.filter_by(expert_id=current_user.id).all()
+    
+    # General User interface, all users can see their own auctions
+    user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
 
-    return render_template('dashboard.html', users=users, requests=requests, experts=experts)
+    return render_template('dashboard.html', manager=manager, expert=expert, user=user)
 
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])
