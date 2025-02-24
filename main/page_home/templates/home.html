@@ -4,16 +4,52 @@
 
 {% block content %}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home-styles.css') }}">
+
 <div class="container mt-5">
   <h1>Current Auctions</h1>
   {% if items %}
-  <ul>
-    {% for item in items %}
-    <li>
-      <a href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
-    </li>
-    {% endfor %}
-  </ul>
+    <div class="row g-4">
+      {% for item in items %}
+      <div class="auction-grid col-12 col-sm-6 col-md-4 col-lg-3">
+
+        <div class="auction-item">
+          <div class="auction-image-container">
+            {% if item.image %}
+              <img class="auction-image img-fluid" 
+                src="{{ item.image }}" 
+                alt="Image of {{ item.title }}" 
+                loading="lazy"
+              >
+            {% else %}
+            <p class="auction-image">Image Pending</p>
+            {% endif %}
+          </div>
+          <div class="auction-info">
+            <div class="badges">
+              <div class="badge {% if item.authentication_status == 1 %}bg-secondary
+              {% elif item.authentication_status == 2 %}bg-warning
+              {% elif item.authentication_status == 3 %}bg-success
+              {% else %}bg-danger{% endif %} p-2"
+              >
+              {% if item.authentication_status == 1 %}
+                  Not Authenticated
+              {% elif item.authentication_status == 2 %}
+                  Authentication Pending
+              {% elif item.authentication_status == 3 %}
+                  Authenticated
+              {% else %}
+                  Authentication Declined
+              {% endif %}
+              </div>
+            </div>
+            <a class="auction-title" href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
+            <div>£{{ item.minimum_price }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   {% else %}
   <p>No auctions available.</p>
   {% endif %}
@@ -22,3 +58,4 @@
 <!-- Scripts -->
 
 {% endblock %}
+
