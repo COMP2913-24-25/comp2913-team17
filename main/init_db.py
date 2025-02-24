@@ -38,8 +38,7 @@ def populate_db(app):
             upload_date=now,
             auction_start=now,
             auction_end=now + timedelta(days=3),
-            minimum_price=100.00,
-            authentication_status=1
+            minimum_price=100.00
         )
         item2 = Item(
             seller_id=user2.id,
@@ -48,8 +47,7 @@ def populate_db(app):
             upload_date=now,
             auction_start=now,
             auction_end=now + timedelta(days=5),
-            minimum_price=200.00,
-            authentication_status=2
+            minimum_price=200.00
         )
         db.session.add_all([item1, item2])
         db.session.commit()
@@ -145,12 +143,12 @@ def populate_db(app):
         configs = [
             ManagerConfig(
                 config_key='base_platform_fee',
-                config_value='1.0',
+                config_value='1.00',
                 description='Base platform fee percentage for standard items'
             ),
             ManagerConfig(
                 config_key='authenticated_platform_fee',
-                config_value='5.0',
+                config_value='5.00',
                 description='Platform fee percentage for authenticated items'
             ),
             ManagerConfig(

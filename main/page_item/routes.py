@@ -4,12 +4,27 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from datetime import datetime
 from . import item_page
-from ..models import db, Item, Bid, User  # Add User to imports
+from ..models import db, Item, Bid, User, Notification, AuthenticationRequest
 
 @item_page.route('/<url>')
 def index(url):
     item = Item.query.filter_by(url=url).first_or_404()
-    return render_template('item.html', item=item)
+
+    # Check authentication status
+    authentication = AuthenticationRequest.query.filter_by(item_id=item.item_id).first()
+    status = None
+    if authentication:
+        status = authentication.status
+        expert = authentication.expert_assignments[0] if authentication.expert_assignments else None
+
+    # Allow validated users access to the authentication page
+    is_allowed = authentication and (
+        authentication.requester_id == current_user.id or
+        expert and expert.expert_id == current_user.id or
+        current_user.role == 3
+    )
+
+    return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed)
 
 @item_page.route('/<url>/bid', methods=['POST'])
 @login_required
