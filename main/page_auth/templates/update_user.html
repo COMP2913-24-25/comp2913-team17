@@ -12,7 +12,7 @@
     {{ form.csrf_token }}
     <!-- Username -->
     <div class="form-group">
-      <label for="enter-username" class="form-label">Username</label>
+      <label for="enter-username" class="form-label">New Username</label>
       {{ form.username(class_="form-control required-field", placeholder="Enter a username", id_="enter-username", maxlength_="50", autocomplete="username") }}
       <p id="username-warning" class="text-danger" style="visibility: hidden">Invalid username</p>
       {% for error in form.username.errors %} 
@@ -21,7 +21,7 @@
     </div>
     <!-- Email -->
     <div class="form-group">
-      <label for="enter-email" class="form-label">Email</label>
+      <label for="enter-email" class="form-label">New Email</label>
       {{ form.email(class_="form-control required-field", placeholder="Enter your email", id_="enter-email",minlength_="5", maxlength_="100", autcomplete="email") }}
       <p id="email-warning" class="text-danger" style="visibility: hidden">Invalid email</p>
       {% for error in form.email.errors %}
@@ -30,7 +30,7 @@
     </div>
     <!-- Password -->
     <div class="form-group">
-      <label for="enter-password" class="form-label">Password (Optional)</label>
+      <label for="enter-password" class="form-label">New Password (Optional)</label>
       {{ form.password(class_="form-control required-field", placeholder="Enter a password", id_="enter-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
       <p id="password-warning" class="text-danger" style="visibility: hidden">Invalid password</p>
       {% for error in form.password.errors %}
@@ -39,7 +39,7 @@
     </div>
     <!-- Confirm Password -->
     <div class="form-group">
-      <label for="enter-confirm" class="form-label">Confirm Password (Optional)</label>
+      <label for="enter-confirm" class="form-label">Confirm New Password (Optional)</label>
       {{ form.confirm_password(class_="form-control required-field", placeholder="Confirm your password", id_="enter-confirm", minlength_="8", maxlength_="24", autocomplete="new-password") }}
       <p id="confirm-warning" class="text-danger" style="visibility: hidden">Passwords do not match</p>
       {% for error in form.confirm_password.errors %}

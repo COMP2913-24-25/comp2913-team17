@@ -70,11 +70,22 @@
             Dashboard
           </a>
         </div>
-        <div class="nav-item">
-          <a class="btn btn-danger" href="{{ url_for('auth_page.logout') }}" title="Logout">
-            Logout
+        <div class="nav-item me-2">
+          <a class="btn btn-primary" href="{{ url_for('create_page.index') }}" title="Create Auction">
+            Create Auction
           </a>
         </div>
+        <div class="nav-item dropdown me-2">
+          <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            {{ current_user.username }}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('auth_page.update_user') }}">Update User</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('auth_page.logout') }}">Logout</a></li>
+          </ul>
+        </div>
+        
       </div>
       {% else %}
       <!-- Registration Links -->

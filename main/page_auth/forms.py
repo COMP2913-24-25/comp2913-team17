@@ -40,7 +40,6 @@ class UpdateForm(FlaskForm):
                              Length(min=8, max=24, message='Password must be between 8 and 24 characters.'),
                              Regexp(regex='^(?=.*[A-Z]).+$', message='Password must have at least one uppercase letter')])
     confirm_password = PasswordField('Confirm Password', validators=[
-                                    (Optional),
-                                     DataRequired(),
+                                    Optional(),
                                      EqualTo('password', message='Passwords must match')])
     submit = SubmitField('Register')
