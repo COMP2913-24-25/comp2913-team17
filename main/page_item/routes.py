@@ -18,11 +18,14 @@ def index(url):
         expert = authentication.expert_assignments[0] if authentication.expert_assignments else None
 
     # Allow validated users access to the authentication page
-    is_allowed = authentication and (
-        authentication.requester_id == current_user.id or
-        expert and expert.expert_id == current_user.id or
-        current_user.role == 3
-    )
+    if not current_user.is_authenticated:
+        is_allowed = False
+    else:
+        is_allowed = authentication and (
+            current_user.role == 3 or
+            expert and expert.expert_id == current_user.id or
+            authentication.requester_id == current_user.id
+        )
 
     return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed)
 
