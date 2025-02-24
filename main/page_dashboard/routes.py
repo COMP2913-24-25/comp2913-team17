@@ -3,8 +3,9 @@
 from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
 from datetime import datetime
+from sqlalchemy import and_
 from . import dashboard_page
-from ..models import db, User
+from ..models import db, User, AuthenticationRequest, ExpertAssignment
 
 
 @dashboard_page.route('/')
@@ -13,10 +14,22 @@ def index():
     """Dashboard page."""
     users = None
 
-    # Get all non-managers if user is a manager
+    # Manager interface
     if current_user.role == 3:
+        # Get all user roles except managers
         users = db.session.query(User).filter(User.role != 3).all()
-    return render_template('dashboard.html', users=users)
+
+        # Get all pending authentication requests without assignments
+        requests = AuthenticationRequest.query\
+            .filter(and_(
+                AuthenticationRequest.status == 1,
+                ~AuthenticationRequest.expert_assignments.any()
+            )).all()
+
+        # Get all available experts, for now all experts - add filtering later
+        experts = User.query.filter_by(role=2).all()
+
+    return render_template('dashboard.html', users=users, requests=requests, experts=experts)
 
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])
@@ -59,4 +72,55 @@ def update_user_role(user_id):
         'user_id': user.id,
         'new_role': user.role,
         'updated_at': time
+    }), 200
+
+@dashboard_page.route('/api/assign-expert/<request_id>', methods=['POST'])
+@login_required
+def assign_expert(request_id):
+    """Assign an expert to an authentication request."""
+    if current_user.role != 3:
+        return jsonify({'error': 'Unauthorised'}), 403
+
+    if not request.is_json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    authentication_request = db.session.query(AuthenticationRequest).filter_by(request_id=request_id).first()
+    if authentication_request is None:
+        return jsonify({'error': 'Request not found'}), 404
+    
+    if authentication_request.status != 1:
+        return jsonify({'error': 'Request not pending'}), 400
+
+    expert = request.json.get('expert')
+
+    if not isinstance(expert, int):
+        return jsonify({'error': 'Invalid expert'}), 400
+
+    user = db.session.query(User).filter_by(id=expert).first()
+    if user is None:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Cannot double-assign
+    if ExpertAssignment.query.filter_by(request_id=request_id).first():
+        return jsonify({'error': 'Request already assigned'}), 400
+
+    # Cannot assign non-expert
+    if user.role != 2:
+        return jsonify({'error': 'Cannot assign non-expert'}), 403
+    
+    # Cannot assign self
+    if expert == current_user.id:
+        return jsonify({'error': 'Cannot assign self'}), 403
+    
+    assignment = ExpertAssignment(
+        request_id=request_id,
+        expert_id=expert
+    )
+    db.session.add(assignment)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Assignment successful',
+        'request_id': request_id,
+        'expert_id': expert
     }), 200

@@ -6,10 +6,11 @@
 
 <div class="container mt-4">
   <h1>Dashboard</h1>
+  <!-- Manager User Role Interface -->
   {% if users %}
   <div class="card mt-4">
     <div class="card-header">
-      <h2 class="mb-0">Management Interface</h2>
+      <h2 class="mb-0">Management: User Roles</h2>
     </div>
     <div class="card-body">
       <table class="table">
@@ -48,9 +49,51 @@
     </div>
   </div>
   {% endif %}
+  <!-- Manager Expert Assignment Interface -->
+  {% if requests %}
+  <div class="card mt-4">
+    <div class="card-header">
+      <h2 class="mb-0">Management: Pending Authentication Requests</h2>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Requester</th>
+            <th>Item</th>
+            <th>Assign Expert</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for request in requests %}
+          <tr data-request-id="{{ request.request_id }}">
+            <td>{{ request.requester.username }}</td>
+            <td><a href="/item/{{ request.item.url }}">{{ request.item.title }}</a></td>
+            <td>
+              {% if not experts %}
+              <p>No available experts</p>
+              {% else %}
+              <select class="form-select form-select-sm expert-select" style="width: auto; display: inline-block;">
+                {% for expert in experts %}
+                <option value="{{ expert.id }}">{{ expert.username }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-sm btn-outline-primary assign-expert-btn my-sm-1">
+                Assign
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
 </div>
 
 <!-- Scripts -->
 <script src="{{ url_for('static', filename='js/updateRole.js') }}"></script> 
+<script src="{{ url_for('static', filename='js/assignExpert.js') }}"></script>
 
 {% endblock %}
