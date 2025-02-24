@@ -3,8 +3,10 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from datetime import datetime
+import decimal
 from . import item_page
 from ..models import db, Item, Bid, User, Notification, AuthenticationRequest
+
 
 @item_page.route('/<url>')
 def index(url):
@@ -26,8 +28,12 @@ def index(url):
             expert and expert.expert_id == current_user.id or
             authentication.requester_id == current_user.id
         )
+    # Get all bids in descending order and suggested bid amount
+    bids = item.bids[::-1]
+    suggested_bid = item.highest_bid().bid_amount + decimal.Decimal('0.01') if item.highest_bid() else item.minimum_price + decimal.Decimal('0.01')
 
-    return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed)
+    return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed, suggested_bid=suggested_bid, bids=bids)
+
 
 @item_page.route('/<url>/bid', methods=['POST'])
 @login_required
@@ -48,6 +54,18 @@ def place_bid(url):
         current_highest = item.highest_bid()
         
         # Validate bid amount
+        if not bid_amount:
+            flash('Please enter a bid amount.', 'error')
+            return redirect(url_for('item_page.index', url=url))
+        
+        if not isinstance(bid_amount, (int, float)):
+            flash('Bid amount must be a number.', 'error')
+            return redirect(url_for('item_page.index', url=url))
+
+        if bid_amount < 0:
+            flash('Bid amount must be a positive number.', 'error')
+            return redirect(url_for('item_page.index', url=url))
+        
         if current_highest and bid_amount <= current_highest.bid_amount:
             flash('Your bid must be higher than the current bid.', 'error')
             return redirect(url_for('item_page.index', url=url))
@@ -104,6 +122,7 @@ def check_ended_auctions():
         db.session.rollback()
         print(f"Error processing ended auctions: {str(e)}")
         return {'error': 'Failed to process ended auctions'}, 500
+
 
 @item_page.route('/notifications/mark-read', methods=['POST'])
 @login_required
