@@ -101,7 +101,25 @@
     <ul>
       {% for request in expert['requests'] %}
       <li>
-        <a href="{{ url_for('item_page.index', url=request.authentication_request.item.url) }}">{{ request.authentication_request.item.title }}</a>
+        <a href="{{ url_for('item_page.index', url=request.authentication_request.item.url) }}"
+          title="See item details"
+        >
+          {{ request.authentication_request.item.title }}
+        </a>
+        <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.item.url) }}"
+          title="View authentication request"
+          class="badge mx-2 {% if request.authentication_request.status == 1 %}bg-warning
+          {% elif request.authentication_request.status == 2 %}bg-success
+          {% else %}bg-danger{% endif %} p-2"
+        >
+          {% if request.authentication_request.status == 1 %}
+            Authentication Pending
+          {% elif request.authentication_request.status == 2 %}
+            Authenticated
+          {% else %}
+            Authentication Declined
+          {% endif %}
+        </a>
       </li>
       {% endfor %}
     </ul>
@@ -119,7 +137,27 @@
     <ul>
       {% for item in user['auctions'] %}
       <li>
-        <a href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
+        <a href="{{ url_for('item_page.index', url=item.url) }}"
+          title="See item details"
+        >
+          {{ item.title }}
+        </a>
+        {% if item.authentication_requests %}
+          <a href="{{ url_for('authenticate_item_page.index', url=item.url) }}"
+            title="View authentication request"
+            class="badge mx-2 {% if item.authentication_requests[0].status == 1 %}bg-warning
+            {% elif item.authentication_requests[0].status == 2 %}bg-success
+            {% else %}bg-danger{% endif %} p-2"
+          >
+            {% if item.authentication_requests[0].status == 1 %}
+              Authentication Pending
+            {% elif item.authentication_requests[0].status == 2 %}
+              Authenticated
+            {% else %}
+              Authentication Declined
+            {% endif %}
+          </a>
+        {% endif %}
       </li>
       {% endfor %}
     </ul>

@@ -12,10 +12,19 @@ def index(url):
 
     # Check authentication status
     authentication = AuthenticationRequest.query.filter_by(item_id=item.item_id).first()
+    status = None
     if authentication:
-        authentication = authentication.status
+        status = authentication.status
+        expert = authentication.expert_assignments[0] if authentication.expert_assignments else None
 
-    return render_template('item.html', item=item, authentication=authentication)
+    # Allow validated users access to the authentication page
+    is_allowed = authentication and (
+        authentication.requester_id == current_user.id or
+        expert and expert.expert_id == current_user.id or
+        current_user.role == 3
+    )
+
+    return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed)
 
 @item_page.route('/<url>/bid', methods=['POST'])
 @login_required

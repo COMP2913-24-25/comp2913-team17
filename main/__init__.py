@@ -78,12 +78,14 @@ def create_app():
     from .page_create import create_page
     from .page_dashboard import dashboard_page
     from .page_auth import auth_page
+    from .page_authenticate_item import authenticate_item_page
 
     app.register_blueprint(home_page)
     app.register_blueprint(item_page, url_prefix='/item')
     app.register_blueprint(create_page, url_prefix='/create')
     app.register_blueprint(dashboard_page, url_prefix='/dashboard')
     app.register_blueprint(auth_page)
+    app.register_blueprint(authenticate_item_page, url_prefix='/authenticate')
 
     @login_manager.user_loader
     def load_user(user_id):
