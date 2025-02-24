@@ -1,9 +1,5 @@
 // Update management configuration settings in the database
 
-// update-base, base-input
-// update-auth, auth-input
-// update-dur
-
 $(document).ready(function() {
   $('.update-base-btn').on('click', async function() {
     const row = $(this).closest('tr');
