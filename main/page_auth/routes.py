@@ -68,6 +68,45 @@ def register():
             return redirect(url_for('home_page.index'))
     return render_template('register.html', form=form)
 
+@auth_page.route('/update_user', methods=['GET', 'POST'])
+def update_user():
+    """Render the update page and update user details."""
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth_page.login'))
+
+    form = RegisterForm()
+
+    # Pre-fill the form with the current user's information on GET requests.
+    if request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+
+    if form.validate_on_submit():
+        new_username = form.username.data
+        new_email = form.email.data
+        new_password = form.password.data
+
+        # Check if the email is taken by another user.
+        existing_email = db.session.query(User).filter(User.email == new_email, User.id != current_user.id).first()
+        if existing_email:
+            flash('Email already taken')
+        # Check if the username is taken by another user.
+        elif db.session.query(User).filter(User.username == new_username, User.id != current_user.id).first():
+            flash('Username already taken')
+        else:
+            # Update current_user's details.
+            current_user.username = new_username
+            current_user.email = new_email
+
+            # Update password if a new one was provided.
+            if new_password:
+                current_user.set_password(new_password)
+
+            db.session.commit()
+            flash('Details been updated')
+            return redirect(url_for('home_page.index'))
+
+    return render_template('update_user.html', form=form)
 
 @auth_page.route('/logout')
 def logout():
