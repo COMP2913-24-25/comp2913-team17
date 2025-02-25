@@ -1,13 +1,8 @@
-from calendar import c
-from datetime import date, datetime
-from turtle import back
+from datetime import datetime
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import current_app
-from flask_mail import Message
-from .tasks import send_winner_email
 
 db = SQLAlchemy()
 
@@ -31,10 +26,7 @@ class User(UserMixin, db.Model):
                            onupdate=datetime.now())
 
     # Relationships to other tables:
-    items = db.relationship('Item', 
-                          backref='seller',
-                          lazy=True,
-                          foreign_keys='Item.seller_id')
+    items = db.relationship('Item', backref='seller', lazy=True)
     bids = db.relationship('Bid', backref='bidder', lazy=True)
     payments = db.relationship('Payment', backref='user', lazy=True)
     authentication_requests = db.relationship('AuthenticationRequest', backref='requester', lazy=True)
@@ -55,19 +47,6 @@ class User(UserMixin, db.Model):
         if not self.password_hash:
             return False
         return check_password_hash(self.password_hash, password)
-
-    # Grab the user's winning items from the database
-    def get_won_items(self):
-        # Get items won by the winner
-        return Item.query.join(Bid).filter(Item.winning_bid_id == Bid.bid_id).filter(Bid.bidder_id == self.id).all()
-
-    # Schedule a task to automate checking and finalising auctions that have ended
-    def schedule_auction_finalisation(self):
-        # Check for finished auctions and set the winner
-        finished_items = Item.query.filter(Item.auction_end <= datetime.now(),
-                                           Item.winning_bid_id.is_(None)).all()
-        for item in finished_items:
-            item.finalise_auction()
 
 # Item Model
 class Item(db.Model):
@@ -92,97 +71,48 @@ class Item(db.Model):
         nullable=False,
         default=1
     )
-    winning_bid_id = db.Column(
-        db.Integer, 
-        db.ForeignKey('bids.bid_id', use_alter=True, name='fk_winning_bid'),
-        nullable=True
-    )
-    # Define relationships
-    winning_bid = db.relationship(
-        'Bid',
-        foreign_keys=[winning_bid_id],
-        uselist=False,
-        post_update=True
-    )
-    bids = db.relationship(
-        'Bid', 
-        backref='item', 
-        lazy=True, 
-        foreign_keys='Bid.item_id',
-        primaryjoin="Item.item_id==Bid.item_id"
-    )
     
+    # Relationships:
+    bids = db.relationship('Bid', backref='item', lazy=True)
+    authentication_requests = db.relationship('AuthenticationRequest', backref='item', lazy=True)
+
     def __repr__(self):
         return f"<Item {self.title} (ID: {self.item_id})>"
 
-    # Add method to get highest bid
-    def highest_bid(self):
-        """Get the highest bid for this item"""
-        return Bid.query.filter_by(item_id=self.item_id)\
-                       .order_by(Bid.bid_amount.desc())\
-                       .first()
-
-    # Method for outbid notification
-    def notify_outbid(self, outbid_user):
-        """Create notification for outbid user"""
-        notification = Notification(
-            user_id=outbid_user.id,
-            message=f"You have been outbid on {self.title}",
-            is_read=False,
-            created_at=datetime.now()
-        )
-        db.session.add(notification)
-        db.session.commit()
-
-    def notify_winner(self):
-        """Create notification for auction winner"""
-        winning_bid = self.highest_bid()
-        if winning_bid:
-            notification = Notification(
-                user_id=winning_bid.bidder_id,
-                message=f"Congratulations! You won the auction for {self.title}",
-                is_read=False,
-                created_at=datetime.now()
-            )
-            db.session.add(notification)
-            db.session.commit()
-
-    def notify_winner_email(self):
-        """Queue async email notification to winner"""
-        if self.winning_bid:
-            # Using SQLAlchemy 2.0 pattern
-            winner = db.session.get(User, self.winning_bid.bidder_id)
-            if winner:
-                try:
-                    from .tasks import send_winner_email
-                    send_winner_email.delay(
-                        recipient=winner.email,
-                        item_title=self.title,
-                        bid_amount=self.winning_bid.bid_amount,
-                        end_date=self.auction_end.strftime('%Y-%m-%d %H:%M')
-                    )
-                except Exception as e:
-                    print(f"Error sending winner email: {str(e)}")
-
 # Bid Model
+from sqlalchemy.exc import IntegrityError
+
 class Bid(db.Model):
     __tablename__ = 'bids'
 
     bid_id = db.Column(db.Integer, primary_key=True)
-    item_id = db.Column(
-        db.Integer, 
-        db.ForeignKey('items.item_id', ondelete='CASCADE'),
-        nullable=False
-    )
+    item_id = db.Column(db.Integer, db.ForeignKey('items.item_id'), nullable=False)
     bidder_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     bid_amount = db.Column(db.Numeric(10, 2), nullable=False)
     bid_time = db.Column(db.DateTime, default=datetime.now())
 
-    # Relationship to payments (if any)
-    payments = db.relationship('Payment', backref='bid', lazy=True)
+    @staticmethod
+    def place_bid(item_id, user_id, bid_amount):
+        """
+        Handles bid placement with concurrency control to avoid problems
+        """
+        try:
+            item = db.session.query(Item).filter_by(item_id=item_id).first()
+            if not item:
+                return {"error": "Item not found"}, 404
 
-    def __repr__(self):
-        return f"<Bid {self.bid_id} on Item {self.item_id}>"
+            highest_bid = db.session.query(Bid).filter_by(item_id=item_id).order_by(Bid.bid_amount.desc()).first()
+
+            if highest_bid and bid_amount <= highest_bid.bid_amount:
+                return {"error": "Bid must be higher than the current highest bid"}, 400
+
+            new_bid = Bid(item_id=item_id, bidder_id=user_id, bid_amount=bid_amount)
+            db.session.add(new_bid)
+            db.session.commit()
+            return {"message": "Bid placed successfully", "bid_amount": str(new_bid.bid_amount)}, 200
+        except IntegrityError:
+            db.session.rollback()
+            return {"error": "Database error, please try again"}, 500
 
 # Payment Model
 class Payment(db.Model):
@@ -242,7 +172,7 @@ class ExpertAssignment(db.Model):
     request_id = db.Column(db.Integer, db.ForeignKey('authentication_requests.request_id'), nullable=False)
     expert_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     assigned_date = db.Column(db.DateTime, default=datetime.now())
-    # Assignment status: 1 = Notified, 2 = In Review, 3 = Awaiting Info, 4 = Completed
+    # Assignment status: 1 = Notified, 2 = In Review, 3 = Awaiting Info, 4 = Completed 
     status = db.Column(
         db.Integer,
         nullable=False,
