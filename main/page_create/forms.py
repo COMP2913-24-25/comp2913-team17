@@ -2,7 +2,7 @@
 
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileSize
-from wtforms import StringField, TextAreaField, DecimalField, SubmitField
+from wtforms import StringField, TextAreaField, DecimalField, SubmitField, BooleanField
 from wtforms.fields import DateTimeLocalField
 from wtforms.validators import DataRequired, Length, NumberRange
 from datetime import datetime
@@ -46,5 +46,7 @@ class CreateAuctionForm(FlaskForm):
         FileAllowed(['jpg', 'png'], '.jpg or .png images only'),
         FileSize(max_size=1024 * 1024, message='Image must be 1MB or less')
     ])
+
+    authenticate_item = BooleanField("Authenticate Item", default=False)
 
     submit = SubmitField('Create Auction')

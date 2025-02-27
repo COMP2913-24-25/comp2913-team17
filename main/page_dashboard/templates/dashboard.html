@@ -5,11 +5,14 @@
 {% block content %}
 
 <div class="container mt-4">
-  <h1>Dashboard</h1>
-  {% if users %}
+  <!-- Manager Dashboard -->
+  {% if manager %}
+  <h1>Management Dashboard</h1>
+  <!-- Manager User Role Interface -->
+  {% if manager['users'] %}
   <div class="card mt-4">
     <div class="card-header">
-      <h2 class="mb-0">Management Interface</h2>
+      <h2 class="mb-0">Management: User Roles</h2>
     </div>
     <div class="card-body">
       <table class="table">
@@ -24,7 +27,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for user in users %}
+          {% for user in manager['users'] %}
           <tr data-user-id="{{ user.id }}">
             <td>{{ user.username }}</td>
             <td>{{ user.email }}</td>
@@ -47,10 +50,195 @@
       </table>
     </div>
   </div>
+  <div class="card mt-4">
+    <div class="card-header">
+      <h2 class="mb-0">Management: Configuration</h2>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Option</th>
+            <th>Current Value</th>
+            <th>Update Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Base Platform Fee (%)</td>
+            <td class="base-cell">{{ manager['base_fee'] }}</td>
+            <td>
+              <input type="number" 
+                class="form-control form-control-sm base-input" 
+                step="0.01" 
+                min="0.00"
+                max="100.00"
+                value="{{ manager['base_fee'] }}"
+                style="width: auto; display: inline-block;"
+              >
+              <button class="btn btn-sm btn-outline-primary update-base-btn my-sm-1">
+                Update
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>Authenticated Item Fee (%)</td>
+            <td class="auth-cell">{{ manager['authenticated_fee'] }}</td>
+            <td>
+              <input type="number" 
+                class="form-control form-control-sm auth-input" 
+                step="0.01" 
+                min="0.00"
+                max="100.00"
+                value="{{ manager['authenticated_fee'] }}"
+                style="width: auto; display: inline-block;"
+              >
+              <button class="btn btn-sm btn-outline-primary update-auth-btn my-sm-1">
+                Update
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>Maximum Auction Duration (Days)</td>
+            <td class="dur-cell">{{ manager['max_duration'] }}</td>
+            <td>
+              <input type="number" 
+                class="form-control form-control-sm dur-input" 
+                step="1" 
+                min="1"
+                max="365"
+                value="{{ manager['max_duration'] }}"
+                style="width: auto; display: inline-block;"
+              >
+              <button class="btn btn-sm btn-outline-primary update-dur-btn my-sm-1">
+                Update
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
   {% endif %}
+  <!-- Manager Expert Assignment Interface -->
+  {% if manager['requests'] %}
+  <div class="card mt-4">
+    <div class="card-header">
+      <h2 class="mb-0">Management: Pending Authentication Requests</h2>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Requester</th>
+            <th>Item</th>
+            <th>Assign Expert</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for request in manager['requests'] %}
+          <tr data-request-id="{{ request.request_id }}">
+            <td>{{ request.requester.username }}</td>
+            <td><a href="/item/{{ request.item.url }}">{{ request.item.title }}</a></td>
+            <td>
+              {% if not manager['experts'] %}
+              <p>No available experts</p>
+              {% else %}
+              <select class="form-select form-select-sm expert-select" style="width: auto; display: inline-block;">
+                {% for expert in manager['experts'] %}
+                <option value="{{ expert.id }}">{{ expert.username }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-sm btn-outline-primary assign-expert-btn my-sm-1">
+                Assign
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+  <!-- Expert Dashboard -->
+  {% elif expert %}
+  <h1>Expert Dashboard</h1>
+  <div class="container mt-5">
+    <h2>Your Authentications</h1>
+    {% if expert['requests'] %}
+    <ul>
+      {% for request in expert['requests'] %}
+      <li>
+        <a href="{{ url_for('item_page.index', url=request.authentication_request.item.url) }}"
+          title="See item details"
+        >
+          {{ request.authentication_request.item.title }}
+        </a>
+        <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.item.url) }}"
+          title="View authentication request"
+          class="badge mx-2 {% if request.authentication_request.status == 1 %}bg-warning
+          {% elif request.authentication_request.status == 2 %}bg-success
+          {% else %}bg-danger{% endif %} p-2"
+        >
+          {% if request.authentication_request.status == 1 %}
+            Authentication Pending
+          {% elif request.authentication_request.status == 2 %}
+            Authenticated
+          {% else %}
+            Authentication Declined
+          {% endif %}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No auctions to authenticate.</p>
+    {% endif %}
+  </div>
+  <!-- General User Dashboard -->
+  {% else %}
+  <h1>User Dashboard</h1>
+  {% endif %}
+  <div class="container mt-5">
+    <h2>Your Auctions</h1>
+    {% if user['auctions'] %}
+    <ul>
+      {% for item in user['auctions'] %}
+      <li>
+        <a href="{{ url_for('item_page.index', url=item.url) }}"
+          title="See item details"
+        >
+          {{ item.title }}
+        </a>
+        {% if item.authentication_requests %}
+          <a href="{{ url_for('authenticate_item_page.index', url=item.url) }}"
+            title="View authentication request"
+            class="badge mx-2 {% if item.authentication_requests[0].status == 1 %}bg-warning
+            {% elif item.authentication_requests[0].status == 2 %}bg-success
+            {% else %}bg-danger{% endif %} p-2"
+          >
+            {% if item.authentication_requests[0].status == 1 %}
+              Authentication Pending
+            {% elif item.authentication_requests[0].status == 2 %}
+              Authenticated
+            {% else %}
+              Authentication Declined
+            {% endif %}
+          </a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No auctions available.</p>
+    {% endif %}
+  </div>
 </div>
 
 <!-- Scripts -->
-<script src="{{ url_for('static', filename='js/updateRole.js') }}"></script> 
+<script src="{{ url_for('static', filename='js/updateRole.js') }}"></script>
+<script src="{{ url_for('static', filename='js/updateConfig.js') }}"></script>
+<script src="{{ url_for('static', filename='js/assignExpert.js') }}"></script>
 
 {% endblock %}
