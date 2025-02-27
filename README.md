@@ -29,7 +29,65 @@ This project utilises GitHub's built-in tools for development tracking:
 
 ## Installation Instructions
 
-Coming Soon...
+## Running the Application
+
+1. Insert an environment variable file named '.env' in the project root directory.
+   This should be in the following format:
+
+```bash
+SECRET_KEY=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+AWS_ACCESS_KEY=
+AWS_SECRET_KEY=
+AWS_BUCKET=
+EMAIL_USER=
+EMAIL_PASSWORD=
+```
+
+2. Create your virtual environment:
+
+```bash
+python3 -m venv myenv
+```
+
+3. Activate your virtual environment:
+```bash
+# For Windows Command Prompt
+myenv\Scripts\activate
+
+# For Windows PowerShell
+.\myenv\Scripts\Activate.ps1
+
+# For Linux/MacOS
+source myenv/bin/activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Run Flask application:
+```bash
+# For production:
+set FLASK_ENV=production # Command Prompt
+$env:FLASK_ENV="production" # PowerShell
+export FLASK_ENV=production # Linux/MacOS
+
+flask run
+
+# For development mode with debugging:
+set FLASK_ENV=development # Command Prompt
+$env:FLASK_ENV="development" # PowerShell
+export FLASK_ENV=development # Linux/MacOS
+
+flask run
+```
+
+5. Access the application:
+- Open browser at: http://localhost:5000
+- New feature at: http://localhost:5000/new-feature
 
 
 
@@ -167,22 +225,6 @@ pytest --cov=main tests/
 # Run with coverage and fail if coverage is below 80% (or any other value)
 pytest --cov=main tests/ --cov-fail-under=80
 ```
-
-## Running the Application
-
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-2. Run Flask application:
-```bash
-python app.py
-```
-
-3. Access the application:
-- Open browser at: http://localhost:5000
-- New feature at: http://localhost:5000/new-feature
 
 ## Code Quality and Security Tools
 
