@@ -3,7 +3,6 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home-styles.css') }}">
 
 <div class="container mt-5">
@@ -11,8 +10,7 @@
   {% if items %}
     <div class="row g-4">
       {% for item in items %}
-      <div class="auction-grid col-12 col-sm-6 col-md-4 col-lg-3">
-
+      <div class="auction-grid col-12 col-sm-6 col-md-4 col-lg-3" data-item-id="{{ item.item_id }}">
         <div class="auction-item">
           <div class="auction-image-container">
             {% if item.image %}
@@ -28,7 +26,7 @@
           <div class="auction-info">
             <div class="badges">
               <div class="badge {% if not item.authentication_requests %}bg-secondary
-              {% elif item.authentication_requests[0].status == 2 %}bg-sucesss
+              {% elif item.authentication_requests[0].status == 2 %}bg-success
               {% elif item.authentication_requests[0].status == 3 %}bg-danger
               {% else %}bg-warning{% endif %} p-2"
               >
@@ -44,7 +42,17 @@
               </div>
             </div>
             <a class="auction-title" href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
-            <div>£{{ item.minimum_price }}</div>
+            <div>
+              {% set highest_bid = item.highest_bid() %}
+              {% if highest_bid %}
+                £{{ highest_bid.bid_amount }} <i>{{ item.bids|length }} bids</i>
+              {% else %}
+                £0.00 <i>0 bids</i>
+              {% endif %} 
+            </div>
+            <div class="auction-end-date">
+              Auction Ends: {{ item.auction_end.strftime('%y-%m-%d %H:%M') }}
+            </div>
           </div>
         </div>
       </div>
@@ -56,6 +64,5 @@
 </div>
 
 <!-- Scripts -->
-
 {% endblock %}
 
