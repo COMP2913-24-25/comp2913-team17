@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Expert Availability{% endblock %}
+
+{% block content %}
+
+<h1 class="mt-5 mb-4 text-center">Update Weekly Availability</h1>
+
+<div id="availability-form" class="container">
+  <form action="" method="POST" name="ExpertAvailability">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Start Time (8:00 - 20:00)</th>
+          <th>End Time (8:00 - 20:00)</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in range(7) %}
+          {% set current_day = week_start + timedelta(days=i) %}
+          {% set availability = week_availabilities[current_day] %}
+          <tr>
+            <td>{{ current_day.strftime('%A, %b %d') }}</td>
+            <td>
+              <input type="time" class="form-control" name="day_{{ i }}_start"
+                     min="08:00" max="20:00"
+                     value="{{ availability.start_time if availability else '' }}">
+            </td>
+            <td>
+              <input type="time" class="form-control" name="day_{{ i }}_end"
+                     min="08:00" max="20:00"
+                     value="{{ availability.end_time if availability else '' }}">
+            </td>
+            <td>
+              <select name="day_{{ i }}_status" class="form-control">
+                <option value="available" {% if availability and availability.status %}selected{% endif %}>Available</option>
+                <option value="unavailable" {% if availability and not availability.status %}selected{% endif %}>Unavailable</option>
+              </select>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="d-flex justify-content-center mt-3">
+      <button type="submit" class="btn btn-primary">Save Availability</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

@@ -79,6 +79,7 @@ def create_app():
     from .page_dashboard import dashboard_page
     from .page_auth import auth_page
     from .page_authenticate_item import authenticate_item_page
+    from .page_experts import expert_page
 
     app.register_blueprint(home_page)
     app.register_blueprint(item_page, url_prefix='/item')
@@ -86,6 +87,7 @@ def create_app():
     app.register_blueprint(dashboard_page, url_prefix='/dashboard')
     app.register_blueprint(auth_page)
     app.register_blueprint(authenticate_item_page, url_prefix='/authenticate')
+    app.register_blueprint(expert_page, url_prefix='/expert')
 
     @login_manager.user_loader
     def load_user(user_id):
