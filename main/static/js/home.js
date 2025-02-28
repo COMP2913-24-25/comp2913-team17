@@ -20,6 +20,30 @@ $(document).ready(function() {
     });
   }, 60000);
   
+  // Search functionality
+  $('#search-bar').on('input', function() {
+    const searchTerm = $(this).val().toLowerCase().trim();
+    let visibleItems = 0;
+    
+    $('.auction-grid').each(function() {
+      const title = $(this).data('title').toLowerCase();
+      
+      if (title.includes(searchTerm)) {
+        $(this).show();
+        visibleItems++;
+      } else {
+        $(this).hide();
+      }
+    });
+    
+    // Show or hide the "no results" message
+    if (visibleItems === 0 && searchTerm !== '') {
+      $('#no-results').removeClass('d-none');
+    } else {
+      $('#no-results').addClass('d-none');
+    }
+  });
+  
   function updateCountdown(element) {
     const endTime = element.data('end');
     const now = new Date();
