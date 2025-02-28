@@ -6,8 +6,11 @@ from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
+from flask_socketio import SocketIO
 from .models import db
 from .init_db import populate_db
+
+socketio = SocketIO()
 
 def create_app():
     app = Flask(__name__, static_url_path='', static_folder='static')
@@ -62,6 +65,9 @@ def create_app():
     )
     
     mail = Mail(app)
+
+    # Initialise the WebSocket server
+    socketio.init_app(app, cors_allowed_origins='*')
 
     # Initialise the database
     db.init_app(app)
