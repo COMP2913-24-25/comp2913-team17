@@ -6,8 +6,13 @@ from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
+from flask_socketio import SocketIO
+from flask_apscheduler import APScheduler
 from .models import db
 from .init_db import populate_db
+
+socketio = SocketIO()
+scheduler = APScheduler()
 
 def create_app():
     app = Flask(__name__, static_url_path='', static_folder='static')
@@ -62,6 +67,29 @@ def create_app():
     )
     
     mail = Mail(app)
+
+    # Initialise the WebSocket server
+    socketio.init_app(app, cors_allowed_origins='*')
+
+    # Initialise the scheduler
+    scheduler.init_app(app)
+    scheduler.api_enabled = True
+
+    app.config.update(
+        SCHEDULER_API_ENABLED=True,
+    )
+
+    # Check for ended auctions every minute
+    @scheduler.task('interval', id='check_ended_auctions', seconds=60, misfire_grace_time=30)
+    def check_ended_auctions_job():
+        with app.app_context():
+            from .page_item.routes import check_ended_auctions
+            try:
+                check_ended_auctions()
+            except Exception as e:
+                print(f'Error checking ended auctions: {str(e)}')
+
+    scheduler.start()
 
     # Initialise the database
     db.init_app(app)

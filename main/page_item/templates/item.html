@@ -12,6 +12,7 @@
       <img src="{{ item.image }}" 
         alt="{{ item.title }}" 
         class="img-fluid rounded"
+        loading="lazy"
       >
       {% else %}
       <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px">
@@ -78,7 +79,8 @@
           </div>
           <div class="col">
             <small class="text-muted">End Time</small>
-            <p>{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p class="auction-end">{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p><span class="countdown-label">Time remaining:</span> <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</span></p>
           </div>
         </div>
       </div>
@@ -107,14 +109,14 @@
               id="bid_amount"
               name="bid_amount"
               step="0.01"
-              min="{{ item.minimum_price }}"
+              min="{{ suggested_bid }}"
               value="{{ suggested_bid }}"
               required
             >
           </div>
           <div class="form-text">
             {% if item.highest_bid() %}
-              Current highest bid: £{{ "%.2f"|format(item.highest_bid().bid_amount) }}
+              Current highest bid: £<span class="max-bid">{{ "%.2f"|format(item.highest_bid().bid_amount) }}</span>
             {% else %}
               Minimum bid: £{{ "%.2f"|format(item.minimum_price) }}
             {% endif %}
@@ -126,17 +128,17 @@
         </div>
         
         <div class="mt-3">
-          <p class="text-muted">
+          <p class="text-muted small-end">
             Auction ends on: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
           </p>
           {% if item.highest_bid() and item.highest_bid().bidder_id == current_user.id %}
-            <div class="alert alert-info mt-2">
+            <div class="alert alert-info mt-2 max-bid-alert">
               You currently have the highest bid!
             </div>
           {% endif %}
           <h3>Bid History:</h3>
           {% if bids %}
-          <ol reversed start="{{ bids|length }}">
+          <ol class="bid-history" reversed start="{{ bids|length }}">
             {% for bid in bids %}
             <li>
               {{ bid.bidder.username }}</strong> - £{{ "%.2f"|format(bid.bid_amount) }}
@@ -145,7 +147,7 @@
             {% endfor %}
           </ol>
           {% else %}
-          <p class="text-muted">No bids yet</p>
+          <p class="text-muted no-bids-msg">No bids yet</p>
           {% endif %}
         </div>
       </form>
@@ -159,5 +161,6 @@
 </div>
 
 <!-- Scripts -->
+<script src="{{ url_for('static', filename='js/bidding.js') }}"></script>
 
 {% endblock %}
