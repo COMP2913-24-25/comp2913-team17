@@ -80,6 +80,7 @@
           <div class="col">
             <small class="text-muted">End Time</small>
             <p class="auction-end">{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p><span class="countdown-label">Time remaining:</span> <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</span></p>
           </div>
         </div>
       </div>
@@ -146,7 +147,7 @@
             {% endfor %}
           </ol>
           {% else %}
-          <p class="text-muted">No bids yet</p>
+          <p class="text-muted no-bids-msg">No bids yet</p>
           {% endif %}
         </div>
       </form>

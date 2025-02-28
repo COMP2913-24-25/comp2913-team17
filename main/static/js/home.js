@@ -20,16 +20,16 @@ $(document).ready(function() {
     });
   }, 60000);
   
-  function updateCountdown($element) {
-    const endTime = $element.data('end');
+  function updateCountdown(element) {
+    const endTime = element.data('end');
     const now = new Date();
     const target = new Date(endTime);
     const delta = target - now;
     
     // If auction has ended
     if (now >= target) {
-      $element.text('Auction ended');
-      $element.removeClass('countdown-active countdown-urgent').addClass('countdown-ended');
+      element.text('Auction ended');
+      element.removeClass('countdown-active countdown-urgent').addClass('countdown-ended');
       return;
     }
     
@@ -38,12 +38,12 @@ $(document).ready(function() {
     
     // If less than 1 minute, make urgent and show seconds
     if (minutes <= 1) {
-      $element.removeClass('countdown-active').addClass('countdown-urgent');
-      $element.text('Ends in ' + (seconds + (seconds === 1 ? ' second' : ' seconds')));
+      element.removeClass('countdown-active').addClass('countdown-urgent');
+      element.text('Ends in ' + (seconds + (seconds === 1 ? ' second' : ' seconds')));
     } else {
       // Otherwise, normal countdown
-      $element.removeClass('countdown-urgent').addClass('countdown-active');
-      $element.text(getTimeRemaining(endTime));
+      element.removeClass('countdown-urgent').addClass('countdown-active');
+      element.text(getTimeRemaining(endTime));
     }
   }
   

@@ -137,11 +137,27 @@ def check_ended_auctions():
             if highest_bid:
                 # Set winning bid
                 item.winning_bid_id = highest_bid.bid_id
-                # Send notifications
-                item.notify_winner()  # In-app notification
-                item.notify_winner_email()  # Email notification
+                
+                # Send notifications - To implement
+                # item.notify_winner()  # In-app notification
+                # item.notify_winner_email()  # Email notification
+
                 db.session.commit()
 
+                # Disconnects all users from the auction room
+                socketio.emit('auction_ended', {
+                    'item_url': item.url,
+                    'winner': True,
+                    'winning_bidder_id': highest_bid.bidder.id,
+                    'winning_bidder_username': highest_bid.bidder.username,
+                    'winning_bid_amount': float(highest_bid.bid_amount)
+                }, room=item.url)
+            else:
+                socketio.emit('auction_ended', {
+                    'item_url': item.url,
+                    'winner': False
+                }, room=item.url)
+                
         return {'message': 'Ended auctions processed'}, 200
     except Exception as e:
         db.session.rollback()

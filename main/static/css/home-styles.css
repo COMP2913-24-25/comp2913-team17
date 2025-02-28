@@ -46,19 +46,3 @@
 .bid-info {
   display: flex;
 }
-
-.countdown-active {
-  color: green;
-}
-
-.countdown-urgent {
-  color: red;
-  font-weight: bold;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
