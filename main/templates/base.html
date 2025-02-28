@@ -61,11 +61,6 @@
         </div>
         <!-- Existing buttons -->
         <div class="nav-item me-2">
-          <a class="btn btn-primary" href="{{ url_for('create_page.index' )}}" title="Create Auction">
-            Create Auction
-          </a>
-        </div>
-        <div class="nav-item me-2">
           <a class="btn btn-secondary" href="{{ url_for('dashboard_page.index') }}" title="Dashboard">
             Dashboard
           </a>
@@ -83,6 +78,10 @@
             <li><a class="dropdown-item" href="{{ url_for('auth_page.update_user') }}">Update User</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{{ url_for('auth_page.logout') }}">Logout</a></li>
+            {% if current_user.role == 2 %}
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{{ url_for('expert_page.update_availability') }}">Update Availability</a></li>
+            {% endif %}
           </ul>
         </div>
         
