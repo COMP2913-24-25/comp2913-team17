@@ -1,8 +1,8 @@
-"""Launches the Flask app."""
+"""Launches the Flask app with WebSocket support"""
 
-from main import create_app
+from main import create_app, socketio
 
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)
