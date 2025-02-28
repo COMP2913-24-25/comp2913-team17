@@ -18,6 +18,8 @@
   <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
   <!-- Notifications JS -->
   <script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>
+  <!-- Socketio -->
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 </head>
 <body>
   <!-- Navbar -->
@@ -32,6 +34,7 @@
         </div>
       </div>
       {% if current_user.is_authenticated %}
+      <meta name="user-id" content="{{ current_user.id }}">
       <div class="ms-auto d-flex">
         <!-- Add this notification dropdown -->
         <div class="nav-item dropdown me-2">
