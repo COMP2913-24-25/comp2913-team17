@@ -163,3 +163,4 @@ def oauth2_callback(provider):
     # Log the user in
     login_user(user)
     return redirect(url_for('home_page.index'))
+

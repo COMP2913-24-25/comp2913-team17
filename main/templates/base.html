@@ -18,6 +18,10 @@
   <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
   <!-- Notifications JS -->
   <script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>
+  <!-- Add Socket.IO client library -->
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <!-- Real-time notifications -->
+  <script src="{{ url_for('static', filename='js/realtime-notifications.js') }}" defer></script>
 </head>
 <body>
   <!-- Navbar -->
@@ -44,14 +48,22 @@
             </span>
             {% endif %}
           </button>
-          <ul class="dropdown-menu dropdown-menu-end" style="width: 300px;">
+          <ul class="dropdown-menu dropdown-menu-end" style="width: 300px; max-height: 400px; overflow-y: auto;">
             {% if current_user.notifications %}
               {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true) %}
               <li>
+                {% if notification.item_url %}
+                <a href="{{ url_for('item_page.index', url=notification.item_url) }}" 
+                   class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %} text-decoration-none">
+                  <small class="text-muted d-block">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                  {{ notification.message }}
+                </a>
+                {% else %}
                 <div class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %}">
                   <small class="text-muted d-block">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                   {{ notification.message }}
                 </div>
+                {% endif %}
               </li>
               {% endfor %}
             {% else %}

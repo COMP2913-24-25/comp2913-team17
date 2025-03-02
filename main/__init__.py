@@ -1,6 +1,7 @@
 """Configures the Flask app."""
 
 import os
+import logging
 from dotenv import load_dotenv
 from flask import Flask, render_template
 from flask_login import LoginManager
@@ -8,6 +9,7 @@ from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
 from .models import db
 from .init_db import populate_db
+from .socket_events import init_socketio, socketio
 
 def create_app():
     app = Flask(__name__, static_url_path='', static_folder='static')
@@ -63,8 +65,21 @@ def create_app():
     
     mail = Mail(app)
 
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(),  # Console handler
+            logging.FileHandler("auction_system.log")  # File handler
+        ]
+    )
+
     # Initialise the database
     db.init_app(app)
+
+    # Initialize SocketIO
+    init_socketio(app)
 
     with app.app_context():
         # Creates tables if they don't exist
