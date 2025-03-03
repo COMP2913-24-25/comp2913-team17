@@ -7,9 +7,14 @@ from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
+from flask_socketio import SocketIO
+from flask_apscheduler import APScheduler
 from .models import db
 from .init_db import populate_db
 from .socket_events import init_socketio, socketio
+
+socketio = SocketIO()
+scheduler = APScheduler()
 
 def create_app():
     app = Flask(__name__, static_url_path='', static_folder='static')
@@ -75,6 +80,29 @@ def create_app():
         ]
     )
 
+    # Initialise the WebSocket server
+    socketio.init_app(app, cors_allowed_origins='*')
+
+    # Initialise the scheduler
+    scheduler.init_app(app)
+    scheduler.api_enabled = True
+
+    app.config.update(
+        SCHEDULER_API_ENABLED=True,
+    )
+
+    # Check for ended auctions every minute
+    @scheduler.task('interval', id='check_ended_auctions', seconds=60, misfire_grace_time=30)
+    def check_ended_auctions_job():
+        with app.app_context():
+            from .page_item.routes import check_ended_auctions
+            try:
+                check_ended_auctions()
+            except Exception as e:
+                print(f'Error checking ended auctions: {str(e)}')
+
+    scheduler.start()
+
     # Initialise the database
     db.init_app(app)
 
@@ -93,12 +121,16 @@ def create_app():
     from .page_create import create_page
     from .page_dashboard import dashboard_page
     from .page_auth import auth_page
+    from .page_authenticate_item import authenticate_item_page
+    from .page_experts import expert_page
 
     app.register_blueprint(home_page)
     app.register_blueprint(item_page, url_prefix='/item')
     app.register_blueprint(create_page, url_prefix='/create')
     app.register_blueprint(dashboard_page, url_prefix='/dashboard')
     app.register_blueprint(auth_page)
+    app.register_blueprint(authenticate_item_page, url_prefix='/authenticate')
+    app.register_blueprint(expert_page, url_prefix='/expert')
 
     @login_manager.user_loader
     def load_user(user_id):

@@ -36,6 +36,7 @@
         </div>
       </div>
       {% if current_user.is_authenticated %}
+      <meta name="user-id" content="{{ current_user.id }}">
       <div class="ms-auto d-flex">
         <!-- Add this notification dropdown -->
         <div class="nav-item dropdown me-2">
@@ -73,20 +74,30 @@
         </div>
         <!-- Existing buttons -->
         <div class="nav-item me-2">
-          <a class="btn btn-primary" href="{{ url_for('create_page.index' )}}" title="Create Auction">
-            Create Auction
-          </a>
-        </div>
-        <div class="nav-item me-2">
           <a class="btn btn-secondary" href="{{ url_for('dashboard_page.index') }}" title="Dashboard">
             Dashboard
           </a>
         </div>
-        <div class="nav-item">
-          <a class="btn btn-danger" href="{{ url_for('auth_page.logout') }}" title="Logout">
-            Logout
+        <div class="nav-item me-2">
+          <a class="btn btn-primary" href="{{ url_for('create_page.index') }}" title="Create Auction">
+            Create Auction
           </a>
         </div>
+        <div class="nav-item dropdown me-2">
+          <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            {{ current_user.username }}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('auth_page.update_user') }}">Update User</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('auth_page.logout') }}">Logout</a></li>
+            {% if current_user.role == 2 %}
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{{ url_for('expert_page.update_availability') }}">Update Availability</a></li>
+            {% endif %}
+          </ul>
+        </div>
+        
       </div>
       {% else %}
       <!-- Registration Links -->

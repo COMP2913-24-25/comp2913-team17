@@ -1,3 +1,5 @@
+// Mark notifications as read when dropdown is opened
+
 document.addEventListener('DOMContentLoaded', function() {
   // Get the notification dropdown button parent
   const notificationDropdown = document.querySelector('.nav-item.dropdown');

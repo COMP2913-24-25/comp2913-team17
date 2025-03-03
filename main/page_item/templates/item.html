@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ item.title }}{% endblock %}
+{% block title %}Auction: {{ item.title }}{% endblock %}
 
 {% block content %}
 
@@ -12,6 +12,7 @@
       <img src="{{ item.image }}" 
         alt="{{ item.title }}" 
         class="img-fluid rounded"
+        loading="lazy"
       >
       {% else %}
       <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px">
@@ -29,21 +30,38 @@
           <span class="badge {% if item.locked %}bg-danger{% else %}bg-success{% endif %} p-2">
             {{ "Locked" if item.locked else "Open" }}
           </span>
-          <span class="badge {% if item.authentication_status == 1 %}bg-secondary
-            {% elif item.authentication_status == 2 %}bg-warning
-            {% elif item.authentication_status == 3 %}bg-success
+          {% if is_allowed %}
+          <a href="{{ url_for('authenticate_item_page.index', url=item.url) }}"
+            title="View authentication request"
+            class="badge mx-2 {% if item.authentication_requests[0].status == 1 %}bg-warning
+            {% elif item.authentication_requests[0].status == 2 %}bg-success
             {% else %}bg-danger{% endif %} p-2"
           >
-            {% if item.authentication_status == 1 %}
-                Not Authenticated
-            {% elif item.authentication_status == 2 %}
-                Authentication Pending
-            {% elif item.authentication_status == 3 %}
-                Authenticated
+            {% if item.authentication_requests[0].status == 1 %}
+              Authentication Pending
+            {% elif item.authentication_requests[0].status == 2 %}
+              Authenticated
             {% else %}
-                Authentication Declined
+              Authentication Declined
+            {% endif %}
+          </a>
+          {% else %}
+          <span class="badge {% if authentication == 1 %}bg-warning
+            {% elif item.authentication == 2 %}bg-success
+            {% elif item.authentication == 3 %}bg-danger
+            {% else %}bg-secondary{% endif %} p-2"
+          >
+            {% if authentication == 1 %}
+              Authentication Pending
+            {% elif authentication == 2 %}
+              Authenticated
+            {% elif authentication == 3 %}
+              Authentication Declined
+            {% else %}
+              Not Authenticated
             {% endif %}
           </span>
+          {% endif %}
         </div>
       </div>
       <!-- Price -->
@@ -61,7 +79,8 @@
           </div>
           <div class="col">
             <small class="text-muted">End Time</small>
-            <p>{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p class="auction-end">{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p><span class="countdown-label">Time remaining:</span> <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</span></p>
           </div>
         </div>
       </div>
@@ -77,13 +96,71 @@
         <p><small class="text-muted">Upload date: {{ item.upload_date.strftime('%Y-%m-%d %H:%M') }}</small></p>
       </div>
       <!-- Action Buttons -->
+      {% if current_user.is_authenticated %}
+      <form action="{{ url_for('item_page.place_bid', url=item.url) }}" method="POST" class="bid-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+          <label for="bid_amount" class="form-label">Your Bid Amount</label>
+          <div class="input-group">
+            <span class="input-group-text">£</span>
+            <input 
+              type="number"
+              class="form-control"
+              id="bid_amount"
+              name="bid_amount"
+              step="0.01"
+              min="{{ suggested_bid }}"
+              value="{{ suggested_bid }}"
+              required
+            >
+          </div>
+          <div class="form-text">
+            {% if item.highest_bid() %}
+              Current highest bid: £<span class="max-bid">{{ "%.2f"|format(item.highest_bid().bid_amount) }}</span>
+            {% else %}
+              Minimum bid: £{{ "%.2f"|format(item.minimum_price) }}
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-primary btn-lg">Place Bid</button>
+        </div>
+        
+        <div class="mt-3">
+          <p class="text-muted small-end">
+            Auction ends on: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
+          </p>
+          {% if item.highest_bid() and item.highest_bid().bidder_id == current_user.id %}
+            <div class="alert alert-info mt-2 max-bid-alert">
+              You currently have the highest bid!
+            </div>
+          {% endif %}
+          <h3>Bid History:</h3>
+          {% if bids %}
+          <ol class="bid-history" reversed start="{{ bids|length }}">
+            {% for bid in bids %}
+            <li>
+              {{ bid.bidder.username }}</strong> - £{{ "%.2f"|format(bid.bid_amount) }}
+              <small class="text-muted">({{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }})</small>
+            </li>
+            {% endfor %}
+          </ol>
+          {% else %}
+          <p class="text-muted no-bids-msg">No bids yet</p>
+          {% endif %}
+        </div>
+      </form>
+      {% else %}
       <div class="d-grid gap-2">
-        <button class="btn btn-primary btn-lg">Place Bid</button>
+        <a href="{{ url_for('auth_page.login') }}" class="btn btn-primary btn-lg">Login to Place Bid</a>
       </div>
+      {% endif %}
     </div>
   </div>
 </div>
 
 <!-- Scripts -->
+<script src="{{ url_for('static', filename='js/bidding.js') }}"></script>
 
 {% endblock %}

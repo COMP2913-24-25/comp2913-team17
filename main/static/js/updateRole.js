@@ -1,3 +1,5 @@
+// Update user role in the database
+
 $(document).ready(function() {
   $('.update-role-btn').on('click', async function() {
     const row = $(this).closest('tr');

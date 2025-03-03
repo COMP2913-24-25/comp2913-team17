@@ -88,12 +88,7 @@ class Item(db.Model):
     minimum_price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     # Auction cannot be modified if a bid has been placed
     locked = db.Column(db.Boolean, default=False)
-    # Authentication status: 1 = Not Requested, 2 = Pending, 3 = Approved, 4 = Declined
-    authentication_status = db.Column(
-        db.Integer,
-        nullable=False,
-        default=1
-    )
+
     winning_bid_id = db.Column(
         db.Integer, 
         db.ForeignKey('bids.bid_id', use_alter=True, name='fk_winning_bid'),
@@ -113,6 +108,7 @@ class Item(db.Model):
         foreign_keys='Bid.item_id',
         primaryjoin="Item.item_id==Bid.item_id"
     )
+    authentication_requests = db.relationship('AuthenticationRequest', backref='item', lazy=True)
     
     def __repr__(self):
         return f"<Item {self.title} (ID: {self.item_id})>"
