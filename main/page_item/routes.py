@@ -183,3 +183,55 @@ def mark_notifications_read():
     except Exception as e:
         print(f"Error marking notifications read: {str(e)}")
         return {'error': 'Failed to mark notifications as read'}, 500
+
+@item_page.route('/<url>')
+def index(url):
+    """View a single auction item."""
+    item = Item.query.filter_by(url=url).first_or_404()
+    bids = Bid.query.filter_by(item_id=item.item_id).order_by(Bid.bid_time.desc()).all()
+    
+    # Check if user is watching this item
+    is_watching = False
+    if current_user.is_authenticated:
+        is_watching = WatchedItem.query.filter_by(
+            user_id=current_user.id,
+            item_id=item.item_id
+        ).first() is not None
+    
+    return render_template('item.html', item=item, bids=bids, is_watching=is_watching)
+
+@item_page.route('/<url>/watch', methods=['POST'])
+@login_required
+def watch_item(url):
+    """Add an item to user's watched items."""
+    item = Item.query.filter_by(url=url).first_or_404()
+    
+    # Check if already watching
+    existing = WatchedItem.query.filter_by(
+        user_id=current_user.id,
+        item_id=item.item_id
+    ).first()
+    
+    if not existing:
+        watched = WatchedItem(user_id=current_user.id, item_id=item.item_id)
+        db.session.add(watched)
+        db.session.commit()
+    
+    return jsonify({'status': 'success'}), 200
+
+@item_page.route('/<url>/unwatch', methods=['POST'])
+@login_required
+def unwatch_item(url):
+    """Remove an item from user's watched items."""
+    item = Item.query.filter_by(url=url).first_or_404()
+    
+    watched = WatchedItem.query.filter_by(
+        user_id=current_user.id,
+        item_id=item.item_id
+    ).first()
+    
+    if watched:
+        db.session.delete(watched)
+        db.session.commit()
+    
+    return jsonify({'status': 'success'}), 200

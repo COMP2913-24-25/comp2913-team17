@@ -234,6 +234,44 @@
     <p>No auctions available.</p>
     {% endif %}
   </div>
+  <div class="container mt-5">
+    <h2>Watched Auctions</h1>
+    {% if user['watched_items'] %}
+    <ul>
+      {% for item in user['watched_items'] %}
+      <li>
+        <a href="{{ url_for('item_page.index', url=item.url) }}"
+          title="See item details"
+        >
+          {{ item.title }}
+        </a>
+        <!-- Show countdown or status -->
+        <span class="badge {% if now < item.auction_end %}bg-primary{% else %}bg-secondary{% endif %} p-2">
+          {% if now < item.auction_end %}
+            Ends: {{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}
+          {% else %}
+            Ended
+          {% endif %}
+        </span>
+        
+        <!-- Show highest bid information -->
+        {% set highest_bid = item.highest_bid() %}
+        {% if highest_bid %}
+          <span class="badge bg-info p-2">
+            Current Bid: £{{ "%.2f"|format(highest_bid.bid_amount) }}
+          </span>
+        {% else %}
+          <span class="badge bg-light text-dark p-2">
+            No bids
+          </span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>You are not watching any auctions.</p>
+    {% endif %}
+  </div>
 </div>
 
 <!-- Scripts -->

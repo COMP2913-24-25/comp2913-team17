@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 from datetime import datetime
 from sqlalchemy import and_
 from . import dashboard_page
-from ..models import db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig
+from ..models import db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig, WatchedItem
 
 
 @dashboard_page.route('/')
@@ -76,6 +76,14 @@ def index():
 
     # General User interface, all users can see their own auctions
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
+
+    # Add watched items
+    watched_items = db.session.query(Item)\
+        .join(WatchedItem, WatchedItem.item_id == Item.item_id)\
+        .filter(WatchedItem.user_id == current_user.id)\
+        .all()
+    
+    user['watched_items'] = watched_items
 
     return render_template('dashboard.html', manager=manager, expert=expert, user=user)
 

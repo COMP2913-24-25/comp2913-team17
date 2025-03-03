@@ -48,7 +48,7 @@
           {% else %}
           <span class="badge {% if authentication == 1 %}bg-warning
             {% elif item.authentication == 2 %}bg-success
-            {% elif item.authentication == 3 %}bg-danger
+            {% elif authentication == 3 %}bg-danger
             {% else %}bg-secondary{% endif %} p-2"
           >
             {% if authentication == 1 %}
@@ -151,6 +151,17 @@
           {% endif %}
         </div>
       </form>
+      <div class="mt-3">
+        {% if is_watching %}
+          <button id="unwatch-btn" class="btn btn-outline-secondary" data-item-url="{{ item.url }}">
+            <i class="fas fa-eye-slash"></i> Unwatch
+          </button>
+        {% else %}
+          <button id="watch-btn" class="btn btn-outline-primary" data-item-url="{{ item.url }}">
+            <i class="fas fa-eye"></i> Watch
+          </button>
+        {% endif %}
+      </div>
       {% else %}
       <div class="d-grid gap-2">
         <a href="{{ url_for('auth_page.login') }}" class="btn btn-primary btn-lg">Login to Place Bid</a>
@@ -162,5 +173,6 @@
 
 <!-- Scripts -->
 <script src="{{ url_for('static', filename='js/bidding.js') }}"></script>
+<script src="{{ url_for('static', filename='js/watchAuction.js') }}"></script>
 
 {% endblock %}
