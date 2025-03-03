@@ -210,6 +210,8 @@ class AuthenticationRequest(db.Model):
     __tablename__ = 'authentication_requests'
 
     request_id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String(32), unique=True,
+                    default=lambda: uuid4().hex, nullable=False, index=True)
     item_id = db.Column(db.Integer, db.ForeignKey('items.item_id'), nullable=False)
     requester_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     request_date = db.Column(db.DateTime, default=datetime.now())

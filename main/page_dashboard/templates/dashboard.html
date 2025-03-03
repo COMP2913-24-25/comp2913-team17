@@ -175,7 +175,7 @@
         >
           {{ request.authentication_request.item.title }}
         </a>
-        <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.item.url) }}"
+        <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.url) }}"
           title="View authentication request"
           class="badge mx-2 {% if request.authentication_request.status == 1 %}bg-warning
           {% elif request.authentication_request.status == 2 %}bg-success
@@ -212,7 +212,7 @@
           {{ item.title }}
         </a>
         {% if item.authentication_requests %}
-          <a href="{{ url_for('authenticate_item_page.index', url=item.url) }}"
+          <a href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}"
             title="View authentication request"
             class="badge mx-2 {% if item.authentication_requests[0].status == 1 %}bg-warning
             {% elif item.authentication_requests[0].status == 2 %}bg-success
