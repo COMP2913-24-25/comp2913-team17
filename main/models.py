@@ -240,7 +240,7 @@ class ExpertAssignment(db.Model):
     request_id = db.Column(db.Integer, db.ForeignKey('authentication_requests.request_id'), nullable=False)
     expert_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     assigned_date = db.Column(db.DateTime, default=datetime.now())
-    # Assignment status: 1 = Notified, 2 = In Review, 3 = Awaiting Info, 4 = Completed
+    # Assignment status: 1 = Notified, 2 = Completed, 3 = Reassigned
     status = db.Column(
         db.Integer,
         nullable=False,

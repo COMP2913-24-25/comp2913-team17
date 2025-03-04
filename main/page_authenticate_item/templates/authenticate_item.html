@@ -6,10 +6,10 @@
 
 <div class="container mt-5">
   <h1>TODO: Authentication Page</h1>
-  <a href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
+  <a id="item-link" href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
   <span class="badge {% if authentication == 1 %}bg-warning
-    {% elif item.authentication == 2 %}bg-success
-    {% elif item.authentication == 3 %}bg-danger
+    {% elif authentication == 2 %}bg-success
+    {% elif authentication == 3 %}bg-danger
     {% else %}bg-secondary{% endif %} p-2"
   >
     {% if authentication == 1 %}
@@ -22,8 +22,93 @@
       Not Authenticated
     {% endif %}
   </span>
+
+  {% if is_expert %}
+  <h2>Expert View</h2>
+  {% if authentication == 1%}
+  <button id="authenticate-item">Authenticate</button>
+  <button id="decline-item">Decline</button>
+  <button id="reassign-item">Reassign</button>
+  {% endif %}
+  {% elif is_creator %}
+  <h2>Creator View</h2>
+  {% else %}
+  <h2>Manager view</h2>
+  {% endif %}
 </div>
 
 <!-- Scripts -->
+ <script>
+  $(document).ready(function() {
+    $('#authenticate-item').on('click', async function() {
+      if (!confirm('Are you sure you want to authenticate this item?\nThis action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const response = await csrfFetch(`${window.location.pathname}/api/accept`, {
+          method: 'POST'
+        });
+            
+        const data = await response.json();
+        
+        if (data && data.success) {
+          alert('Item authenticated successfully!');
+          window.location = $('#item-link').attr('href');
+        } else {
+          alert('Failed to authenticate item.');
+        }
+      } catch (error) {
+        console.log('Error:', error);
+      }
+    });
+
+    $('#decline-item').on('click', async function() {
+      if (!confirm('Are you sure you want to decline this item?\nThis action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const response = await csrfFetch(`${window.location.pathname}/api/decline`, {
+          method: 'POST'
+        });
+            
+        const data = await response.json();
+        
+        if (data && data.success) {
+          alert('Item declined successfully!');
+          window.location = $('#item-link').attr('href');
+        } else {
+          alert('Failed to decline item.');
+        }
+      } catch (error) {
+        console.log('Error:', error);
+      }
+    });
+
+    $('#reassign-item').on('click', async function() {
+      if (!confirm('Are you sure you want to reassign this item?\nThis action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const response = await csrfFetch(`${window.location.pathname}/api/reassign`, {
+          method: 'POST'
+        });
+            
+        const data = await response.json();
+        
+        if (data && data.success) {
+          alert('Item scheduled for reassignment!');
+          window.location = $('#item-link').attr('href');
+        } else {
+          alert('Failed to reassign item.');
+        }
+      } catch (error) {
+        console.log('Error:', error);
+      }
+    });
+  });
+ </script>
 
 {% endblock %}

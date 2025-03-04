@@ -47,8 +47,8 @@
           </a>
           {% else %}
           <span class="badge {% if authentication == 1 %}bg-warning
-            {% elif item.authentication == 2 %}bg-success
-            {% elif item.authentication == 3 %}bg-danger
+            {% elif authentication == 2 %}bg-success
+            {% elif authentication == 3 %}bg-danger
             {% else %}bg-secondary{% endif %} p-2"
           >
             {% if authentication == 1 %}
