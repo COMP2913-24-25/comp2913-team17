@@ -3,7 +3,7 @@
 from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
 from datetime import datetime
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from . import dashboard_page
 from ..models import db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig
 
@@ -61,18 +61,42 @@ def index():
         # Get all user roles except managers
         manager['users'] = db.session.query(User).filter(User.role != 3).all()
 
-        # Get all pending authentication requests without assignments
-        manager['requests'] = AuthenticationRequest.query\
+        # Get all pending authentication requests without valid assignments
+        pending_requests = AuthenticationRequest.query\
             .filter(and_(
                 AuthenticationRequest.status == 1,
-                ~AuthenticationRequest.expert_assignments.any()
+                or_(
+                    ~AuthenticationRequest.expert_assignments.any(),
+                    ~AuthenticationRequest.expert_assignments.any(ExpertAssignment.status != 3)
+                )
             )).all()
-
-        # Get all available experts, for now all experts - add filtering later
-        manager['experts'] = User.query.filter_by(role=2).all()
+        requests = []
+        for request in pending_requests:
+            # Get all experts not assigned to this request, excluding the requester
+            # Will need to be filtered for categories and scheduling in future
+            eligible_experts = User.query\
+                .filter(and_(
+                    User.role == 2,
+                    User.id != request.requester_id,
+                    ~User.expert_assignments.any(
+                        ExpertAssignment.request_id == request.request_id
+                    )
+                )).all()
+            requests.append((request, eligible_experts))
+        manager['requests'] = requests
     # Expert interface
     elif current_user.role == 2:
-        expert['requests'] = ExpertAssignment.query.filter_by(expert_id=current_user.id).all()
+        expert['pending'] = ExpertAssignment.query\
+            .filter(and_(
+                ExpertAssignment.expert_id == current_user.id,
+                ExpertAssignment.status == 1
+            )).all()
+        
+        expert['complete'] = ExpertAssignment.query\
+            .filter(and_(
+                ExpertAssignment.expert_id == current_user.id,
+                ExpertAssignment.status == 2
+            )).all()
 
     # General User interface, all users can see their own auctions
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
@@ -150,7 +174,10 @@ def assign_expert(request_id):
         return jsonify({'error': 'User not found'}), 404
 
     # Cannot double-assign
-    if ExpertAssignment.query.filter_by(request_id=request_id).first():
+    if ExpertAssignment.query.filter(and_(
+            ExpertAssignment.request_id == request_id,
+            ExpertAssignment.status != 3
+        )).first():
         return jsonify({'error': 'Request already assigned'}), 400
 
     # Cannot assign non-expert
@@ -160,6 +187,10 @@ def assign_expert(request_id):
     # Cannot assign self
     if expert == current_user.id:
         return jsonify({'error': 'Cannot assign self'}), 403
+    
+    # Cannot assign expert to own request
+    if authentication_request.requester_id == expert:
+        return jsonify({'error': 'Cannot assign expert to own request'}), 403
 
     assignment = ExpertAssignment(
         request_id=request_id,

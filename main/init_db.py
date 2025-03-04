@@ -115,13 +115,13 @@ def populate_db(app):
 
         # Messages (for the expert assignment)
         message1 = Message(
-            assignment_id=expert_assignment.assignment_id,
+            authentication_request_id=auth_req.request_id,
             sender_id=user3.id,
             message_text='I have reviewed the request.',
             sent_at=now + timedelta(hours=1)
         )
         message2 = Message(
-            assignment_id=expert_assignment.assignment_id,
+            authentication_request_id=auth_req.request_id,
             sender_id=user2.id,
             message_text='Thanks for the update.',
             sent_at=now + timedelta(hours=2)
