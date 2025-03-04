@@ -5,7 +5,8 @@
 {% block content %}
 
 <div class="container mt-5">
-  <h1>TODO: Authentication Page</h1>
+  <meta name="user-id" content="{{ current_user.id }}">
+  <h1>Authentication: {{ item.title }}</h1>
   <a id="item-link" href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
   <span class="badge {% if authentication == 1 %}bg-warning
     {% elif authentication == 2 %}bg-success
@@ -22,93 +23,36 @@
       Not Authenticated
     {% endif %}
   </span>
-
-  {% if is_expert %}
-  <h2>Expert View</h2>
-  {% if authentication == 1%}
+  <!-- Chat box -->
+  <h2>Messages</h2>
+  <div id="messages">
+    {% for message in messages %}
+    <div class="message {% if message.sender_id == current_user.id %}my-messages{% else %}other-messages{% endif %}">
+      {% if message.image %}
+      <img src="{{ url_for('static', filename=message.image) }}" style="max-width: 100%">
+      {% endif %}
+      <p>{{ message.message_text }}</p>
+      <p class="username">{{ message.sender.username }} ({{ message.sent_at.strftime('%Y-%m-%d %H:%M:%S') }})</p>
+    </div>
+    {% endfor %}
+  </div>
+  <!-- Only experts and the creator can chat -->
+  {% if authentication == 1 and (is_expert or is_creator) %}
+  <form id="message-form" title="{{ 'Login to send messages' if not current_user.is_authenticated }}" enctype="multipart/form-data">
+    <input type="text" id="message" placeholder="Enter your message" required>
+    <button type="submit">Send</button>
+  </form>
+  {% endif %}
+  <!-- Show authentication options if authentication pending -->
+  {% if is_expert and authentication == 1 %}
+  <h2>Expert Options</h2>
   <button id="authenticate-item">Authenticate</button>
   <button id="decline-item">Decline</button>
   <button id="reassign-item">Reassign</button>
   {% endif %}
-  {% elif is_creator %}
-  <h2>Creator View</h2>
-  {% else %}
-  <h2>Manager view</h2>
-  {% endif %}
 </div>
 
 <!-- Scripts -->
- <script>
-  $(document).ready(function() {
-    $('#authenticate-item').on('click', async function() {
-      if (!confirm('Are you sure you want to authenticate this item?\nThis action cannot be undone.')) {
-        return;
-      }
-
-      try {
-        const response = await csrfFetch(`${window.location.pathname}/api/accept`, {
-          method: 'POST'
-        });
-            
-        const data = await response.json();
-        
-        if (data && data.success) {
-          alert('Item authenticated successfully!');
-          window.location = $('#item-link').attr('href');
-        } else {
-          alert('Failed to authenticate item.');
-        }
-      } catch (error) {
-        console.log('Error:', error);
-      }
-    });
-
-    $('#decline-item').on('click', async function() {
-      if (!confirm('Are you sure you want to decline this item?\nThis action cannot be undone.')) {
-        return;
-      }
-
-      try {
-        const response = await csrfFetch(`${window.location.pathname}/api/decline`, {
-          method: 'POST'
-        });
-            
-        const data = await response.json();
-        
-        if (data && data.success) {
-          alert('Item declined successfully!');
-          window.location = $('#item-link').attr('href');
-        } else {
-          alert('Failed to decline item.');
-        }
-      } catch (error) {
-        console.log('Error:', error);
-      }
-    });
-
-    $('#reassign-item').on('click', async function() {
-      if (!confirm('Are you sure you want to reassign this item?\nThis action cannot be undone.')) {
-        return;
-      }
-
-      try {
-        const response = await csrfFetch(`${window.location.pathname}/api/reassign`, {
-          method: 'POST'
-        });
-            
-        const data = await response.json();
-        
-        if (data && data.success) {
-          alert('Item scheduled for reassignment!');
-          window.location = $('#item-link').attr('href');
-        } else {
-          alert('Failed to reassign item.');
-        }
-      } catch (error) {
-        console.log('Error:', error);
-      }
-    });
-  });
- </script>
+<script src="{{ url_for('static', filename='js/authenticateItem.js') }}"></script>
 
 {% endblock %}

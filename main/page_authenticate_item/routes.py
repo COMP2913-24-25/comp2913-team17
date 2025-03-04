@@ -1,9 +1,42 @@
 """Auction viewing routes."""
 
-from flask import render_template, flash, redirect, url_for, jsonify
+from app import socketio
+from flask_socketio import join_room, leave_room
+from flask import render_template, flash, redirect, url_for, jsonify, request
 from flask_login import login_required, current_user
+from datetime import datetime
 from . import authenticate_item_page
-from ..models import db, Item, AuthenticationRequest
+from ..models import db, Item, AuthenticationRequest, Message
+
+# SocketIO event handlers
+@socketio.on('join')
+def on_join(data):
+    """User joins a chat room."""
+    if not current_user.is_authenticated:
+        return
+    room = data.get('auth_url')
+    authentication = AuthenticationRequest.query.filter_by(url=room).first()
+    
+    # Check user is allowed to join this room
+    expert = authentication.expert_assignments[-1] if authentication.expert_assignments else None
+    is_creator = authentication.requester_id == current_user.id
+    is_expert = expert and expert.expert_id == current_user.id and expert.status != 3
+    is_admin = current_user.role == 3
+
+    if not is_creator and not is_expert and not is_admin:
+        return
+    
+    if room:
+        join_room(room)
+
+
+@socketio.on('leave')
+def on_leave(data):
+    """User leaves a chat room."""
+    room = data.get('auth_url')
+    if room:
+        leave_room(room)
+
 
 @authenticate_item_page.route('/<url>')
 @login_required
@@ -20,8 +53,10 @@ def index(url):
     if not is_creator and not is_expert and not is_admin:
         flash('You are not authorised to view this page.', 'danger')
         return redirect(url_for('home_page.index'))
+    
+    messages = Message.query.filter_by(authentication_request_id=authentication.request_id).all()
 
-    return render_template('authenticate_item.html', item=item, authentication=authentication.status, is_creator=is_creator, is_expert=is_expert, is_admin=is_admin)
+    return render_template('authenticate_item.html', item=item, authentication=authentication.status, is_creator=is_creator, is_expert=is_expert, is_admin=is_admin, messages=messages)
 
 
 @authenticate_item_page.route('/<url>/api/accept', methods=['POST'])
@@ -41,6 +76,7 @@ def accept(url):
     authentication.expert_assignments[-1].status = 2
     db.session.commit()
 
+    socketio.emit('force_reload', { 'status': 'Authentication approved' }, room=url)
     return jsonify({'success': 'Authentication request accepted.'})
 
 
@@ -61,6 +97,7 @@ def reject(url):
     authentication.expert_assignments[-1].status = 2
     db.session.commit()
 
+    socketio.emit('force_reload', {'status': 'Authentication declined'}, room=url)
     return jsonify({'success': 'Authentication request rejected.'})
 
 
@@ -81,3 +118,42 @@ def reassign(url):
     db.session.commit()
 
     return jsonify({'success': 'Authentication request reassignment scheduled.'})
+
+
+@authenticate_item_page.route('/<url>/api/message', methods=['POST'])
+@login_required
+def new_message(url):
+    authentication = AuthenticationRequest.query.filter_by(url=url).first()
+    if not authentication:
+        return jsonify({'error': 'Authentication request not found.'}), 404
+    
+    if authentication.status != 1:
+        return jsonify({'error': 'Authentication request is not pending.'}), 400
+    
+    # Check user is allowed to leave message
+    expert = authentication.expert_assignments[-1] if authentication.expert_assignments else None
+    is_creator = authentication.requester_id == current_user.id
+    is_expert = expert and expert.expert_id == current_user.id and expert.status != 3
+
+    if not is_creator and not is_expert:
+        return jsonify({'error': 'You are not authorised to leave a message.'}), 403
+
+    # Create and emit new message
+    message = Message(
+        authentication_request_id=authentication.request_id,
+        sender_id=current_user.id,
+        message_text=request.json.get('content'),
+        sent_at=datetime.now()
+    )
+    db.session.add(message)
+    db.session.commit()
+
+
+    socketio.emit('new_message', {
+        'message': message.message_text,
+        'sender': current_user.username,
+        'sender_id': str(current_user.id),
+        'sent_at': message.sent_at.strftime('%Y-%m-%d %H:%M:%S')
+    }, room=url)
+
+    return jsonify({'success': 'Your message has been sent.'})

@@ -229,6 +229,9 @@ class AuthenticationRequest(db.Model):
     # Relationship to expert assignments
     expert_assignments = db.relationship('ExpertAssignment', backref='authentication_request', lazy=True)
 
+    # Relationship to messages
+    messages = db.relationship('Message', backref='authentication_request', lazy=True)
+
     def __repr__(self):
         return f"<AuthenticationRequest {self.request_id} for Item {self.item_id}>"
 
@@ -246,9 +249,6 @@ class ExpertAssignment(db.Model):
         nullable=False,
         default=1
     )
-
-    # Relationship to messages
-    messages = db.relationship('Message', backref='expert_assignment', lazy=True)
 
     def __repr__(self):
         return f"<ExpertAssignment {self.assignment_id} for Request {self.request_id}>"
@@ -272,7 +272,7 @@ class Message(db.Model):
     __tablename__ = 'messages'
 
     message_id = db.Column(db.Integer, primary_key=True)
-    assignment_id = db.Column(db.Integer, db.ForeignKey('expert_assignments.assignment_id'), nullable=False)
+    authentication_request_id = db.Column(db.Integer, db.ForeignKey('authentication_requests.request_id'), nullable=False)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     message_text = db.Column(db.Text, nullable=False)
     sent_at = db.Column(db.DateTime, default=datetime.now())
