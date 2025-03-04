@@ -71,12 +71,13 @@ class User(UserMixin, db.Model):
         for item in finished_items:
             item.finalise_auction()
 
-# Item Model
 class Item(db.Model):
     __tablename__ = 'items'
 
     item_id = db.Column(db.Integer, primary_key=True)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    # New field for category support
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
     url = db.Column(db.String(32), unique=True,
                     default=lambda: uuid4().hex, nullable=False, index=True)
     title = db.Column(db.String(256), nullable=False)
@@ -86,7 +87,6 @@ class Item(db.Model):
     auction_start = db.Column(db.DateTime, nullable=False)
     auction_end = db.Column(db.DateTime, nullable=False)
     minimum_price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
-    # Auction cannot be modified if a bid has been placed
     locked = db.Column(db.Boolean, default=False)
 
     winning_bid_id = db.Column(
@@ -94,7 +94,6 @@ class Item(db.Model):
         db.ForeignKey('bids.bid_id', use_alter=True, name='fk_winning_bid'),
         nullable=True
     )
-    # Define relationships
     winning_bid = db.relationship(
         'Bid',
         foreign_keys=[winning_bid_id],
@@ -397,3 +396,16 @@ class ManagerConfig(db.Model):
 
     def __repr__(self):
         return f"<ManagerConfig {self.config_key}>"
+
+# Category Model
+class Category(db.Model):
+    __tablename__ = 'categories'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    # One to many, so each item has one category, but each cat has mnay items
+    items = db.relationship('Item', backref='category', lazy=True)
+
+    def __repr__(self):
+        return f"<Category {self.name}>"
