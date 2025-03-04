@@ -1,6 +1,7 @@
 """Configures the Flask app."""
 
 import os
+import logging
 from dotenv import load_dotenv
 from flask import Flask, render_template
 from flask_login import LoginManager
@@ -68,6 +69,17 @@ def create_app():
     
     mail = Mail(app)
 
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(),  # Console handler
+            logging.FileHandler("auction_system.log")  # File handler
+        ]
+    )
+
+
     # Initialise the WebSocket server
     socketio.init_app(app, cors_allowed_origins='*')
 
@@ -90,7 +102,7 @@ def create_app():
                 print(f'Error checking ended auctions: {str(e)}')
 
     scheduler.start()
-
+    
     # Initialise the database
     db.init_app(app)
 

@@ -1,7 +1,8 @@
 // Mark notifications as read when dropdown is opened
 
 document.addEventListener('DOMContentLoaded', function() {
-  const notificationDropdown = document.querySelector('.notifications-dropdown');
+  // Get the notification dropdown button parent
+  const notificationDropdown = document.querySelector('.nav-item.dropdown');
   
   if (notificationDropdown) {
     notificationDropdown.addEventListener('show.bs.dropdown', async function() {
@@ -17,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Remove notification badge
-        const badge = document.querySelector('.badge');
+        const badge = this.querySelector('.badge');
         if (badge) {
           badge.remove();
         }

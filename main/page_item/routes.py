@@ -7,7 +7,7 @@ from flask_login import login_required, current_user
 from datetime import datetime
 import decimal
 from . import item_page
-from ..models import db, Item, Bid, User, Notification, AuthenticationRequest
+from ..models import db, Item, Bid, User, Notification, AuthenticationRequest, logger
 
 
 # SocketIO event handlers
@@ -132,6 +132,8 @@ def check_ended_auctions():
             Item.winning_bid_id.is_(None)  # Only process items without winners set
         ).all()
 
+        logger.info(f"Found {len(ended_items)} ended auctions to process")
+
         for item in ended_items:
             highest_bid = item.highest_bid()
             if highest_bid:
@@ -160,8 +162,7 @@ def check_ended_auctions():
                 
         return {'message': 'Ended auctions processed'}, 200
     except Exception as e:
-        db.session.rollback()
-        print(f"Error processing ended auctions: {str(e)}")
+        logger.error(f"Error processing ended auctions: {str(e)}")
         return {'error': 'Failed to process ended auctions'}, 500
 
 
