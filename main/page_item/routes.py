@@ -56,131 +56,68 @@ def index(url):
 
     return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed, suggested_bid=suggested_bid, bids=bids)
 
-
 @item_page.route('/<url>/bid', methods=['POST'])
 @login_required
 def place_bid(url):
-    item = Item.query.filter_by(url=url).first_or_404()
-
-    # Check if auction is still active
-    if datetime.now() >= item.auction_end:
-        return jsonify({'error': 'This auction has ended.'}), 400
-
-    # Add error handling for placing bid
     try:
-        # Get bid amount from form
-        bid_amount = float(request.json.get('bid_amount'))
-
-        # Get current highest bid
-        current_highest = item.highest_bid()
-
-        # Validate bid amount
-        if not bid_amount:
-            return jsonify({'error': 'Please enter a bid amount.'}), 400
-
-        if not isinstance(bid_amount, (int, float)):
-            return jsonify({'error': 'Bid amount must be a number.'}), 400
-
-        if bid_amount < 0:
-            return jsonify({'error': 'Bid amount must be a positive number.'}), 400
-
-        if current_highest and bid_amount <= current_highest.bid_amount:
-            return jsonify({'error': 'Your bid must be higher than the current bid.'}), 400
-
-        if bid_amount < item.minimum_price:
-            return jsonify({'error': 'Your bid must be at least the minimum price.'}), 400
-
+        item = Item.query.filter_by(url=url).first_or_404()
+        
+        # Check if auction is still open
+        if datetime.now() > item.auction_end:
+            return jsonify({'status': 'error', 'message': 'Auction has ended'}), 400
+        
+        data = request.get_json()
+        bid_amount = decimal.Decimal(data.get('bid_amount', 0))
+        
+        # Check if bid is high enough
+        highest_bid = item.highest_bid()
+        if highest_bid and bid_amount <= highest_bid.bid_amount:
+            return jsonify({'status': 'error', 'message': 'Bid must be higher than current bid'}), 400
+        
+        if not highest_bid and bid_amount < item.minimum_price:
+            return jsonify({'status': 'error', 'message': 'Bid must be at least the minimum price'}), 400
+        
         # Create new bid
         new_bid = Bid(
             item_id=item.item_id,
             bidder_id=current_user.id,
-            bid_amount=bid_amount
+            bid_amount=bid_amount,
+            bid_time=datetime.now()
         )
         db.session.add(new_bid)
-
-        # Notify previous highest bidder that they were outbid
-        if current_highest and current_highest.bidder_id != current_user.id:
-            previous_bidder = User.query.get(current_highest.bidder_id)
-            if previous_bidder:  # Make sure we found the user
-                item.notify_outbid(previous_bidder)
-
         db.session.commit()
-
-        # Notify all users in the auction room
+        
+        # Notify previous highest bidder if exists
+        if highest_bid and highest_bid.bidder_id != current_user.id:
+            outbid_user = User.query.get(highest_bid.bidder_id)
+            item.notify_outbid(outbid_user)
+        
+        # Emit real-time update to all clients in the auction room
         socketio.emit('bid_update', {
-            'item_url': url,
+            'bid_amount': float(bid_amount),
             'bid_userid': current_user.id,
             'bid_username': current_user.username,
-            'bid_amount': bid_amount,
-            'bid_time': new_bid.bid_time.strftime('%Y-%m-%d %H:%M')
+            'bid_time': datetime.now().strftime('%Y-%m-%d %H:%M')
         }, room=url)
-
-        return jsonify({'success': 'Your bid has been placed successfully!'})
-
+        
+        return jsonify({'status': 'success', 'message': 'Bid placed successfully'})
+    
     except Exception as e:
+        logger.error(f"Error in place_bid: {str(e)}")
         db.session.rollback()
-        print(f"Error placing bid: {str(e)}")  # For debugging
-        return jsonify({'error': 'Error placing bid. Please try again.'}), 500
+        return jsonify({'status': 'error', 'message': f'Error placing bid: {str(e)}'}), 500
 
-
-@item_page.route('/check-ended-auctions')
 def check_ended_auctions():
-    """Check for ended auctions and notify winners"""
-    try:
-        ended_items = Item.query.filter(
-            Item.auction_end <= datetime.now(),
-            Item.winning_bid_id.is_(None)  # Only process items without winners set
-        ).all()
-
-        logger.info(f"Found {len(ended_items)} ended auctions to process")
-
-        for item in ended_items:
-            highest_bid = item.highest_bid()
-            if highest_bid:
-                # Set winning bid
-                item.winning_bid_id = highest_bid.bid_id
-                
-                # Send notifications - To implement
-                # item.notify_winner()  # In-app notification
-                # item.notify_winner_email()  # Email notification
-
-                db.session.commit()
-
-                # Disconnects all users from the auction room
-                socketio.emit('auction_ended', {
-                    'item_url': item.url,
-                    'winner': True,
-                    'winning_bidder_id': highest_bid.bidder.id,
-                    'winning_bidder_username': highest_bid.bidder.username,
-                    'winning_bid_amount': float(highest_bid.bid_amount)
-                }, room=item.url)
-            else:
-                socketio.emit('auction_ended', {
-                    'item_url': item.url,
-                    'winner': False
-                }, room=item.url)
-                
-        return {'message': 'Ended auctions processed'}, 200
-    except Exception as e:
-        logger.error(f"Error processing ended auctions: {str(e)}")
-        return {'error': 'Failed to process ended auctions'}, 500
-
-
-@item_page.route('/notifications/mark-read', methods=['POST'])
-@login_required
-def mark_notifications_read():
-    """Mark all notifications as read for current user"""
-    try:
-        notifications = Notification.query.filter_by(
-            user_id=current_user.id,
-            is_read=False
-        ).all()
-
-        for notification in notifications:
-            notification.is_read = True
-
-        db.session.commit()
-        return {'status': 'success'}, 200
-    except Exception as e:
-        print(f"Error marking notifications read: {str(e)}")
-        return {'error': 'Failed to mark notifications as read'}, 500
+    """Check for auctions that have ended but don't have a winner yet."""
+    from ..models import Item
+    finished_items = Item.query.filter(
+        Item.auction_end <= datetime.now(),
+        Item.winning_bid_id.is_(None)
+    ).all()
+    
+    for item in finished_items:
+        try:
+            logger.info(f"Finalizing auction for item: {item.title}")
+            item.finalise_auction()
+        except Exception as e:
+            logger.error(f"Error finalizing auction {item.item_id}: {e}")

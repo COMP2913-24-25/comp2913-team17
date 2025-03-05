@@ -4,16 +4,17 @@ import os
 import logging
 from dotenv import load_dotenv
 from flask import Flask, render_template
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room
 from flask_apscheduler import APScheduler
 from .models import db
 from .init_db import populate_db
 
 socketio = SocketIO()
 scheduler = APScheduler()
+mail = Mail()
 
 def create_app():
     app = Flask(__name__, static_url_path='', static_folder='static')
@@ -67,7 +68,11 @@ def create_app():
         MAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
     )
     
-    mail = Mail(app)
+    # Add BASE_URL for generating links in emails
+    app.config['BASE_URL'] = os.environ.get('BASE_URL', 'http://localhost:5000')
+    
+    # Initialize Mail
+    mail.init_app(app)
 
     # Configure logging
     logging.basicConfig(
@@ -79,9 +84,17 @@ def create_app():
         ]
     )
 
-
     # Initialise the WebSocket server
     socketio.init_app(app, cors_allowed_origins='*')
+    
+    @socketio.on('join_user')
+    def join_user_room(data):
+        """Join a user-specific room for private notifications."""
+        if current_user.is_authenticated and 'user_id' in data:
+            user_id = str(data['user_id'])
+            if str(current_user.id) == user_id:
+                room = f'user_{user_id}'
+                join_room(room)
 
     # Initialise the scheduler
     scheduler.init_app(app)

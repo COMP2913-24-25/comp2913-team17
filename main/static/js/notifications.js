@@ -1,30 +1,88 @@
-// Mark notifications as read when dropdown is opened
-
-document.addEventListener('DOMContentLoaded', function() {
-  // Get the notification dropdown button parent
-  const notificationDropdown = document.querySelector('.nav-item.dropdown');
-  
-  if (notificationDropdown) {
-    notificationDropdown.addEventListener('show.bs.dropdown', async function() {
-      try {
-        await csrfFetch('/item/notifications/mark-read', {
-          method: 'POST'
-        });
+$(document).ready(function() {
+    const userId = $('meta[name="user-id"]').attr('content');
+    
+    if (!userId) {
+        return; // Not logged in
+    }
+    
+    // Connect to Socket.IO server
+    const socket = io();
+    
+    // Join a personal room for receiving notifications
+    socket.emit('join_user', { 'user_id': userId });
+    
+    // Handle incoming notifications
+    socket.on('new_notification', function(data) {
+        // Update notification badge count
+        const badgeElement = $('.btn-light .badge');
         
-        // Remove unread styling
-        const unreadNotifications = this.querySelectorAll('.fw-bold');
-        unreadNotifications.forEach(notification => {
-          notification.classList.remove('fw-bold');
-        });
-        
-        // Remove notification badge
-        const badge = this.querySelector('.badge');
-        if (badge) {
-          badge.remove();
+        if (badgeElement.length) {
+            const currentCount = parseInt(badgeElement.text());
+            badgeElement.text(currentCount + 1);
+        } else {
+            // Create new badge if doesn't exist
+            const newBadge = $('<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">1</span>');
+            $('.btn-light').append(newBadge);
         }
-      } catch (error) {
-        console.error('Error marking notifications as read:', error);
-      }
+        
+        // Add new notification to dropdown
+        const dropdownMenu = $('.dropdown-menu');
+        const noNotifsItem = dropdownMenu.find('.dropdown-item:contains("No notifications")');
+        
+        if (noNotifsItem.length) {
+            // Replace "No notifications" message
+            noNotifsItem.parent().remove();
+        }
+        
+        // Create notification item
+        let notificationHTML = '<li>';
+        
+        if (data.item_url) {
+            notificationHTML += `<a href="/item/${data.item_url}" class="dropdown-item fw-bold text-decoration-none">
+                <small class="text-muted d-block">${data.created_at}</small>
+                ${data.message}
+            </a>`;
+        } else {
+            notificationHTML += `<div class="dropdown-item fw-bold">
+                <small class="text-muted d-block">${data.created_at}</small>
+                ${data.message}
+            </div>`;
+        }
+        
+        notificationHTML += '</li>';
+        
+        // Add to the top of the list
+        dropdownMenu.prepend(notificationHTML);
+        
+        // Display a toast notification
+        showToast(data.message);
     });
-  }
+    
+    // Display a toast notification
+    function showToast(message) {
+        // Create toast container if it doesn't exist
+        if ($('#toast-container').length === 0) {
+            $('body').append('<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>');
+        }
+        
+        const toastId = 'toast-' + Date.now();
+        const toastHTML = `
+            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Notification</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">${message}</div>
+            </div>
+        `;
+        
+        $('#toast-container').append(toastHTML);
+        
+        const toastElement = new bootstrap.Toast(document.getElementById(toastId), {
+            autohide: true,
+            delay: 5000
+        });
+        
+        toastElement.show();
+    }
 });
