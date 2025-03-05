@@ -38,7 +38,7 @@ def index(url):
     status = None
     if authentication:
         status = authentication.status
-        expert = authentication.expert_assignments[0] if authentication.expert_assignments else None
+        expert = authentication.expert_assignments[-1] if authentication.expert_assignments else None
 
     # Allow validated users access to the authentication page
     if not current_user.is_authenticated:
@@ -46,7 +46,7 @@ def index(url):
     else:
         is_allowed = authentication and (
             current_user.role == 3
-            or expert and expert.expert_id == current_user.id
+            or (expert and expert.expert_id == current_user.id and expert.status != 3)
             or authentication.requester_id == current_user.id
         )
     # Get all bids in descending order and suggested bid amount

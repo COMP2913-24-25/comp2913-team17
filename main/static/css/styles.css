@@ -15,3 +15,35 @@
   50% { opacity: 0.7; }
   100% { opacity: 1; }
 }
+
+#messages {
+  width: 90%;
+  margin: 20px auto;
+  border: 1px solid black;
+  text-wrap: wrap;
+  height: 400px;
+  overflow-y: auto;
+}
+
+.message {
+  text-align: left;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 5px;
+  max-width: fit-content;
+}
+
+.other-messages {
+  background-color: lightblue;
+}
+
+.my-messages {
+  background-color: lightgray;
+  margin-left: auto;
+  margin-right: 10;
+}
+
+.username {
+  font-size: 0.8em;
+  margin: 0;
+}

@@ -93,6 +93,8 @@ class Item(db.Model):
 
     item_id = db.Column(db.Integer, primary_key=True)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    # New field for category support
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
     url = db.Column(db.String(32), unique=True,
                     default=lambda: uuid4().hex, nullable=False, index=True)
     title = db.Column(db.String(256), nullable=False)
@@ -102,7 +104,6 @@ class Item(db.Model):
     auction_start = db.Column(db.DateTime, nullable=False)
     auction_end = db.Column(db.DateTime, nullable=False)
     minimum_price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
-    # Auction cannot be modified if a bid has been placed
     locked = db.Column(db.Boolean, default=False)
 
     winning_bid_id = db.Column(
@@ -110,7 +111,6 @@ class Item(db.Model):
         db.ForeignKey('bids.bid_id', use_alter=True, name='fk_winning_bid'),
         nullable=True
     )
-    # Define relationships
     winning_bid = db.relationship(
         'Bid',
         foreign_keys=[winning_bid_id],
@@ -228,6 +228,8 @@ class AuthenticationRequest(db.Model):
     __tablename__ = 'authentication_requests'
 
     request_id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String(32), unique=True,
+                    default=lambda: uuid4().hex, nullable=False, index=True)
     item_id = db.Column(db.Integer, db.ForeignKey('items.item_id'), nullable=False)
     requester_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     request_date = db.Column(db.DateTime, default=datetime.now())
@@ -245,6 +247,9 @@ class AuthenticationRequest(db.Model):
     # Relationship to expert assignments
     expert_assignments = db.relationship('ExpertAssignment', backref='authentication_request', lazy=True)
 
+    # Relationship to messages
+    messages = db.relationship('Message', backref='authentication_request', lazy=True)
+
     def __repr__(self):
         return f"<AuthenticationRequest {self.request_id} for Item {self.item_id}>"
 
@@ -256,15 +261,12 @@ class ExpertAssignment(db.Model):
     request_id = db.Column(db.Integer, db.ForeignKey('authentication_requests.request_id'), nullable=False)
     expert_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     assigned_date = db.Column(db.DateTime, default=datetime.now())
-    # Assignment status: 1 = Notified, 2 = In Review, 3 = Awaiting Info, 4 = Completed
+    # Assignment status: 1 = Notified, 2 = Completed, 3 = Reassigned
     status = db.Column(
         db.Integer,
         nullable=False,
         default=1
     )
-
-    # Relationship to messages
-    messages = db.relationship('Message', backref='expert_assignment', lazy=True)
 
     def __repr__(self):
         return f"<ExpertAssignment {self.assignment_id} for Request {self.request_id}>"
@@ -288,7 +290,7 @@ class Message(db.Model):
     __tablename__ = 'messages'
 
     message_id = db.Column(db.Integer, primary_key=True)
-    assignment_id = db.Column(db.Integer, db.ForeignKey('expert_assignments.assignment_id'), nullable=False)
+    authentication_request_id = db.Column(db.Integer, db.ForeignKey('authentication_requests.request_id'), nullable=False)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     message_text = db.Column(db.Text, nullable=False)
     sent_at = db.Column(db.DateTime, default=datetime.now())
@@ -334,3 +336,16 @@ class ManagerConfig(db.Model):
 
     def __repr__(self):
         return f"<ManagerConfig {self.config_key}>"
+
+# Category Model
+class Category(db.Model):
+    __tablename__ = 'categories'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    # One to many, so each item has one category, but each cat has mnay items
+    items = db.relationship('Item', backref='category', lazy=True)
+
+    def __repr__(self):
+        return f"<Category {self.name}>"

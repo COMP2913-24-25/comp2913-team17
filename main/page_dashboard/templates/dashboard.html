@@ -136,16 +136,16 @@
           </tr>
         </thead>
         <tbody>
-          {% for request in manager['requests'] %}
+          {% for request, eligible_experts in manager['requests'] %}
           <tr data-request-id="{{ request.request_id }}">
             <td>{{ request.requester.username }}</td>
             <td><a href="/item/{{ request.item.url }}">{{ request.item.title }}</a></td>
             <td>
-              {% if not manager['experts'] %}
+              {% if not eligible_experts %}
               <p>No available experts</p>
               {% else %}
               <select class="form-select form-select-sm expert-select" style="width: auto; display: inline-block;">
-                {% for expert in manager['experts'] %}
+                {% for expert in eligible_experts %}
                 <option value="{{ expert.id }}">{{ expert.username }}</option>
                 {% endfor %}
               </select>
@@ -165,17 +165,17 @@
   {% elif expert %}
   <h1>Expert Dashboard</h1>
   <div class="container mt-5">
-    <h2>Your Authentications</h1>
-    {% if expert['requests'] %}
+    <h2>Pending Authentications</h1>
+    {% if expert['pending'] %}
     <ul>
-      {% for request in expert['requests'] %}
+      {% for request in expert['pending'] %}
       <li>
         <a href="{{ url_for('item_page.index', url=request.authentication_request.item.url) }}"
           title="See item details"
         >
           {{ request.authentication_request.item.title }}
         </a>
-        <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.item.url) }}"
+        <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.url) }}"
           title="View authentication request"
           class="badge mx-2 {% if request.authentication_request.status == 1 %}bg-warning
           {% elif request.authentication_request.status == 2 %}bg-success
@@ -195,6 +195,36 @@
     {% else %}
     <p>No auctions to authenticate.</p>
     {% endif %}
+    <h2>Completed Authentications</h1>
+      {% if expert['complete'] %}
+      <ul>
+        {% for request in expert['complete'] %}
+        <li>
+          <a href="{{ url_for('item_page.index', url=request.authentication_request.item.url) }}"
+            title="See item details"
+          >
+            {{ request.authentication_request.item.title }}
+          </a>
+          <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.url) }}"
+            title="View authentication request"
+            class="badge mx-2 {% if request.authentication_request.status == 1 %}bg-warning
+            {% elif request.authentication_request.status == 2 %}bg-success
+            {% else %}bg-danger{% endif %} p-2"
+          >
+            {% if request.authentication_request.status == 1 %}
+              Authentication Pending
+            {% elif request.authentication_request.status == 2 %}
+              Authenticated
+            {% else %}
+              Authentication Declined
+            {% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>No auctions to authenticate.</p>
+      {% endif %}
   </div>
   <!-- General User Dashboard -->
   {% else %}
@@ -212,7 +242,7 @@
           {{ item.title }}
         </a>
         {% if item.authentication_requests %}
-          <a href="{{ url_for('authenticate_item_page.index', url=item.url) }}"
+          <a href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}"
             title="View authentication request"
             class="badge mx-2 {% if item.authentication_requests[0].status == 1 %}bg-warning
             {% elif item.authentication_requests[0].status == 2 %}bg-success
