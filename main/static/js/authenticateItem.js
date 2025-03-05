@@ -73,9 +73,8 @@ $(document).ready(function() {
     }
   });
 
-  const socket = io();
   const url = window.location.pathname.split('/').pop();
-  socket.emit('join_chat', { auth_url: url });
+  window.globalSocket.emit('join_chat', { auth_url: url });
 
   // Message form submission
   $('#message-form').on('submit', async function(e) {
@@ -110,8 +109,8 @@ $(document).ready(function() {
     $('#messages').animate({ scrollTop: $('#messages')[0].scrollHeight }, delay);
   }
   
-  // Listen for new messages from SocketIO
-  socket.on('new_message', function(data) {
+  // Listen for new messages from window.globalSocketIO
+  window.globalSocket.on('new_message', function(data) {
     let messageClass = 'other-messages';
     if (data.sender_id === $('meta[name="user-id"]').attr('content')) {
       messageClass = 'my-messages';
@@ -128,13 +127,13 @@ $(document).ready(function() {
   });
 
   // Check for forced reload
-  socket.on('force_reload', function(data) {
+  window.globalSocket.on('force_reload', function(data) {
     location.reload();
   });
   
   // Leave the room when the page unloads
   $(window).on('beforeunload', function() {
-    socket.emit('leave', { 'auth_url': url });
+    window.globalSocket.emit('leave', { 'auth_url': url });
   });
 
   // Scroll to bottom on page load

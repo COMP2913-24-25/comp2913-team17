@@ -5,14 +5,12 @@ $(document).ready(function() {
     return; // Not logged in
   }
   
-  // Connect to server
-  const notificationSocket = io();
-  
   // Join a personal room for receiving notifications
-  notificationSocket.emit('join_user', { 'user_key': userKey });
+  window.globalSocket.emit('join_user', { 'user_key': userKey });
   
   // Handle incoming notifications
-  notificationSocket.on('new_notification', function(data) {
+  window.globalSocket.on('new_notification', function(data) {
+    console.log('New notification:', data);
     // Update notification badge count
     const badgeElement = $('.btn-light .badge');
     

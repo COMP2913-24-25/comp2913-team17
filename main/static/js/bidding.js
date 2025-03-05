@@ -99,9 +99,8 @@ $(document).ready(function() {
     }
   }
 
-  const socket = io();
   const itemURL = window.location.pathname.split('/').pop();
-  socket.emit('join_auction', { 'item_url': itemURL });
+  window.globalSocket.emit('join_auction', { 'item_url': itemURL });
 
   // Submit a bid
   if (bidForm.length) {
@@ -137,7 +136,7 @@ $(document).ready(function() {
   };
 
   // Listen for bid updates
-  socket.on('bid_update', function(data) {
+  window.globalSocket.on('bid_update', function(data) {
     // Update the highest bid
     if (maxBid.length) {
       maxBid.text(`${parseFloat(data.bid_amount).toFixed(2)}`);
@@ -183,17 +182,16 @@ $(document).ready(function() {
 
   // Leave the auction room when the user navigates away
   $(window).on('beforeunload', function() {
-    socket.emit('leave', { 'item_url': itemURL });
+    window.globalSocket.emit('leave', { 'item_url': itemURL });
   });
 
-  // Disconnect the socket when the auction ends
-  socket.on('auction_ended', function(data) {
+  // Disconnect the window.globalSocket when the auction ends
+  window.globalSocket.on('auction_ended', function(data) {
     // Disable bid form
     bidForm.hide();
     bidAmount.prop('disabled', true);
     bidAmount.attr('title', 'Auction has ended');
 
-    socket.emit('leave', { 'item_url': itemURL });
-    socket.disconnect();
+    window.globalSocket.emit('leave', { 'item_url': itemURL });
   });
 });
