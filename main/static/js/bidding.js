@@ -101,7 +101,7 @@ $(document).ready(function() {
 
   const socket = io();
   const itemURL = window.location.pathname.split('/').pop();
-  socket.emit('join', { 'item_url': itemURL });
+  socket.emit('join_auction', { 'item_url': itemURL });
 
   // Submit a bid
   if (bidForm.length) {

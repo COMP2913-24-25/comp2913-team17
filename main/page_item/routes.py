@@ -7,11 +7,11 @@ from flask_login import login_required, current_user
 from datetime import datetime
 import decimal
 from . import item_page
-from ..models import db, Item, Bid, User, Notification, AuthenticationRequest, logger
+from ..models import db, Item, Bid, User, AuthenticationRequest, logger
 
 
 # SocketIO event handlers
-@socketio.on('join')
+@socketio.on('join_auction')
 def on_join(data):
     """User joins a specific auction."""
     if not current_user.is_authenticated:
@@ -56,27 +56,41 @@ def index(url):
 
     return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed, suggested_bid=suggested_bid, bids=bids)
 
+
 @item_page.route('/<url>/bid', methods=['POST'])
 @login_required
 def place_bid(url):
+    item = Item.query.filter_by(url=url).first_or_404()
+
+    # Check if auction is still active
+    if datetime.now() >= item.auction_end:
+        return jsonify({'error': 'This auction has ended.'}), 400
+
+    # Error handling for placing bid
     try:
-        item = Item.query.filter_by(url=url).first_or_404()
-        
-        # Check if auction is still open
-        if datetime.now() > item.auction_end:
-            return jsonify({'status': 'error', 'message': 'Auction has ended'}), 400
-        
-        data = request.get_json()
-        bid_amount = decimal.Decimal(data.get('bid_amount', 0))
-        
-        # Check if bid is high enough
-        highest_bid = item.highest_bid()
-        if highest_bid and bid_amount <= highest_bid.bid_amount:
-            return jsonify({'status': 'error', 'message': 'Bid must be higher than current bid'}), 400
-        
-        if not highest_bid and bid_amount < item.minimum_price:
-            return jsonify({'status': 'error', 'message': 'Bid must be at least the minimum price'}), 400
-        
+        # Get bid amount from form
+        bid_amount = float(request.json.get('bid_amount'))
+        print(bid_amount)
+
+        # Get current highest bid
+        current_highest = item.highest_bid()
+
+        # Validate bid amount
+        if not bid_amount:
+            return jsonify({'error': 'Please enter a bid amount.'}), 400
+
+        if not isinstance(bid_amount, (int, float)):
+            return jsonify({'error': 'Bid amount must be a number.'}), 400
+
+        if bid_amount < 0:
+            return jsonify({'error': 'Bid amount must be a positive number.'}), 400
+
+        if current_highest and bid_amount <= current_highest.bid_amount:
+            return jsonify({'error': 'Your bid must be higher than the current bid.'}), 400
+
+        if bid_amount < item.minimum_price:
+            return jsonify({'error': 'Your bid must be at least the minimum price.'}), 400
+
         # Create new bid
         new_bid = Bid(
             item_id=item.item_id,
@@ -86,42 +100,57 @@ def place_bid(url):
         )
         db.session.add(new_bid)
         db.session.commit()
-        
-        # First emit the bid_update to ensure UI updates
+
+        # Notify all users in the auction room
         socketio.emit('bid_update', {
-            'bid_amount': float(bid_amount),
             'bid_userid': current_user.id,
             'bid_username': current_user.username,
-            'bid_time': datetime.now().strftime('%Y-%m-%d %H:%M')
+            'bid_amount': bid_amount,
+            'bid_time': new_bid.bid_time.strftime('%Y-%m-%d %H:%M')
         }, room=url)
-        
-        # Then handle notifications
+
+        # Notify previous highest bidder that they were outbid
         try:
-            if highest_bid and highest_bid.bidder_id != current_user.id:
-                outbid_user = User.query.get(highest_bid.bidder_id)
-                item.notify_outbid(outbid_user)
+            if current_highest and current_highest.bidder_id != current_user.id:
+                previous_bidder = User.query.get(current_highest.bidder_id)
+                item.notify_outbid(previous_bidder)
+        # Notification errors don't affect the bid placement
         except Exception as e:
             logger.error(f"Error sending notifications: {str(e)}")
-            # Continue execution - don't let notification failure affect bidding
-        
+
         return jsonify({'status': 'success', 'message': 'Bid placed successfully'})
-    
+
     except Exception as e:
-        logger.error(f"Error in place_bid: {str(e)}")
         db.session.rollback()
-        return jsonify({'status': 'error', 'message': f'Error placing bid: {str(e)}'}), 500
+        print(f"Error placing bid: {str(e)}")  # For debugging
+        return jsonify({'error': 'Error placing bid. Please try again.'}), 500
+
 
 def check_ended_auctions():
     """Check for auctions that have ended but don't have a winner yet."""
-    from ..models import Item
     finished_items = Item.query.filter(
         Item.auction_end <= datetime.now(),
         Item.winning_bid_id.is_(None)
     ).all()
-    
+
     for item in finished_items:
         try:
             logger.info(f"Finalizing auction for item: {item.title}")
             item.finalise_auction()
+
+            highest_bid = item.highest_bid()
+
+            # Disconnects all users from the auction room
+            if highest_bid:
+                socketio.emit('auction_ended', {
+                    'winner': True,
+                    'winning_bidder_id': highest_bid.bidder.id,
+                    'winning_bidder_username': highest_bid.bidder.username,
+                    'winning_bid_amount': float(highest_bid.bid_amount)
+                }, room=item.url)
+            else:
+                socketio.emit('auction_ended', {
+                    'winner': False
+                }, room=item.url)
         except Exception as e:
             logger.error(f"Error finalizing auction {item.item_id}: {e}")

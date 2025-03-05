@@ -1,13 +1,11 @@
 import logging
 from calendar import c
-from datetime import date, datetime
-from turtle import back
+from datetime import datetime
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import current_app
-from flask_mail import Message
 from .email_utils import send_notification_email
 
 db = SQLAlchemy()
@@ -22,6 +20,8 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
+    secret_key = db.Column(db.String(32), unique=True,
+                    default=lambda: uuid4().hex, nullable=False, index=True)
     username = db.Column(db.String(50), unique=True, nullable=False, index=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -136,7 +136,7 @@ class Item(db.Model):
                 'message': notification.message,
                 'item_url': notification.item_url, 
                 'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
-            }, room=f'user_{user.id}')
+            }, room=f'user_{user.secret_key}')
         except Exception as e:
             logger.error(f"Failed to send notification: {e}")
             
@@ -144,7 +144,7 @@ class Item(db.Model):
         send_notification_email(user, notification)
 
     # Send notification to the winner
-    def notify_winner(self, user):
+    def notify_winner(self):
         if not self.winning_bid:
             return
         
@@ -165,7 +165,7 @@ class Item(db.Model):
             'message': notification.message,
             'item_url': notification.item_url,
             'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
-        }, room=f'user_{winner.id}')
+        }, room=f'user_{winner.secret_key}')
         
         # Send email
         send_notification_email(winner, notification)
@@ -199,7 +199,7 @@ class Item(db.Model):
                 'message': notification.message,
                 'item_url': notification.item_url,
                 'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
-            }, room=f'user_{bidder.id}')
+            }, room=f'user_{bidder.secret_key}')
 
     # Set the winning bid and notify users about the auction outcome
     def finalise_auction(self):

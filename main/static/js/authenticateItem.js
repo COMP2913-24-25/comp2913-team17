@@ -75,7 +75,7 @@ $(document).ready(function() {
 
   const socket = io();
   const url = window.location.pathname.split('/').pop();
-  socket.emit('join', { auth_url: url });
+  socket.emit('join_chat', { auth_url: url });
 
   // Message form submission
   $('#message-form').on('submit', async function(e) {
@@ -134,7 +134,7 @@ $(document).ready(function() {
   
   // Leave the room when the page unloads
   $(window).on('beforeunload', function() {
-    socket.emit('leave', { auth_url: url });
+    socket.emit('leave', { 'auth_url': url });
   });
 
   // Scroll to bottom on page load
