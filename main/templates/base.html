@@ -37,7 +37,7 @@
       <div class="ms-auto d-flex">
         <!-- Add this notification dropdown -->
         <div class="nav-item dropdown me-2">
-          <button class="btn btn-light position-relative" data-bs-toggle="dropdown">
+          <button class="btn btn-light position-relative notifications-dropdown-toggle" data-bs-toggle="dropdown">
             Notifications
             {% set unread = current_user.notifications|selectattr('is_read', 'equalto', false)|list|length %}
             {% if unread > 0 %}

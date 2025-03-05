@@ -8,6 +8,31 @@ $(document).ready(function() {
   // Join a personal room for receiving notifications
   window.globalSocket.emit('join_user', { 'user_key': userKey });
   
+  // Mark notifications as read when dropdown is opened
+  $('.notifications-dropdown-toggle').on('click', function() {
+    const unreadNotifications = $('.dropdown-item.fw-bold');
+    
+    if (unreadNotifications.length > 0) {
+      // Remove the badge
+      $('.btn-light .badge').remove();
+      
+      // Remove bold styling from items
+      unreadNotifications.removeClass('fw-bold');
+
+      // Optional: Collect notification IDs to send to backend later
+      const notificationIds = [];
+      unreadNotifications.each(function() {
+        const notificationId = $(this).data('notification-id');
+        if (notificationId) {
+          notificationIds.push(notificationId);
+        }
+      });
+
+      // You can add backend sync here if needed
+      $.post('/api/notifications/mark-read', { ids: notificationIds });
+    }
+  });
+  
   // Handle incoming notifications
   window.globalSocket.on('new_notification', function(data) {
     console.log('New notification:', data);
@@ -36,12 +61,12 @@ $(document).ready(function() {
     let notificationHTML = '<li>';
       
     if (data.item_url) {
-      notificationHTML += `<a href="/item/${data.item_url}" class="dropdown-item fw-bold text-decoration-none">
+      notificationHTML += `<a href="/item/${data.item_url}" class="dropdown-item fw-bold text-decoration-none" data-notification-id="${data.id}">
         <small class="text-muted d-block">${data.created_at}</small>
         ${data.message}
       </a>`;
     } else {
-      notificationHTML += `<div class="dropdown-item fw-bold">
+      notificationHTML += `<div class="dropdown-item fw-bold" data-notification-id="${data.id}">
         <small class="text-muted d-block">${data.created_at}</small>
         ${data.message}
       </div>`;
