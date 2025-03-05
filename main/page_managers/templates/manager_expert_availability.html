@@ -1,84 +1,84 @@
 {% extends "base.html" %}
 
-{% block title %}Expert Availability{% endblock %}
+{% block title %}Expert Availability Overview{% endblock %}
 
 {% block content %}
-<h1 class="mt-5 mb-4 text-center">Update Weekly Availability</h1>
-<div id="availability-form" class="container">
-  <!-- Week Navigation -->
-  {% set prev_week = week_start - timedelta(days=7) %}
-  {% set next_week = week_start + timedelta(days=7) %}
-  <div class="d-flex justify-content-center mb-3">
-    {% if week_start > current_week_start %}
-      <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ prev_week.strftime('%Y-%m-%d') }}" class="btn btn-outline-primary me-2">Previous Week</a>
-    {% else %}
-      <button type="button" class="btn btn-outline-secondary me-2" disabled>Previous Week</button>
-    {% endif %}
-    <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ next_week.strftime('%Y-%m-%d') }}" class="btn btn-outline-primary">Next Week</a>
-  </div>
+<div class="container mt-4">
+  <h1>Expert Availability Overview</h1>
   
-  <form action="{{ url_for('expert_page.update_availability') }}" method="POST" name="ExpertAvailability">
-    <!-- CSRF token and hidden week_start field -->
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="week_start" value="{{ week_start.strftime('%Y-%m-%d') }}">
-    
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Day</th>
-          <th>Start Time (8:00 - 20:00)</th>
-          <th>End Time (8:00 - 20:00)</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for i in range(7) %}
-          {% set current_day = week_start + timedelta(days=i) %}
-          {% set availability = week_availabilities[current_day] %}
-          <tr data-day="{{ current_day.strftime('%Y-%m-%d') }}">
-            <td>{{ current_day.strftime('%A, %b %d') }}</td>
-            <td>
-              <input type="time" 
-                     class="form-control start-input {% if current_day < today or (availability and not availability.status) %}bg-secondary text-white{% endif %}"
-                     name="day_{{ i }}_start"
-                     min="08:00" max="20:00"
-                     value="{{ availability.start_time.strftime('%H:%M') if availability and availability.start_time else '' }}"
-                     {% if current_day < today or (availability and not availability.status) %}disabled{% endif %}>
-            </td>
-            <td>
-              <input type="time" 
-                     class="form-control end-input {% if current_day < today or (availability and not availability.status) %}bg-secondary text-white{% endif %}"
-                     name="day_{{ i }}_end"
-                     min="08:00" max="20:00"
-                     value="{{ availability.end_time.strftime('%H:%M') if availability and availability.end_time else '' }}"
-                     {% if current_day < today or (availability and not availability.status) %}disabled{% endif %}>
-            </td>
-            <td>
-              <select name="day_{{ i }}_status" 
-                      class="form-control status-select"
-                      {% if current_day < today %}disabled class="bg-secondary text-white"{% endif %}>
-                <option value="available" {% if availability and availability.status %}selected{% endif %}>Available</option>
-                <option value="unavailable" {% if availability and not availability.status %}selected{% endif %}>Unavailable</option>
-              </select>
-            </td>
+  <!-- Tabs for Daily and Weekly Views -->
+  <ul class="nav nav-tabs" id="availabilityTab" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="daily-tab" data-toggle="tab" href="#daily" role="tab">Daily View</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="weekly-tab" data-toggle="tab" href="#weekly" role="tab">Weekly View</a>
+    </li>
+  </ul>
+  
+  <div class="tab-content mt-4" id="availabilityTabContent">
+    <!-- Daily View -->
+    <div class="tab-pane fade show active" id="daily" role="tabpanel">
+      <h2>Today ({{ today.strftime('%A, %b %d, %Y') }})</h2>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Expert</th>
+            {% for slot in time_slots %}
+              <th>{{ slot.strftime('%H:%M') }}</th>
+            {% endfor %}
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <!-- Mark Whole Week as Unavailable Button -->
-    <div class="d-flex justify-content-center mt-2">
-      <button type="button" id="mark-week-unavailable" class="btn btn-danger">
-        Mark Whole Week as Unavailable
-      </button>
+        </thead>
+        <tbody>
+          {% for expert in experts %}
+            <tr>
+              <td>{{ expert.username }}</td>
+              {% set avail = daily_availability[expert.id] %}
+              {% for slot in time_slots %}
+                {% if avail and avail.status and (slot >= avail.start_time and slot < avail.end_time) %}
+                  <td class="bg-success"></td>
+                {% else %}
+                  <td class="bg-danger"></td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <!-- Optionally, show current time marker (for example, a vertical line or note) -->
+      <p>Current time: {{ current_time.strftime('%H:%M') }}</p>
     </div>
-
-    <!-- Save Availability Button -->
-    <div class="d-flex justify-content-center mt-3">
-      <button type="submit" class="btn btn-primary">Save Availability</button>
+    
+    <!-- Weekly View -->
+    <div class="tab-pane fade" id="weekly" role="tabpanel">
+      <h2>Next 7 Days</h2>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Expert</th>
+            {% for i in range(7) %}
+              {% set day = today + timedelta(days=i) %}
+              <th>{{ day.strftime('%a, %b %d') }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for expert in experts %}
+            <tr>
+              <td>{{ expert.username }}</td>
+              {% for i in range(7) %}
+                {% set day = today + timedelta(days=i) %}
+                {% if weekly_availability[expert.id][day] %}
+                  <td class="bg-success"></td>
+                {% else %}
+                  <td class="bg-danger"></td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-  </form>
+  </div>
 </div>
-
-<script src="{{ url_for('static', filename='js/timeValidation.js') }}"></script>
 {% endblock %}
