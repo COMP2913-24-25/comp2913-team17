@@ -69,23 +69,7 @@ class User(UserMixin, db.Model):
         for item in finished_items:
             item.finalise_auction()
 
-# Watch Auctions Model
-class WatchedItem(db.Model):
-    """Model for users watching auction items."""
-    __tablename__ = 'watched_items'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    item_id = db.Column(db.Integer, db.ForeignKey('items.item_id'), nullable=False)
-    added_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    
-    # Relationships
-    user = db.relationship('User', backref=db.backref('watched_items', lazy=True))
-    item = db.relationship('Item', backref=db.backref('watchers', lazy=True))
-    
-    __table_args__ = (
-        db.UniqueConstraint('user_id', 'item_id', name='unique_user_item_watch'),
-    )
+
 
 # Item Model
 class Item(db.Model):
