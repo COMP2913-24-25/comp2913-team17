@@ -87,18 +87,22 @@ def place_bid(url):
         db.session.add(new_bid)
         db.session.commit()
         
-        # Notify previous highest bidder if exists
-        if highest_bid and highest_bid.bidder_id != current_user.id:
-            outbid_user = User.query.get(highest_bid.bidder_id)
-            item.notify_outbid(outbid_user)
-        
-        # Emit real-time update to all clients in the auction room
+        # First emit the bid_update to ensure UI updates
         socketio.emit('bid_update', {
             'bid_amount': float(bid_amount),
             'bid_userid': current_user.id,
             'bid_username': current_user.username,
             'bid_time': datetime.now().strftime('%Y-%m-%d %H:%M')
         }, room=url)
+        
+        # Then handle notifications
+        try:
+            if highest_bid and highest_bid.bidder_id != current_user.id:
+                outbid_user = User.query.get(highest_bid.bidder_id)
+                item.notify_outbid(outbid_user)
+        except Exception as e:
+            logger.error(f"Error sending notifications: {str(e)}")
+            # Continue execution - don't let notification failure affect bidding
         
         return jsonify({'status': 'success', 'message': 'Bid placed successfully'})
     
