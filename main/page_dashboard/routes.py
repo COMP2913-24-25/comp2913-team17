@@ -3,9 +3,9 @@
 from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
 from datetime import date, datetime, timedelta
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 from . import dashboard_page
-from ..models import ExpertAvailability, db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig
+from ..models import ExpertAvailability, db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig, Bid
 
 
 def get_expert_availability(expert):
@@ -39,46 +39,35 @@ def index():
     manager = {}
     expert = {}
     user = {}
+    now = datetime.now()
 
     # Manager interface
     if current_user.role == 3:
         # Check manager configuration and set if not present
-        manager['base_fee'] = ManagerConfig.query.filter_by(config_key='base_platform_fee')
-        manager['authenticated_fee'] = ManagerConfig.query.filter_by(config_key='authenticated_platform_fee')
-        manager['max_duration'] = ManagerConfig.query.filter_by(config_key='max_auction_duration')
+        manager['base_fee'] = ManagerConfig.query.filter_by(config_key='base_platform_fee').first()
+        manager['authenticated_fee'] = ManagerConfig.query.filter_by(config_key='authenticated_platform_fee').first()
+        manager['max_duration'] = ManagerConfig.query.filter_by(config_key='max_auction_duration').first()
 
         if not manager['base_fee']:
-            base_fee = ManagerConfig(
-                config_key='base_platform_fee',
-                config_value=1.00,
-                description='Base platform fee percentage for standard items'
-            )
+            base_fee = ManagerConfig(config_key='base_platform_fee', config_value='1.00', description='Base platform fee percentage for standard items')
             db.session.add(base_fee)
-            manager['base_fee'] = base_fee
+            manager['base_fee'] = base_fee.config_value
         else:
-            manager['base_fee'] = manager['base_fee'].first().config_value
+            manager['base_fee'] = float(manager['base_fee'].config_value)
 
         if not manager['authenticated_fee']:
-            authenticated_fee = ManagerConfig(
-                config_key='authenticated_platform_fee',
-                config_value=5.00,
-                description='Platform fee percentage for authenticated items'
-            )
+            authenticated_fee = ManagerConfig(config_key='authenticated_platform_fee', config_value='5.00', description='Platform fee percentage for authenticated items')
             db.session.add(authenticated_fee)
-            manager['authenticated_fee'] = authenticated_fee
+            manager['authenticated_fee'] = authenticated_fee.config_value
         else:
-            manager['authenticated_fee'] = manager['authenticated_fee'].first().config_value
+            manager['authenticated_fee'] = float(manager['authenticated_fee'].config_value)
 
         if not manager['max_duration']:
-            max_duration = ManagerConfig(
-                config_key='max_auction_duration',
-                config_value=5,
-                description='Maximum auction duration in days'
-            )
+            max_duration = ManagerConfig(config_key='max_auction_duration', config_value='5', description='Maximum auction duration in days')
             db.session.add(max_duration)
-            manager['max_duration'] = max_duration
+            manager['max_duration'] = max_duration.config_value
         else:
-            manager['max_duration'] = manager['max_duration'].first().config_value
+            manager['max_duration'] = int(manager['max_duration'].config_value)
 
         db.session.commit()
 
@@ -107,24 +96,59 @@ def index():
             requests.append((req, eligible_experts))
         manager['requests'] = requests
 
+        # Statistics Calculations
+        # Total Revenue (sum of highest bids for completed auctions)
+        completed_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+            .join(Bid, Item.item_id == Bid.item_id)\
+            .filter(Item.auction_end < now)\
+            .group_by(Item.item_id)\
+            .subquery()
+        total_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid)).scalar() or 0.0
+        manager['total_revenue'] = total_revenue
+
+        # Commission Income (based on base_fee and authenticated_fee)
+        authenticated_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid))\
+            .join(Item, Item.item_id == completed_auctions.c.item_id)\
+            .join(AuthenticationRequest, AuthenticationRequest.item_id == Item.item_id)\
+            .filter(AuthenticationRequest.status == 2)\
+            .scalar() or 0.0
+        standard_revenue = total_revenue - authenticated_revenue
+        commission_income = (standard_revenue * (manager['base_fee'] / 100)) + (authenticated_revenue * (manager['authenticated_fee'] / 100))
+        manager['commission_income'] = commission_income
+        manager['commission_percentage'] = round((commission_income / total_revenue) * 100, 2) if total_revenue > 0 else 0.0
+
+        # Active Auctions
+        manager['active_auctions'] = Item.query.filter(and_(Item.auction_start <= now, Item.auction_end >= now)).count()
+
+        # Total Users
+        manager['user_count'] = User.query.count()
+
+        # Revenue Data for Chart (monthly revenue for last 6 months)
+        revenue_data = []
+        revenue_labels = []
+        for i in range(5, -1, -1):
+            start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i * 30)
+            end_date = start_date + timedelta(days=30)
+            monthly_revenue = db.session.query(func.sum(Bid.bid_amount))\
+                .join(Item, Item.item_id == Bid.item_id)\
+                .filter(and_(Item.auction_end >= start_date, Item.auction_end < end_date))\
+                .scalar() or 0.0
+            revenue_data.append(monthly_revenue)
+            revenue_labels.append(start_date.strftime('%b'))
+        manager['revenue_data'] = revenue_data
+        manager['revenue_labels'] = revenue_labels
+
     # Expert interface
     elif current_user.role == 2:
         expert['pending'] = ExpertAssignment.query\
-            .filter(and_(
-                ExpertAssignment.expert_id == current_user.id,
-                ExpertAssignment.status == 1
-            )).all()
-        
+            .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 1)).all()
         expert['complete'] = ExpertAssignment.query\
-            .filter(and_(
-                ExpertAssignment.expert_id == current_user.id,
-                ExpertAssignment.status == 2
-            )).all()
+            .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 2)).all()
 
-    # General User interface, all users can see their own auctions
+    # General User interface
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
+    return render_template('dashboard.html', manager=manager, expert=expert, user=user, now=now, get_expert_availability=get_expert_availability)
 
-    return render_template('dashboard.html', manager=manager, expert=expert, user=user, get_expert_availability=get_expert_availability)
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])
 @login_required
