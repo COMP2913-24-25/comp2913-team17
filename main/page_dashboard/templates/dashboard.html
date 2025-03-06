@@ -54,8 +54,13 @@
       </div>
     </div>
   </div>
-
-  <!-- Existing Management: User Roles Section -->
+  <!-- View Rota Button for managers -->
+  <div class="mb-3">
+    <a href="{{ url_for('manager_page.expert_availability') }}" class="btn btn-primary">
+      Availability Overview
+    </a>
+  </div>
+  <!-- Manager User Role Interface -->
   {% if manager['users'] %}
   <div class="card mt-4">
     <div class="card-header">
@@ -163,14 +168,19 @@
             <td><a href="/item/{{ request.item.url }}">{{ request.item.title }}</a></td>
             <td>
               {% if not eligible_experts %}
-              <p>No available experts</p>
+                <p>No available experts</p>
               {% else %}
-              <select class="form-select form-select-sm expert-select" style="width: auto; display: inline-block;">
-                {% for expert in eligible_experts %}
-                <option value="{{ expert.id }}">{{ expert.username }}</option>
-                {% endfor %}
-              </select>
-              <button class="btn btn-sm btn-outline-primary assign-expert-btn my-sm-1">Assign</button>
+                <select class="form-select form-select-sm expert-select" style="width: auto; display: inline-block;">
+                  {% for expert in eligible_experts %}
+                  <option value="{{ expert.id }}" data-availability="{{ get_expert_availability(expert) }}">
+                    {{ expert.username }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <span class="availability-text ms-2"></span>
+                <button class="btn btn-sm btn-outline-primary assign-expert-btn my-sm-1">
+                  Assign
+                </button>
               {% endif %}
             </td>
           </tr>
@@ -215,6 +225,36 @@
     {% else %}
     <p>No auctions to authenticate.</p>
     {% endif %}
+    <h2>Completed Authentications</h2>
+      {% if expert['complete'] %}
+      <ul>
+        {% for request in expert['complete'] %}
+        <li>
+          <a href="{{ url_for('item_page.index', url=request.authentication_request.item.url) }}"
+            title="See item details"
+          >
+            {{ request.authentication_request.item.title }}
+          </a>
+          <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.url) }}"
+            title="View authentication request"
+            class="badge mx-2 {% if request.authentication_request.status == 1 %}bg-warning
+            {% elif request.authentication_request.status == 2 %}bg-success
+            {% else %}bg-danger{% endif %} p-2"
+          >
+            {% if request.authentication_request.status == 1 %}
+              Authentication Pending
+            {% elif request.authentication_request.status == 2 %}
+              Authenticated
+            {% else %}
+              Authentication Declined
+            {% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>No auctions to authenticate.</p>
+      {% endif %}
   </div>
 
   <!-- General User Dashboard -->

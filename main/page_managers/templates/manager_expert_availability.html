@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Expert Availability Overview{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1>Expert Availability Overview</h1>
+  
+  <!-- Nav tabs for Daily and Weekly Views (Bootstrap 5) -->
+  <ul class="nav nav-tabs" id="viewTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active" id="daily-tab" data-bs-toggle="tab" href="#daily" role="tab" aria-controls="daily" aria-selected="true">
+        Daily View
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="weekly-tab" data-bs-toggle="tab" href="#weekly" role="tab" aria-controls="weekly" aria-selected="false">
+        Weekly View
+      </a>
+    </li>
+  </ul>
+  
+  <div class="tab-content mt-4" id="viewTabsContent">
+    <!-- Daily View -->
+    <div class="tab-pane fade show active" id="daily" role="tabpanel" aria-labelledby="daily-tab">
+      <div class="d-flex justify-content-between mb-3">
+        <h2>Daily Availability for {{ today.strftime('%A, %b %d, %Y') }}</h2>
+        <!-- Toggle button for filtering -->
+        <button id="toggleFilter" class="btn btn-primary">
+          Show Only Currently Available Experts
+        </button>
+      </div>
+      <!-- The table includes a data attribute for the current timeslot (as a string) -->
+      <table class="table table-bordered" id="dailyTable" data-current-slot="{{ current_slot.strftime('%H:%M') }}">
+        <thead>
+          <tr>
+            <th>Expert</th>
+            {% for slot in time_slots %}
+              <th>{{ slot.strftime('%H:%M') }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for expert in experts %}
+            <tr>
+              <td>{{ expert.username }}</td>
+              {% set avail = daily_availability[expert.id] %}
+              {% for slot in time_slots %}
+                {% set slot_str = slot.strftime('%H:%M') %}
+                {% if slot_str == current_slot.strftime('%H:%M') %}
+                  {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
+                    <!-- Current timeslot, available: dark turquoise -->
+                    <td class="bg-dark-turquoise text-white text-center">Now</td>
+                  {% else %}
+                    <!-- Current timeslot, not available: dark orange -->
+                    <td class="bg-dark-orange text-white text-center">Now</td>
+                  {% endif %}
+                {% else %}
+                  {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
+                    <td class="bg-success text-white text-center">A</td>
+                  {% else %}
+                    <td class="bg-danger text-white text-center">-</td>
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p>Current time: {{ current_time.strftime('%H:%M') }}</p>
+    </div>
+    
+    <!-- Weekly View -->
+    <div class="tab-pane fade" id="weekly" role="tabpanel" aria-labelledby="weekly-tab">
+      <h2>Weekly Availability (Next 7 Days)</h2>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Expert</th>
+            {% for day in days %}
+              <th>{{ day.strftime('%a, %b %d') }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for expert in experts %}
+            <tr>
+              <td>{{ expert.username }}</td>
+              {% for day in days %}
+                {% if weekly_availability[expert.id][day] %}
+                  <td class="bg-success text-white text-center">Available</td>
+                {% else %}
+                  <td class="bg-danger text-white text-center">Unavailable</td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/filterAvailability.js') }}"></script>
+
+{% endblock %}

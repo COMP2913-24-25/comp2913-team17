@@ -1,18 +1,20 @@
 """Configures the Flask app."""
 
 import os
+import logging
 from dotenv import load_dotenv
-from flask import Flask, render_template
+from flask import Flask
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room
 from flask_apscheduler import APScheduler
 from .models import db
 from .init_db import populate_db
 
 socketio = SocketIO()
 scheduler = APScheduler()
+mail = Mail()
 
 def create_app():
     app = Flask(__name__, static_url_path='', static_folder='static')
@@ -66,7 +68,21 @@ def create_app():
         MAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
     )
     
-    mail = Mail(app)
+    # Add BASE_URL for generating links in emails
+    app.config['BASE_URL'] = os.environ.get('BASE_URL', 'http://localhost:5000')
+    
+    # Initialize Mail
+    mail.init_app(app)
+
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(),  # Console handler
+            logging.FileHandler("auction_system.log")  # File handler
+        ]
+    )
 
     # Initialise the WebSocket server
     socketio.init_app(app, cors_allowed_origins='*')
@@ -108,6 +124,7 @@ def create_app():
     from .page_auth import auth_page
     from .page_authenticate_item import authenticate_item_page
     from .page_experts import expert_page
+    from .page_managers import manager_page
 
     app.register_blueprint(home_page)
     app.register_blueprint(item_page, url_prefix='/item')
@@ -116,6 +133,7 @@ def create_app():
     app.register_blueprint(auth_page)
     app.register_blueprint(authenticate_item_page, url_prefix='/authenticate')
     app.register_blueprint(expert_page, url_prefix='/expert')
+    app.register_blueprint(manager_page, url_prefix='/manager')
 
     @login_manager.user_loader
     def load_user(user_id):

@@ -9,7 +9,7 @@ from . import authenticate_item_page
 from ..models import db, Item, AuthenticationRequest, Message
 
 # SocketIO event handlers
-@socketio.on('join')
+@socketio.on('join_chat')
 def on_join(data):
     """User joins a chat room."""
     if not current_user.is_authenticated:

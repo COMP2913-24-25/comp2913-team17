@@ -7,7 +7,7 @@ from . import expert_page
 @expert_page.route('/availability', methods=['GET', 'POST'])
 @login_required
 def update_availability():
-    # Only allow users with the expert role (assuming role 2 is expert)
+    # Only allow users with the expert rol
     if current_user.role != 2:
         flash("You are not authorised to access this page.", "error")
         return redirect(url_for("index"))

@@ -1,15 +1,15 @@
+import logging
 from calendar import c
-from datetime import date, datetime
-from turtle import back
+from datetime import datetime
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import current_app
-from flask_mail import Message
-from .tasks import send_winner_email
+from .email_utils import send_notification_email
 
 db = SQLAlchemy()
+logger = logging.getLogger(__name__)
 
 # ---------------------------
 # Models
@@ -20,6 +20,8 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
+    secret_key = db.Column(db.String(32), unique=True,
+                    default=lambda: uuid4().hex, nullable=False, index=True)
     username = db.Column(db.String(50), unique=True, nullable=False, index=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -109,55 +111,108 @@ class Item(db.Model):
     
     def __repr__(self):
         return f"<Item {self.title} (ID: {self.item_id})>"
-
-    # Add method to get highest bid
+    
     def highest_bid(self):
-        """Get the highest bid for this item"""
-        return Bid.query.filter_by(item_id=self.item_id)\
-                       .order_by(Bid.bid_amount.desc())\
-                       .first()
-
-    # Method for outbid notification
-    def notify_outbid(self, outbid_user):
-        """Create notification for outbid user"""
+        if not self.bids:
+            return None
+        return max(self.bids, key=lambda bid: bid.bid_amount)
+    
+    # Send notification to the outbid user
+    def notify_outbid(self, user):
         notification = Notification(
-            user_id=outbid_user.id,
-            message=f"You have been outbid on {self.title}",
-            is_read=False,
-            created_at=datetime.now()
+            user_id=user.id,
+            message=f"You have been outbid on '{self.title}'",
+            item_url=self.url,
+            item_title=self.title,
+            notification_type=1
         )
         db.session.add(notification)
         db.session.commit()
+        
+        # Send real-time notification
+        try:
+            from app import socketio
+            socketio.emit('new_notification', {
+                'message': notification.message,
+                'item_url': notification.item_url, 
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{user.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send notification: {e}")
+            
+        # Send email
+        send_notification_email(user, notification)
 
+    # Send notification to the winner
     def notify_winner(self):
-        """Create notification for auction winner"""
-        winning_bid = self.highest_bid()
-        if winning_bid:
+        if not self.winning_bid:
+            return
+        
+        winner = User.query.get(self.winning_bid.bidder_id)
+        notification = Notification(
+            user_id=winner.id,
+            message=f"Congratulations! You won the auction for '{self.title}'",
+            item_url=self.url,
+            item_title=self.title,
+            notification_type=2
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Send real-time notification
+        from app import socketio
+        socketio.emit('new_notification', {
+            'message': notification.message,
+            'item_url': notification.item_url,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{winner.secret_key}')
+        
+        # Send email
+        send_notification_email(winner, notification)
+
+    # Send notification to the losers
+    def notify_losers(self):
+        if not self.winning_bid:
+            return
+            
+        # Get unique bidders excluding winner
+        bidders = set()
+        for bid in self.bids:
+            if bid.bidder_id != self.winning_bid.bidder_id:
+                bidders.add(bid.bidder_id)
+        
+        for bidder_id in bidders:
+            bidder = User.query.get(bidder_id)
             notification = Notification(
-                user_id=winning_bid.bidder_id,
-                message=f"Congratulations! You won the auction for {self.title}",
-                is_read=False,
-                created_at=datetime.now()
+                user_id=bidder.id,
+                message=f"The auction for '{self.title}' has ended. Unfortunately, you didn't win.",
+                item_url=self.url,
+                item_title=self.title,
+                notification_type=3
             )
             db.session.add(notification)
             db.session.commit()
+            
+            # Send real-time notification
+            from app import socketio
+            socketio.emit('new_notification', {
+                'message': notification.message,
+                'item_url': notification.item_url,
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{bidder.secret_key}')
 
-    def notify_winner_email(self):
-        """Queue async email notification to winner"""
-        if self.winning_bid:
-            # Using SQLAlchemy 2.0 pattern
-            winner = db.session.get(User, self.winning_bid.bidder_id)
-            if winner:
-                try:
-                    from .tasks import send_winner_email
-                    send_winner_email.delay(
-                        recipient=winner.email,
-                        item_title=self.title,
-                        bid_amount=self.winning_bid.bid_amount,
-                        end_date=self.auction_end.strftime('%Y-%m-%d %H:%M')
-                    )
-                except Exception as e:
-                    print(f"Error sending winner email: {str(e)}")
+    # Set the winning bid and notify users about the auction outcome
+    def finalise_auction(self):
+        highest = self.highest_bid()
+        
+        if highest:
+            self.winning_bid_id = highest.bid_id
+            db.session.commit()
+            
+            # Notify winner and losers
+            self.notify_winner()
+            self.notify_losers()
+
 
 # Bid Model
 class Bid(db.Model):
@@ -283,14 +338,19 @@ class Message(db.Model):
 class Notification(db.Model):
     __tablename__ = 'notifications'
 
-    notification_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    message = db.Column(db.Text, nullable=False)
+    message = db.Column(db.String(255), nullable=False)
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.now())
+    item_url = db.Column(db.String(32), nullable=True)
+    item_title = db.Column(db.String(256), nullable=True)
+    # Notification type: 0 = Default, 1 = Outbid, 2 = Winner, 3 = Loser
+    notification_type = db.Column(db.Integer, nullable=True, default=0)
+
 
     def __repr__(self):
-        return f"<Notification {self.notification_id} for User {self.user_id}>"
+        return f"<Notification {self.id} for user {self.user_id}>"
 
 # Manager Config Model
 class ManagerConfig(db.Model):

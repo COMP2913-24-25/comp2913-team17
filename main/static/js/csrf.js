@@ -1,4 +1,4 @@
-// Global CSRF helper functions
+// Global CSRF helper functions and socket
 
 const getCSRFToken = () => {
   const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -25,3 +25,6 @@ const csrfFetch = async (url, options = {}) => {
     },
   });
 };
+
+// Socket connection
+window.globalSocket = io();
