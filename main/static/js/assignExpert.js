@@ -19,15 +19,18 @@ $(document).ready(function() {
         method: 'POST',
         body: JSON.stringify({ expert: parseInt(expert) })
       });
-          
       const data = await response.json();
       
-      // Remove row on success
-      if (data) {
-        row.remove(); 
+      if (response.ok) {
+        // Remove row on success
+        row.remove();
+      } else {
+        // Show error and do not remove the row
+        alert(data.error || "Error assigning expert.");
       }
     } catch (error) {
       console.log('Error:', error);
+      alert("Error assigning expert.");
     }
   });
 });
