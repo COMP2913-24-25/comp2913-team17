@@ -7,10 +7,16 @@
 
 <div class="container mt-5">
   <h1>Current Auctions</h1>
+
+  <!-- Search bar -->
+  <div class="search-container mb-4">
+    <input type="text" id="search-bar" class="form-control" placeholder="Search auctions...">
+  </div>
+
   {% if items %}
-    <div class="row g-4">
+    <div class="row g-4" id="auction-container">
       {% for item in items %}
-      <div class="auction-grid col-12 col-sm-6 col-md-4 col-lg-3" data-item-id="{{ item.item_id }}">
+      <div class="auction-grid col-12 col-sm-6 col-md-4 col-lg-3" data-item-id="{{ item.item_id }}" data-title="{{ item.title | lower }}">
         <a href="{{ url_for('item_page.index', url=item.url) }}" style="text-decoration: none; color: inherit; display: block; cursor: pointer;">
           <div class="auction-item">
             <div class="auction-image-container">
@@ -60,6 +66,9 @@
       </div>
       {% endfor %}
     </div>
+    <div id="no-results" class="mt-4 d-none">
+      <p>No auctions matching your search.</p>
+    </div>
   {% else %}
   <p>No auctions available.</p>
   {% endif %}
@@ -69,4 +78,3 @@
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 
 {% endblock %}
-
