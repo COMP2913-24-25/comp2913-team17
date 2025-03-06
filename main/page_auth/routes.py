@@ -5,9 +5,24 @@ import requests
 from flask import render_template, redirect, url_for, flash, request, current_app, session, abort
 from flask_login import login_user, logout_user, current_user
 from urllib.parse import urlparse, urlencode
+from app import socketio
+from flask_socketio import join_room
 from . import auth_page
 from .forms import LoginForm, RegisterForm, UpdateForm
 from ..models import db, User
+
+# SocketIO notification rooms
+@socketio.on('join_user')
+def on_join(data):
+    """User joins a their personal notification room."""
+    if not current_user.is_authenticated:
+        return
+    room = data.get('user_key')
+    if current_user.secret_key != room:
+        return
+    elif room:
+        join_room(f'user_{room}')
+
 
 @auth_page.route('/login', methods=['GET', 'POST'])
 def login():
