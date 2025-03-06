@@ -37,7 +37,7 @@
       <div class="ms-auto d-flex">
         <!-- Add this notification dropdown -->
         <div class="nav-item dropdown me-2">
-          <button class="btn btn-light position-relative notifications-dropdown-toggle" data-bs-toggle="dropdown">
+          <button class="btn btn-light position-relative" data-bs-toggle="dropdown">
             Notifications
             {% set unread = current_user.notifications|selectattr('is_read', 'equalto', false)|list|length %}
             {% if unread > 0 %}
@@ -52,12 +52,14 @@
               <li>
                 {% if notification.item_url %}
                 <a href="{{ url_for('item_page.index', url=notification.item_url) }}" 
-                   class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %} text-decoration-none">
+                   class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %} text-decoration-none notification-item"
+                   data-notification-id="{{ notification.id }}">
                   <small class="text-muted d-block">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                   {{ notification.message }}
                 </a>
                 {% else %}
-                <div class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %}">
+                <div class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %} notification-item"
+                     data-notification-id="{{ notification.id }}">
                   <small class="text-muted d-block">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                   {{ notification.message }}
                 </div>

@@ -1,111 +1,171 @@
 $(document).ready(function() {
+  // Only proceed if the user is authenticated (has a secret key)
   const userKey = $('meta[name="user-key"]').attr('content');
-  
-  if (!userKey) {
-    return; // Not logged in
-  }
-  
-  // Join a personal room for receiving notifications
-  window.globalSocket.emit('join_user', { 'user_key': userKey });
-  
-  // Mark notifications as read when dropdown is opened
-  $('.notifications-dropdown-toggle').on('click', function() {
-    const unreadNotifications = $('.dropdown-item.fw-bold');
-    
-    if (unreadNotifications.length > 0) {
-      // Remove the badge
-      $('.btn-light .badge').remove();
-      
-      // Remove bold styling from items
-      unreadNotifications.removeClass('fw-bold');
+  if (!userKey) return;
 
-      // Optional: Collect notification IDs to send to backend later
-      const notificationIds = [];
-      unreadNotifications.each(function() {
-        const notificationId = $(this).data('notification-id');
-        if (notificationId) {
-          notificationIds.push(notificationId);
-        }
-      });
+  // Join user's personal notification room
+  window.globalSocket = window.globalSocket || io();
+  window.globalSocket.emit('join_user', { user_key: userKey });
 
-      // You can add backend sync here if needed
-      $.post('/api/notifications/mark-read', { ids: notificationIds });
-    }
-  });
-  
-  // Handle incoming notifications
+  // Listen for new notifications
   window.globalSocket.on('new_notification', function(data) {
-    console.log('New notification:', data);
-    // Update notification badge count
-    const badgeElement = $('.btn-light .badge');
+    // Update notification count badge
+    const badge = $('.btn:contains("Notifications") .badge');
+    const currentCount = parseInt(badge.text()) || 0;
+    badge.text(currentCount + 1);
     
-    if (badgeElement.length) {
-      const currentCount = parseInt(badgeElement.text());
-      badgeElement.text(currentCount + 1);
-    } else {
-      // Create new badge if doesn't exist
-      const newBadge = $('<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">1</span>');
-      $('.btn-light').append(newBadge);
+    if (badge.hasClass('d-none')) {
+      badge.removeClass('d-none');
     }
-      
-    // Add new notification to dropdown
-    const dropdownMenu = $('.dropdown-menu');
-    const noNotifsItem = dropdownMenu.find('.dropdown-item:contains("No notifications")');
-    
-    if (noNotifsItem.length) {
-      // Replace "No notifications" message
-      noNotifsItem.parent().remove();
-    }
-      
-    // Create notification item
-    let notificationHTML = '<li>';
-      
+
+    // Create new notification element
+    let notificationElement = '';
     if (data.item_url) {
-      notificationHTML += `<a href="/item/${data.item_url}" class="dropdown-item fw-bold text-decoration-none" data-notification-id="${data.id}">
-        <small class="text-muted d-block">${data.created_at}</small>
-        ${data.message}
-      </a>`;
+      notificationElement = `
+        <li>
+          <a href="/item/${data.item_url}" 
+             class="dropdown-item fw-bold text-decoration-none notification-item" 
+             data-notification-id="${data.id}">
+            <small class="text-muted d-block">${data.created_at}</small>
+            ${data.message}
+          </a>
+        </li>
+      `;
     } else {
-      notificationHTML += `<div class="dropdown-item fw-bold" data-notification-id="${data.id}">
-        <small class="text-muted d-block">${data.created_at}</small>
-        ${data.message}
-      </div>`;
+      notificationElement = `
+        <li>
+          <div class="dropdown-item fw-bold notification-item" data-notification-id="${data.id}">
+            <small class="text-muted d-block">${data.created_at}</small>
+            ${data.message}
+          </div>
+        </li>
+      `;
     }
-      
-    notificationHTML += '</li>';
-      
-    // Add to the top of the list
-    dropdownMenu.prepend(notificationHTML);
-      
-    // Display a toast notification
-    showToast(data.message);
+
+    // Add notification to the dropdown menu
+    const notificationList = $('.btn:contains("Notifications")').next('.dropdown-menu');
+    
+    // Remove "No notifications" message if it exists
+    notificationList.find(':contains("No notifications")').parent().remove();
+    
+    // Add new notification at the top
+    notificationList.prepend(notificationElement);
+
+    // Show a toast notification
+    showToast(data.message, data.item_url);
   });
-  
-  // Display a toast notification
-  function showToast(message) {
+
+  // Mark notifications as read when clicked
+  $(document).on('click', '.notification-item', function(event) {
+    // For notification items with an href (links to items)
+    if ($(this).attr('href')) {
+      // Prevent immediate navigation
+      event.preventDefault();
+      
+      // Store the URL we'll navigate to after marking read
+      const destinationUrl = $(this).attr('href');
+      const notificationId = $(this).data('notification-id');
+      
+      if (notificationId) {
+        // Mark as read, then navigate
+        markNotificationsAsRead([notificationId])
+          .then(() => {
+            // Remove bold styling to indicate "read" status
+            $(this).removeClass('fw-bold');
+            // Navigate to the item page after marking as read
+            window.location.href = destinationUrl;
+          })
+          .catch(error => {
+            console.error('Error marking notification as read:', error);
+            // Navigate anyway even if there was an error
+            window.location.href = destinationUrl;
+          });
+      } else {
+        // If no ID, just navigate
+        window.location.href = destinationUrl;
+      }
+    } else {
+      // For notification items without href (not clickable to navigate)
+      const notificationId = $(this).data('notification-id');
+      if (notificationId) {
+        markNotificationsAsRead([notificationId]);
+        // Remove bold styling to indicate "read" status
+        $(this).removeClass('fw-bold');
+      }
+    }
+  });
+
+  // Mark all notifications as read when dropdown is opened
+  $('.btn:contains("Notifications")').on('click', function() {
+    const unreadNotifications = $('.dropdown-item.fw-bold');
+    if (unreadNotifications.length === 0) return;
+
+    const notificationIds = [];
+    unreadNotifications.each(function() {
+      const id = $(this).data('notification-id');
+      if (id) notificationIds.push(id);
+      $(this).removeClass('fw-bold');
+    });
+
+    if (notificationIds.length > 0) {
+      markNotificationsAsRead(notificationIds);
+      // Reset the badge count
+      $('.btn:contains("Notifications") .badge').text('');
+      $('.btn:contains("Notifications") .badge').addClass('d-none');
+    }
+  });
+
+  // Function to mark notifications as read via API - modified to return the Promise
+  async function markNotificationsAsRead(ids) {
+    try {
+      return await csrfFetch('/item/api/notifications/mark-read', {
+        method: 'POST',
+        body: JSON.stringify({ ids: ids })
+      });
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+      throw error;
+    }
+  }
+
+  // Function to show toast notification
+  function showToast(message, itemUrl) {
     // Create toast container if it doesn't exist
     if ($('#toast-container').length === 0) {
-      $('body').append('<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>');
+      $('body').append('<div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050"></div>');
     }
-      
+
+    // Create unique ID for the toast
     const toastId = 'toast-' + Date.now();
-    const toastHTML = `
+    
+    // Create toast HTML
+    let toastHtml = `
       <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header">
-          <strong class="me-auto">Notification</strong>
+          <strong class="me-auto">Auction Notification</strong>
+          <small>${new Date().toLocaleTimeString()}</small>
           <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
-        <div class="toast-body">${message}</div>
+        <div class="toast-body">
+          ${message}
+          ${itemUrl ? `<div class="mt-2"><a href="/item/${itemUrl}" class="btn btn-sm btn-primary">View Item</a></div>` : ''}
+        </div>
       </div>
     `;
-      
-    $('#toast-container').append(toastHTML);
-      
+    
+    // Add toast to container
+    $('#toast-container').append(toastHtml);
+    
+    // Initialize and show toast
     const toastElement = new bootstrap.Toast(document.getElementById(toastId), {
       autohide: true,
       delay: 5000
     });
-      
     toastElement.show();
+    
+    // Clean up toast after it's hidden
+    $(`#${toastId}`).on('hidden.bs.toast', function() {
+      $(this).remove();
+    });
   }
 });

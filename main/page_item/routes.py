@@ -7,7 +7,7 @@ from flask_login import login_required, current_user
 from datetime import datetime
 import decimal
 from . import item_page
-from ..models import db, Item, Bid, User, AuthenticationRequest, logger
+from ..models import db, Item, Bid, User, AuthenticationRequest, logger, Notification
 
 
 # SocketIO event handlers
@@ -154,3 +154,29 @@ def check_ended_auctions():
                 }, room=item.url)
         except Exception as e:
             logger.error(f"Error finalizing auction {item.item_id}: {e}")
+
+
+@item_page.route('/api/notifications/mark-read', methods=['POST'])
+@login_required
+def mark_notifications_read():
+    try:
+        # Get notification IDs from the request
+        notification_ids = request.json.get('ids', [])
+        
+        if not notification_ids:
+            return jsonify({'status': 'success', 'message': 'No notifications to mark as read'})
+        
+        # Mark specified notifications as read
+        notifications = Notification.query.filter(
+            Notification.id.in_(notification_ids),
+            Notification.user_id == current_user.id
+        ).all()
+        
+        for notification in notifications:
+            notification.is_read = True
+        
+        db.session.commit()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        logger.error(f"Error marking specific notifications as read: {str(e)}")
+        return jsonify({'error': 'Failed to mark notifications as read'}), 500
