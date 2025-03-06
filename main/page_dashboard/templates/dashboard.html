@@ -50,7 +50,11 @@
       </div>
       <div class="mt-4">
         <h5>Revenue Over Time (Last 6 Months)</h5>
-        <canvas id="revenueChart" width="400" height="200"></canvas>
+        <canvas id="revenueChart" width="400" height="200"
+          data-labels="{{ manager['revenue_labels'] | tojson | safe }}"
+          data-values="{{ manager['revenue_data'] | tojson | safe }}"
+        >
+        </canvas>
       </div>
     </div>
   </div>
@@ -102,7 +106,7 @@
   </div>
   {% endif %}
 
-  <!-- Existing Management: Configuration Section -->
+  <!-- Management Configuration Section -->
   <div class="card mt-4">
     <div class="card-header">
       <h2 class="mb-0">Management: Configuration</h2>
@@ -146,7 +150,7 @@
     </div>
   </div>
 
-  <!-- Existing Management: Pending Authentication Requests Section -->
+  <!-- Management: Pending Authentication Requests Section -->
   {% if manager['requests'] %}
   <div class="card mt-4">
     <div class="card-header">
@@ -199,21 +203,6 @@
     {% if expert['pending'] %}
     <ul>
       {% for request in expert['pending'] %}
-      <li>
-        <a href="{{ url_for('item_page.index', url=request.authentication_request.item.url) }}" title="See item details">{{ request.authentication_request.item.title }}</a>
-        <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.url) }}" title="View authentication request" class="badge mx-2 {% if request.authentication_request.status == 1 %}bg-warning{% elif request.authentication_request.status == 2 %}bg-success{% else %}bg-danger{% endif %} p-2">
-          {% if request.authentication_request.status == 1 %}Authentication Pending{% elif request.authentication_request.status == 2 %}Authenticated{% else %}Authentication Declined{% endif %}
-        </a>
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <p>No auctions to authenticate.</p>
-    {% endif %}
-    <h2>Completed Authentications</h2>
-    {% if expert['complete'] %}
-    <ul>
-      {% for request in expert['complete'] %}
       <li>
         <a href="{{ url_for('item_page.index', url=request.authentication_request.item.url) }}" title="See item details">{{ request.authentication_request.item.title }}</a>
         <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.url) }}" title="View authentication request" class="badge mx-2 {% if request.authentication_request.status == 1 %}bg-warning{% elif request.authentication_request.status == 2 %}bg-success{% else %}bg-danger{% endif %} p-2">
@@ -282,41 +271,12 @@
     {% endif %}
   </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Existing Scripts -->
+<!-- Custom Scripts -->
 <script src="{{ url_for('static', filename='js/updateRole.js') }}"></script>
 <script src="{{ url_for('static', filename='js/updateConfig.js') }}"></script>
 <script src="{{ url_for('static', filename='js/assignExpert.js') }}"></script>
-<!-- Chart Initialization -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const ctx = document.getElementById('revenueChart');
-    if (ctx) {  // Only initialize if the canvas exists (i.e., for managers)
-      const revenueChart = new Chart(ctx.getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: {{ manager['revenue_labels'] | tojson | safe }},
-          datasets: [{
-            label: 'Revenue (£)',
-            data: {{ manager['revenue_data'] | tojson | safe }},
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
-  });
-</script>
+<script src="{{ url_for('static', filename='js/managementCharts.js') }}"></script>
 {% endblock %}

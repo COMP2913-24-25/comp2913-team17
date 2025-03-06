@@ -39,6 +39,7 @@ def index():
     manager = {}
     expert = {}
     user = {}
+    now = datetime.now()
 
     # Manager interface
     if current_user.role == 3:
@@ -96,8 +97,6 @@ def index():
         manager['requests'] = requests
 
         # Statistics Calculations
-        now = datetime.now()
-        
         # Total Revenue (sum of highest bids for completed auctions)
         completed_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
@@ -149,6 +148,7 @@ def index():
     # General User interface
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
     return render_template('dashboard.html', manager=manager, expert=expert, user=user, now=now, get_expert_availability=get_expert_availability)
+
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])
 @login_required
@@ -399,4 +399,3 @@ def update_dur():
         'config_key': dur.config_key,
         'config_value': dur.config_value
     }), 200
-
