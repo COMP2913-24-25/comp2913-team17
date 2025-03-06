@@ -14,12 +14,10 @@
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   <!-- CSRF Token -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <!-- CSRF Helper -->
-  <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
-  <!-- Notifications JS -->
-  <script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>
   <!-- Socketio -->
   <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <!-- CSRF Helper -->
+  <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
 </head>
 <body>
   <!-- Navbar -->
@@ -35,6 +33,7 @@
       </div>
       {% if current_user.is_authenticated %}
       <meta name="user-id" content="{{ current_user.id }}">
+      <meta name="user-key" content="{{ current_user.secret_key }}">
       <div class="ms-auto d-flex">
         <!-- Add this notification dropdown -->
         <div class="nav-item dropdown me-2">
@@ -47,14 +46,24 @@
             </span>
             {% endif %}
           </button>
-          <ul class="dropdown-menu dropdown-menu-end" style="width: 300px;">
+          <ul class="dropdown-menu dropdown-menu-end" style="width: 300px; max-height: 400px; overflow-y: auto;">
             {% if current_user.notifications %}
               {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true) %}
               <li>
-                <div class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %}">
+                {% if notification.item_url %}
+                <a href="{{ url_for('item_page.index', url=notification.item_url) }}" 
+                   class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %} text-decoration-none notification-item"
+                   data-notification-id="{{ notification.id }}">
+                  <small class="text-muted d-block">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                  {{ notification.message }}
+                </a>
+                {% else %}
+                <div class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %} notification-item"
+                     data-notification-id="{{ notification.id }}">
                   <small class="text-muted d-block">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                   {{ notification.message }}
                 </div>
+                {% endif %}
               </li>
               {% endfor %}
             {% else %}
@@ -127,7 +136,6 @@
     {% block content %}{% endblock %}
   </div>
   <!-- Custom JS -->
-  {% block scripts %}
-  {% endblock %}
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 </body>
 </html>

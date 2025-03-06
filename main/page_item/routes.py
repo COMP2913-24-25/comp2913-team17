@@ -7,11 +7,11 @@ from flask_login import login_required, current_user
 from datetime import datetime
 import decimal
 from . import item_page
-from ..models import db, Item, Bid, User, Notification, AuthenticationRequest
+from ..models import db, Item, Bid, User, AuthenticationRequest, logger, Notification
 
 
 # SocketIO event handlers
-@socketio.on('join')
+@socketio.on('join_auction')
 def on_join(data):
     """User joins a specific auction."""
     if not current_user.is_authenticated:
@@ -66,10 +66,11 @@ def place_bid(url):
     if datetime.now() >= item.auction_end:
         return jsonify({'error': 'This auction has ended.'}), 400
 
-    # Add error handling for placing bid
+    # Error handling for placing bid
     try:
         # Get bid amount from form
         bid_amount = float(request.json.get('bid_amount'))
+        print(bid_amount)
 
         # Get current highest bid
         current_highest = item.highest_bid()
@@ -94,28 +95,30 @@ def place_bid(url):
         new_bid = Bid(
             item_id=item.item_id,
             bidder_id=current_user.id,
-            bid_amount=bid_amount
+            bid_amount=bid_amount,
+            bid_time=datetime.now()
         )
         db.session.add(new_bid)
-
-        # Notify previous highest bidder that they were outbid
-        if current_highest and current_highest.bidder_id != current_user.id:
-            previous_bidder = User.query.get(current_highest.bidder_id)
-            if previous_bidder:  # Make sure we found the user
-                item.notify_outbid(previous_bidder)
-
         db.session.commit()
 
         # Notify all users in the auction room
         socketio.emit('bid_update', {
-            'item_url': url,
             'bid_userid': current_user.id,
             'bid_username': current_user.username,
             'bid_amount': bid_amount,
             'bid_time': new_bid.bid_time.strftime('%Y-%m-%d %H:%M')
         }, room=url)
 
-        return jsonify({'success': 'Your bid has been placed successfully!'})
+        # Notify previous highest bidder that they were outbid
+        try:
+            if current_highest and current_highest.bidder_id != current_user.id:
+                previous_bidder = User.query.get(current_highest.bidder_id)
+                item.notify_outbid(previous_bidder)
+        # Notification errors don't affect the bid placement
+        except Exception as e:
+            logger.error(f"Error sending notifications: {str(e)}")
+
+        return jsonify({'status': 'success', 'message': 'Bid placed successfully'})
 
     except Exception as e:
         db.session.rollback()
@@ -123,30 +126,23 @@ def place_bid(url):
         return jsonify({'error': 'Error placing bid. Please try again.'}), 500
 
 
-@item_page.route('/check-ended-auctions')
 def check_ended_auctions():
-    """Check for ended auctions and notify winners"""
-    try:
-        ended_items = Item.query.filter(
-            Item.auction_end <= datetime.now(),
-            Item.winning_bid_id.is_(None)  # Only process items without winners set
-        ).all()
+    """Check for auctions that have ended but don't have a winner yet."""
+    finished_items = Item.query.filter(
+        Item.auction_end <= datetime.now(),
+        Item.winning_bid_id.is_(None)
+    ).all()
 
-        for item in ended_items:
+    for item in finished_items:
+        try:
+            logger.info(f"Finalizing auction for item: {item.title}")
+            item.finalise_auction()
+
             highest_bid = item.highest_bid()
+
+            # Disconnects all users from the auction room
             if highest_bid:
-                # Set winning bid
-                item.winning_bid_id = highest_bid.bid_id
-                
-                # Send notifications - To implement
-                # item.notify_winner()  # In-app notification
-                # item.notify_winner_email()  # Email notification
-
-                db.session.commit()
-
-                # Disconnects all users from the auction room
                 socketio.emit('auction_ended', {
-                    'item_url': item.url,
                     'winner': True,
                     'winning_bidder_id': highest_bid.bidder.id,
                     'winning_bidder_username': highest_bid.bidder.username,
@@ -154,32 +150,33 @@ def check_ended_auctions():
                 }, room=item.url)
             else:
                 socketio.emit('auction_ended', {
-                    'item_url': item.url,
                     'winner': False
                 }, room=item.url)
-                
-        return {'message': 'Ended auctions processed'}, 200
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error processing ended auctions: {str(e)}")
-        return {'error': 'Failed to process ended auctions'}, 500
+        except Exception as e:
+            logger.error(f"Error finalizing auction {item.item_id}: {e}")
 
 
-@item_page.route('/notifications/mark-read', methods=['POST'])
+@item_page.route('/api/notifications/mark-read', methods=['POST'])
 @login_required
 def mark_notifications_read():
-    """Mark all notifications as read for current user"""
     try:
-        notifications = Notification.query.filter_by(
-            user_id=current_user.id,
-            is_read=False
+        # Get notification IDs from the request
+        notification_ids = request.json.get('ids', [])
+        
+        if not notification_ids:
+            return jsonify({'status': 'success', 'message': 'No notifications to mark as read'})
+        
+        # Mark specified notifications as read
+        notifications = Notification.query.filter(
+            Notification.id.in_(notification_ids),
+            Notification.user_id == current_user.id
         ).all()
-
+        
         for notification in notifications:
             notification.is_read = True
-
+        
         db.session.commit()
-        return {'status': 'success'}, 200
+        return jsonify({'status': 'success'})
     except Exception as e:
-        print(f"Error marking notifications read: {str(e)}")
-        return {'error': 'Failed to mark notifications as read'}, 500
+        logger.error(f"Error marking specific notifications as read: {str(e)}")
+        return jsonify({'error': 'Failed to mark notifications as read'}), 500
