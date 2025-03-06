@@ -2,10 +2,34 @@
 
 from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
-from datetime import datetime
+from datetime import date, datetime
 from sqlalchemy import and_, or_
 from . import dashboard_page
 from ..models import db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig
+
+
+def get_expert_availability(expert):
+    # Returns a string indicating the expert's availability for today.
+    today = date.today()
+    avail = None
+    if expert.expert_availabilities:
+        for a in expert.expert_availabilities:
+            if a.day == today:
+                avail = a
+                break
+    now = datetime.now().time()
+    if avail:
+        if avail.status:  # Expert is marked available in the record
+            if avail.start_time <= now < avail.end_time:
+                return "Currently available"
+            elif now < avail.start_time:
+                delta = (datetime.combine(today, avail.start_time) - datetime.combine(today, now)).seconds // 3600
+                return f"Available in {delta} hour{'s' if delta != 1 else ''}"
+            else:
+                return "Not available today"
+        else:
+            return "Not available today"
+    return "Availability not set"
 
 
 @dashboard_page.route('/')
@@ -71,19 +95,18 @@ def index():
                 )
             )).all()
         requests = []
-        for request in pending_requests:
-            # Get all experts not assigned to this request, excluding the requester
-            # Will need to be filtered for categories and scheduling in future
+        for req in pending_requests:
             eligible_experts = User.query\
                 .filter(and_(
                     User.role == 2,
-                    User.id != request.requester_id,
+                    User.id != req.requester_id,
                     ~User.expert_assignments.any(
-                        ExpertAssignment.request_id == request.request_id
+                        ExpertAssignment.request_id == req.request_id
                     )
                 )).all()
-            requests.append((request, eligible_experts))
+            requests.append((req, eligible_experts))
         manager['requests'] = requests
+
     # Expert interface
     elif current_user.role == 2:
         expert['pending'] = ExpertAssignment.query\
@@ -101,8 +124,7 @@ def index():
     # General User interface, all users can see their own auctions
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
 
-    return render_template('dashboard.html', manager=manager, expert=expert, user=user)
-
+    return render_template('dashboard.html', manager=manager, expert=expert, user=user, get_expert_availability=get_expert_availability)
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])
 @login_required

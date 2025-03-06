@@ -1,6 +1,14 @@
-// Assign an expert to an authentication request
-
 $(document).ready(function() {
+  // Update availability text when an expert is selected
+  $('.expert-select').on('change', function() {
+    var availability = $(this).find('option:selected').data('availability');
+    $(this).siblings('.availability-text').text(availability);
+  });
+  
+  // Trigger change event on page load to set initial availability text
+  $('.expert-select').trigger('change');
+  
+  // Assign an expert to an authentication request
   $('.assign-expert-btn').on('click', async function() {
     const row = $(this).closest('tr');
     const requestId = row.data('request-id');
