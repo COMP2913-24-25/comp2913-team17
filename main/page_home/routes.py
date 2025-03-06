@@ -9,8 +9,7 @@ def index():
 
 @home_page.route('/api/search')
 def search_items():
-    # This route isn't strictly needed for client-side search
-    # But it's included in case you want to implement server-side search in the future
+    # This route isnt neccesary for client-side search but i included in case we  implement server-side search in the future
     items = Item.query.order_by(Item.auction_end.asc()).all()
     return jsonify([{
         'item_id': item.item_id,
