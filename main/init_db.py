@@ -1,7 +1,7 @@
 from datetime import date, datetime, time, timedelta
 from .models import (
     AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability,
-    Item, ManagerConfig, Message, Notification, Payment, User, db
+    Item, ManagerConfig, Message, Notification, Payment, User, Category, db
 )
 
 def populate_db(app):
@@ -30,7 +30,18 @@ def populate_db(app):
         db.session.add_all([user1, user2, user3, user4])
         db.session.commit()
 
-        # Items
+        # Categories (create and commit categories first)
+        cat1 = Category(name='Antiques', description='Vintage and antique items')
+        cat2 = Category(name='Art', description='Paintings, sculptures, and more')
+        cat3 = Category(name='Electronics', description='Gadgets and tech devices')
+        cat4 = Category(name='Fashion', description='Clothing, accessories, etc.')
+        cat5 = Category(name='Furniture', description='Home and office furniture')
+        cat6 = Category(name='Collectibles', description='Rare and collectible items')
+        cat7 = Category(name='Books', description='Rare books and literature')
+        db.session.add_all([cat1, cat2, cat3, cat4, cat5, cat6, cat7])
+        db.session.commit()
+
+        # Items (assign categories at creation time)
         item1 = Item(
             seller_id=user1.id,
             title='Vintage Clock',
@@ -38,7 +49,8 @@ def populate_db(app):
             upload_date=now,
             auction_start=now,
             auction_end=now + timedelta(days=3),
-            minimum_price=100.00
+            minimum_price=100.00,
+            category_id=cat1.id  # Assign to "Antiques"
         )
         item2 = Item(
             seller_id=user2.id,
@@ -47,7 +59,8 @@ def populate_db(app):
             upload_date=now,
             auction_start=now,
             auction_end=now + timedelta(days=5),
-            minimum_price=200.00
+            minimum_price=200.00,
+            category_id=cat2.id  # Assign to "Art"
         )
         db.session.add_all([item1, item2])
         db.session.commit()

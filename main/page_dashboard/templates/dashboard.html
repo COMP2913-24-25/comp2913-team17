@@ -3,11 +3,17 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-
 <div class="container mt-4">
   <!-- Manager Dashboard -->
   {% if manager %}
   <h1>Management Dashboard</h1>
+
+  <!-- View Rota Button for managers -->
+  <div class="mb-3">
+    <a href="{{ url_for('manager_page.expert_availability') }}" class="btn btn-primary">
+      Availability Overview
+    </a>
+  </div>
   <!-- Manager User Role Interface -->
   {% if manager['users'] %}
   <div class="card mt-4">
@@ -142,16 +148,19 @@
             <td><a href="/item/{{ request.item.url }}">{{ request.item.title }}</a></td>
             <td>
               {% if not eligible_experts %}
-              <p>No available experts</p>
+                <p>No available experts</p>
               {% else %}
-              <select class="form-select form-select-sm expert-select" style="width: auto; display: inline-block;">
-                {% for expert in eligible_experts %}
-                <option value="{{ expert.id }}">{{ expert.username }}</option>
-                {% endfor %}
-              </select>
-              <button class="btn btn-sm btn-outline-primary assign-expert-btn my-sm-1">
-                Assign
-              </button>
+                <select class="form-select form-select-sm expert-select" style="width: auto; display: inline-block;">
+                  {% for expert in eligible_experts %}
+                  <option value="{{ expert.id }}" data-availability="{{ get_expert_availability(expert) }}">
+                    {{ expert.username }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <span class="availability-text ms-2"></span>
+                <button class="btn btn-sm btn-outline-primary assign-expert-btn my-sm-1">
+                  Assign
+                </button>
               {% endif %}
             </td>
           </tr>
@@ -161,11 +170,12 @@
     </div>
   </div>
   {% endif %}
+  
   <!-- Expert Dashboard -->
   {% elif expert %}
   <h1>Expert Dashboard</h1>
   <div class="container mt-5">
-    <h2>Pending Authentications</h1>
+    <h2>Pending Authentications</h2>
     {% if expert['pending'] %}
     <ul>
       {% for request in expert['pending'] %}
@@ -195,7 +205,7 @@
     {% else %}
     <p>No auctions to authenticate.</p>
     {% endif %}
-    <h2>Completed Authentications</h1>
+    <h2>Completed Authentications</h2>
       {% if expert['complete'] %}
       <ul>
         {% for request in expert['complete'] %}
@@ -231,7 +241,7 @@
   <h1>User Dashboard</h1>
   {% endif %}
   <div class="container mt-5">
-    <h2>Your Auctions</h1>
+    <h2>Your Auctions</h2>
     {% if user['auctions'] %}
     <ul>
       {% for item in user['auctions'] %}
@@ -270,5 +280,4 @@
 <script src="{{ url_for('static', filename='js/updateRole.js') }}"></script>
 <script src="{{ url_for('static', filename='js/updateConfig.js') }}"></script>
 <script src="{{ url_for('static', filename='js/assignExpert.js') }}"></script>
-
 {% endblock %}
