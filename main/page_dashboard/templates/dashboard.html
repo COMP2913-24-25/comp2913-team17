@@ -7,6 +7,13 @@
   <!-- Manager Dashboard -->
   {% if manager %}
   <h1>Management Dashboard</h1>
+
+  <!-- View Rota Button for managers -->
+  <div class="mb-3">
+    <a href="{{ url_for('manager_page.expert_availability') }}" class="btn btn-primary">
+      Availability Overview
+    </a>
+  </div>
   <!-- Manager User Role Interface -->
   {% if manager['users'] %}
   <div class="card mt-4">
