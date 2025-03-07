@@ -12,15 +12,20 @@ const getCSRFToken = () => {
 const csrfFetch = async (url, options = {}) => {
   const csrfToken = getCSRFToken();
   
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
+  // Only set Content-Type to application/json if the body is not FormData
+  const headers = {
     'X-CSRF-Token': csrfToken
   };
-
+  
+  // Don't set Content-Type for FormData - the browser will set it with boundary
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
   return fetch(url, {
     ...options,
     headers: {
-      ...defaultHeaders,
+      ...headers,
       ...options.headers,
     },
   });

@@ -1,46 +1,13 @@
 """Auction creation routes."""
 
-import boto3
-from botocore.exceptions import ClientError
 from flask import render_template, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from . import create_page
 from .forms import CreateAuctionForm
+from ..s3_utils import upload_s3
 from ..models import db, Item, AuthenticationRequest, ManagerConfig
-
-
-def init_s3():
-    """Initialise the S3 client."""
-    return boto3.client(
-        's3',
-        aws_access_key_id=current_app.config['AWS_ACCESS_KEY'],
-        aws_secret_access_key=current_app.config['AWS_SECRET_KEY'],
-    )
-
-
-def upload_s3(file, filename, folder=None):
-    """Upload a file to S3 and return the URL."""
-    s3 = init_s3()
-    bucket = current_app.config['AWS_BUCKET']
-
-    try:
-        filepath = f'{folder}/{filename}' if folder else filename
-
-        s3.upload_fileobj(
-            file,
-            bucket,
-            filepath,
-            ExtraArgs={
-                'ACL': 'public-read',
-                'ContentType': file.content_type
-            }
-        )
-        return f'https://{bucket}.s3.amazonaws.com/{filepath}'
-    except ClientError as e:
-        print(e)
-        return None
 
 
 @create_page.route('/', methods=['GET', 'POST'])

@@ -22,7 +22,7 @@ def create_app():
     # Load environment variables
     basedir = os.path.abspath(os.path.dirname(__file__))
     parentdir = os.path.dirname(basedir)
-    load_dotenv(os.path.join(parentdir, '.env'))
+    load_dotenv(os.path.join(parentdir, '.env'), override=True)
 
     # Configure the secret key
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
@@ -58,6 +58,7 @@ def create_app():
     app.config['AWS_ACCESS_KEY'] = os.environ.get('AWS_ACCESS_KEY')
     app.config['AWS_SECRET_KEY'] = os.environ.get('AWS_SECRET_KEY')
     app.config['AWS_BUCKET'] = os.environ.get('AWS_BUCKET')
+    app.config['AWS_REGION'] = os.environ.get('AWS_REGION')
 
     # Configure email settings for Flask-Mail
     app.config.update(
