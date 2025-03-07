@@ -1,11 +1,13 @@
 """Dashboard related routes."""
 
+from app import socketio
 from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
 from datetime import date, datetime, timedelta
 from sqlalchemy import and_, or_, func
 from . import dashboard_page
-from ..models import ExpertAvailability, db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig, Bid
+from ..models import ExpertAvailability, db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig, Bid, Notification, Message
+from ..email_utils import send_notification_email
 
 
 def get_expert_availability(expert):
@@ -161,6 +163,7 @@ def update_user_role(user_id):
         return jsonify({'error': 'Invalid request'}), 400
 
     new_role = request.json.get('role')
+    role_strings = ['User', 'Expert', 'Manager']
 
     # User = 1, Expert = 2, Manager = 3
     if new_role not in [1, 2, 3]:
@@ -181,9 +184,30 @@ def update_user_role(user_id):
         return jsonify({'error': 'User already has this role'}), 400
 
     time = datetime.now()
+    old_role = user.role
     user.role = new_role
     user.updated_at = time
+
+    # Send notification to user whose role was changed
+    notification = Notification(
+        user_id=user.id,
+        message=f'Your role has been updated from {role_strings[old_role - 1]} to {role_strings[new_role - 1]}',
+        notification_type=0
+    )
+    db.session.add(notification)
     db.session.commit()
+        
+    # Send real-time notification
+    try:
+        socketio.emit('new_notification', {
+            'message': notification.message,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{user.secret_key}')
+    except Exception as e:
+        print(f'SocketIO Error: {e}')
+        
+    # Send email
+    send_notification_email(user, notification)
 
     return jsonify({
         'message': 'Role updated successfully',
@@ -280,14 +304,64 @@ def assign_expert(request_id):
         expert_id=expert
     )
     db.session.add(assignment)
+
+    # Create new message in the chat
+    message = Message(
+        authentication_request_id=request_id,
+        sender_id=expert,
+        message_text='Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
+        sent_at=datetime.now()
+    )
+    db.session.add(message)
+
+    # Send notification to expert and requester
+    notification_expert = Notification(
+        user_id=expert,
+        message=f'You have been assigned to authenticate an item',
+        item_url=item.url,
+        item_title=item.title,
+        notification_type=4
+    )
+    db.session.add(notification_expert)
+
+    notification_requester = Notification(
+        user_id=authentication_request.requester_id,
+        message=f'An expert has been assigned to authenticate your item',
+        item_url=item.url,
+        item_title=item.title,
+        notification_type=4
+    )
+    db.session.add(notification_requester)
     db.session.commit()
+        
+    # Send real-time notifications
+    try:
+        socketio.emit('new_notification', {
+            'message': notification_expert.message,
+            'item_url': notification_expert.item_url, 
+            'created_at': notification_expert.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{user.secret_key}')
+    except Exception as e:
+        print(f'SocketIO Error: {e}')
+
+    try:
+        socketio.emit('new_notification', {
+            'message': notification_requester.message,
+            'item_url': notification_requester.item_url, 
+            'created_at': notification_requester.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{authentication_request.requester.secret_key}')
+    except Exception as e:
+        print(f'SocketIO Error: {e}')
+        
+    # Send emails
+    send_notification_email(user, notification_expert)
+    send_notification_email(authentication_request.requester, notification_requester)
 
     return jsonify({
         'message': 'Assignment successful',
         'request_id': request_id,
         'expert_id': expert
     }), 200
-
 
 
 @dashboard_page.route('/api/update-base', methods=['PUT'])

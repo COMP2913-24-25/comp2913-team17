@@ -6,7 +6,8 @@ from flask import render_template, flash, redirect, url_for, jsonify, request
 from flask_login import login_required, current_user
 from datetime import datetime
 from . import authenticate_item_page
-from ..models import db, Item, AuthenticationRequest, Message
+from ..models import db, Item, AuthenticationRequest, Message, Notification
+from ..email_utils import send_notification_email
 
 # SocketIO event handlers
 @socketio.on('join_chat')
@@ -74,7 +75,30 @@ def accept(url):
     
     authentication.status = 2
     authentication.expert_assignments[-1].status = 2
+
+    # Send notification to requester
+    notification = Notification(
+        user_id=authentication.requester_id,
+        message=f'Your item has been authenticated!',
+        item_url=authentication.item.url,
+        item_title=authentication.item.title,
+        notification_type=4
+    )
+    db.session.add(notification)
     db.session.commit()
+        
+    # Send real-time notifications
+    try:
+        socketio.emit('new_notification', {
+            'message': notification.message,
+            'item_url': notification.item_url, 
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{authentication.requester.secret_key}')
+    except Exception as e:
+        print(f'SocketIO Error: {e}')
+        
+    # Send email
+    send_notification_email(authentication.requester, notification)
 
     socketio.emit('force_reload', { 'status': 'Authentication approved' }, room=url)
     return jsonify({'success': 'Authentication request accepted.'})
@@ -95,7 +119,30 @@ def reject(url):
     
     authentication.status = 3
     authentication.expert_assignments[-1].status = 2
+    
+    # Send notification to requester
+    notification = Notification(
+        user_id=authentication.requester_id,
+        message=f'Your item authentication has been declined.',
+        item_url=authentication.item.url,
+        item_title=authentication.item.title,
+        notification_type=4
+    )
+    db.session.add(notification)
     db.session.commit()
+        
+    # Send real-time notifications
+    try:
+        socketio.emit('new_notification', {
+            'message': notification.message,
+            'item_url': notification.item_url, 
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{authentication.requester.secret_key}')
+    except Exception as e:
+        print(f'SocketIO Error: {e}')
+        
+    # Send email
+    send_notification_email(authentication.requester, notification)
 
     socketio.emit('force_reload', {'status': 'Authentication declined'}, room=url)
     return jsonify({'success': 'Authentication request rejected.'})
@@ -148,6 +195,33 @@ def new_message(url):
     db.session.add(message)
     db.session.commit()
 
+    if is_creator:
+        recipient = authentication.expert_assignments[-1].expert if authentication.expert_assignments else None
+    else:
+        recipient = authentication.requester
+
+    # Send notification to recipient
+    if recipient:
+        notification = Notification(
+            user_id=recipient.id,
+            message=f'You have received a new message regarding an item authentication request.',
+            item_url=authentication.item.url,
+            item_title=authentication.item.title,
+            notification_type=0
+        )
+        db.session.add(notification)
+        db.session.commit()
+            
+        # Send real-time notifications
+        try:
+            socketio.emit('new_notification', {
+                'id': notification.id,
+                'message': notification.message,
+                'item_url': notification.item_url, 
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{recipient.secret_key}')
+        except Exception as e:
+            print(f'SocketIO Error: {e}')
 
     socketio.emit('new_message', {
         'message': message.message_text,

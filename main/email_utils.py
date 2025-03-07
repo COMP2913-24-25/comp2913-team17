@@ -25,6 +25,8 @@ def send_notification_email(user, notification):
             subject = f"Congratulations! You won the auction for {notification.item_title}"
         elif notification.notification_type == 3:
             subject = f"Auction for {notification.item_title} has ended"
+        elif notification.notification_type == 4:
+            subject = f"Update on authentication request for {notification.item_title}"
         
         # Build email body
         body = f"{notification.message}\n\n"

@@ -9,13 +9,36 @@ $(document).ready(function() {
 
   // Listen for new notifications
   window.globalSocket.on('new_notification', function(data) {
+    // If we are on the authentication page and receive a notification, then don't show and mark as read
+    const itemUrl = $('#item-link').attr('href');
+
+    if (itemUrl && itemUrl.split('/').pop() === data.item_url) {
+      // Mark the notification as read without showing it
+      if (data.id) {
+        markNotificationsAsRead([data.id])
+          .catch(error => console.error('Error marking current item notification as read:', error));
+      }
+      return;
+    }
+
     // Update notification count badge
     const badge = $('.btn:contains("Notifications") .badge');
-    const currentCount = parseInt(badge.text()) || 0;
-    badge.text(currentCount + 1);
-    
-    if (badge.hasClass('d-none')) {
-      badge.removeClass('d-none');
+
+    // Create the badge if it doesn't exist
+    if (badge.length === 0) {
+      console.log('Creating badge');
+      $('#notif-button').append(`
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          1
+        </span>
+      `);
+    } else {
+      const currentCount = parseInt(badge.text()) || 0;
+      badge.text(currentCount + 1);
+      
+      if (badge.hasClass('d-none')) {
+        badge.removeClass('d-none');
+      }
     }
 
     // Create new notification element

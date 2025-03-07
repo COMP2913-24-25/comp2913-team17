@@ -18,8 +18,8 @@ def populate_db(app):
         user1 = User(username='alice', email='alice@example.com', role=1)
         user1.set_password('alice123')
 
-        user2 = User(username='bob', email='bob@example.com', role=1)
-        user2.set_password('bob123')
+        user2 = User(username='robert', email='robert@example.com', role=1)
+        user2.set_password('robert123')
 
         user3 = User(username='charlie', email='charlie@example.com', role=2)
         user3.set_password('charlie123')
@@ -130,13 +130,13 @@ def populate_db(app):
         message1 = Message(
             authentication_request_id=auth_req.request_id,
             sender_id=user3.id,
-            message_text='I have reviewed the request.',
+            message_text='Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
             sent_at=now + timedelta(hours=1)
         )
         message2 = Message(
             authentication_request_id=auth_req.request_id,
             sender_id=user2.id,
-            message_text='Thanks for the update.',
+            message_text='I\'ll provide the necessary information shortly.',
             sent_at=now + timedelta(hours=2)
         )
         db.session.add_all([message1, message2])
