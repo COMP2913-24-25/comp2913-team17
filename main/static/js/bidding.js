@@ -8,6 +8,8 @@ $(document).ready(function() {
   const noBids = $('.no-bids-msg');
   const auctionEnd = $('.auction-end');
   const countdown = $('.countdown');
+  const currentPrice = $('#price-section');
+  const bidHelp = $('#bid-amount-help');
 
   // Initialise live countdown
   function startCountdown() {
@@ -141,6 +143,16 @@ $(document).ready(function() {
     if (maxBid.length) {
       maxBid.text(`${parseFloat(data.bid_amount).toFixed(2)}`);
     }
+
+    // Update the current price
+    currentPrice.html(`
+      <h5>Highest Bid</h5>
+      <p class="h3 text-primary">£${parseFloat(data.bid_amount).toFixed(2)}</p>
+    `)
+
+    bidHelp.html(`
+      Current highest bid: £<span class="max-bid">${parseFloat(data.bid_amount).toFixed(2)}</span>
+    `)
 
     // Update the bid history
     if (!bidHistory.length) {

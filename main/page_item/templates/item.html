@@ -65,9 +65,14 @@
         </div>
       </div>
       <!-- Price -->
-      <div class="mb-4">
-        <h5>Minimum Price</h5>
+      <div class="mb-4" id="price-section">
+        {% if item.highest_bid() %}
+        <h5>Highest Bid</h5>
+        <p class="h3 text-primary">£{{ "%.2f"|format(item.highest_bid().bid_amount) }}</p>
+        {% else %}
+        <h5>Starting Price</h5>
         <p class="h3 text-primary">£{{ "%.2f"|format(item.minimum_price) }}</p>
+        {% endif %}
       </div>
       <!-- Auction Times -->
       <div class="mb-4">
@@ -114,7 +119,7 @@
               required
             >
           </div>
-          <div class="form-text">
+          <div class="form-text" id="bid-amount-help">
             {% if item.highest_bid() %}
               Current highest bid: £<span class="max-bid">{{ "%.2f"|format(item.highest_bid().bid_amount) }}</span>
             {% else %}
