@@ -43,7 +43,7 @@ class CreateAuctionForm(FlaskForm):
     )
 
     image = FileField('Image (optional)', validators=[
-        FileAllowed(['jpg', 'png'], '.jpg or .png images only'),
+        FileAllowed(['jpg', 'png', 'jpeg'], '.jpg, .jpeg, or .png images only'),
         FileSize(max_size=1024 * 1024, message='Image must be 1MB or less')
     ])
 
