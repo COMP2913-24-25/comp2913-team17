@@ -436,3 +436,22 @@ class Category(db.Model):
 
     def __repr__(self):
         return f"<Category {self.name}>"
+
+# Expert Category Model
+class ExpertCategory(db.Model):
+    __tablename__ = 'expert_categories'
+
+    id = db.Column(db.Integer, primary_key=True)
+    expert_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+
+    # Relationships to other tables
+    expert = db.relationship('User', 
+                           backref=db.backref('expert_categories', lazy=True),
+                           foreign_keys=[expert_id])
+    category = db.relationship('Category',
+                             backref=db.backref('expert_categories', lazy=True),
+                             foreign_keys=[category_id])
+
+    def __repr__(self):
+        return f"<ExpertCategory {self.id} for Expert {self.expert_id} in Category {self.category_id}>"

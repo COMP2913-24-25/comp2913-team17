@@ -199,6 +199,59 @@
   {% elif expert %}
   <h1>Expert Dashboard</h1>
   <div class="container mt-5">
+    <h2>Expertise</h2>
+    <!-- Current expertise -->
+    <div class="card mb-4">
+      <div class="card-header">Current Expertise</div>
+        <div class="card-body">
+          <div id="current-expertise">
+            {% if expert['expertise'] %}
+            {% for e in expert['expertise'] %}
+            <span class="badge bg-primary me-2 mb-2" title="{{ e.description }}">{{ e.name }}</span>
+            {% endfor %}
+            {% else %}
+            <p class="text-muted">No areas of expertise selected yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <!-- Category selection form -->
+      <form id="expertise-form">
+        <div class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>All Categories</span>
+            <div>
+              <button type="button" id="select-all" class="btn btn-sm btn-outline-primary me-2">Select All</button>
+              <button type="button" id="deselect-all" class="btn btn-sm btn-outline-secondary">Clear All</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row" id="expertise-categories">
+              {% for category in expert['categories'] %}
+              <div class="col-md-4 col-sm-6 mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" 
+                    value="{{ category.id }}" 
+                    id="category-{{ category.id }}" 
+                    name="expertise" 
+                    {% if category in expert['expertise'] %}checked{% endif %}>
+                  <label class="form-check-label" for="category-{{ category.id }}" title="{{ category.description }}">
+                    {{ category.name }}
+                  </label>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <!-- Chnage Expertise Buttons -->
+        <div class="d-flex justify-content-end">
+          <button type="button" id="cancel-changes" class="btn btn-outline-secondary me-2">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+    <!-- Authentications -->
     <h2>Pending Authentications</h2>
     {% if expert['pending'] %}
     <ul>
@@ -351,5 +404,6 @@
 <script src="{{ url_for('static', filename='js/updateConfig.js') }}"></script>
 <script src="{{ url_for('static', filename='js/assignExpert.js') }}"></script>
 <script src="{{ url_for('static', filename='js/managementCharts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/changeExpertise.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

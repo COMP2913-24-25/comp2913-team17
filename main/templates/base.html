@@ -18,6 +18,8 @@
   <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
   <!-- CSRF Helper -->
   <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+  <!-- Notifications -->
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 </head>
 <body>
   <!-- Navbar -->
@@ -136,6 +138,5 @@
     {% block content %}{% endblock %}
   </div>
   <!-- Custom JS -->
-  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 </body>
 </html>
