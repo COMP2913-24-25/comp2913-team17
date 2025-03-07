@@ -345,7 +345,7 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now())
     item_url = db.Column(db.String(32), nullable=True)
     item_title = db.Column(db.String(256), nullable=True)
-    # Notification type: 0 = Default, 1 = Outbid, 2 = Winner, 3 = Loser
+    # Notification type: 0 = Default, 1 = Outbid, 2 = Winner, 3 = Loser, 4 = Authentication Update
     notification_type = db.Column(db.Integer, nullable=True, default=0)
 
 

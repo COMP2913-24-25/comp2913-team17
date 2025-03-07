@@ -9,6 +9,18 @@ $(document).ready(function() {
 
   // Listen for new notifications
   window.globalSocket.on('new_notification', function(data) {
+    // If we are on the authentication page and receive a notification, then don't show and mark as read
+    const itemUrl = $('#item-link').attr('href');
+
+    if (itemUrl && itemUrl.split('/').pop() === data.item_url) {
+      // Mark the notification as read without showing it
+      if (data.id) {
+        markNotificationsAsRead([data.id])
+          .catch(error => console.error('Error marking current item notification as read:', error));
+      }
+      return;
+    }
+
     // Update notification count badge
     const badge = $('.btn:contains("Notifications") .badge');
     const currentCount = parseInt(badge.text()) || 0;
