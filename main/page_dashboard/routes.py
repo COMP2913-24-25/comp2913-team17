@@ -114,6 +114,10 @@ def index():
             .join(AuthenticationRequest, AuthenticationRequest.item_id == Item.item_id)\
             .filter(AuthenticationRequest.status == 2)\
             .scalar() or 0.0
+        
+        total_revenue = float(total_revenue)
+        authenticated_revenue = float(authenticated_revenue)
+        
         standard_revenue = total_revenue - authenticated_revenue
         commission_income = (standard_revenue * (manager['base_fee'] / 100)) + (authenticated_revenue * (manager['authenticated_fee'] / 100))
         manager['commission_income'] = commission_income
