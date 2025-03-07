@@ -1,5 +1,3 @@
-// Add this to your existing dashboard.js or create a new file
-
 $(document).ready(function() {
   // Update all countdowns on load
   $('.countdown').each(function() {
@@ -115,18 +113,25 @@ $(document).ready(function() {
     const hours = Math.floor(delta / (1000 * 60 * 60));
     const days = Math.floor(delta / (1000 * 60 * 60 * 24));
     
-    // If less than 1 hour, make urgent and show minutes
-    if (hours < 1) {
-      element.removeClass('countdown-active').addClass('countdown-urgent');
-      element.text(minutes + (minutes === 1 ? ' minute' : ' minutes'));
-    } else if (days < 1) {
-      // Less than a day, show hours
-      element.removeClass('countdown-urgent').addClass('countdown-active');
-      element.text(hours + (hours === 1 ? ' hour' : ' hours'));
-    } else {
+    // Display time remaining with appropriate units, including seconds
+    if (days > 0) {
       // More than a day, show days
       element.removeClass('countdown-urgent').addClass('countdown-active');
       element.text(days + (days === 1 ? ' day' : ' days'));
+    } else if (hours > 0) {
+      // Less than a day but more than an hour, show hours
+      element.removeClass('countdown-urgent').addClass('countdown-active');
+      element.text(hours + (hours === 1 ? ' hour' : ' hours'));
+    } else if (minutes > 0) {
+      // Less than an hour but more than a minute, show minutes and seconds
+      element.removeClass('countdown-active').addClass('countdown-urgent');
+      const remainingSeconds = seconds % 60;
+      element.text(minutes + (minutes === 1 ? ' minute ' : ' minutes ') + 
+                  remainingSeconds + (remainingSeconds === 1 ? ' second' : ' seconds'));
+    } else {
+      // Less than a minute, show only seconds
+      element.removeClass('countdown-active').addClass('countdown-urgent');
+      element.text(seconds + (seconds === 1 ? ' second' : ' seconds'));
     }
   }
 });
