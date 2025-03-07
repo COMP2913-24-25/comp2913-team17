@@ -283,6 +283,7 @@
               <th>Status</th>
               <th>Current Price</th>
               <th>Time Remaining</th>
+              <th>Watchers</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -313,6 +314,11 @@
                 {% else %}
                   Ended
                 {% endif %}
+              </td>
+              <td>
+                <span class="badge bg-secondary">
+                  <i class="fas fa-user-friends"></i> {{ item.watcher_count() }}
+                </span>
               </td>
               <td>
                 <div class="btn-group d-flex gap-1">

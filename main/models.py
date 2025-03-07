@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 # Models
 # ---------------------------
 
+# Table for watched items
 user_watched_items = db.Table('user_watched_items',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
     db.Column('item_id', db.Integer, db.ForeignKey('items.item_id'))
@@ -78,7 +79,6 @@ class User(UserMixin, db.Model):
                                            Item.winning_bid_id.is_(None)).all()
         for item in finished_items:
             item.finalise_auction()
-
 
 
 # Item Model
@@ -223,6 +223,11 @@ class Item(db.Model):
             # Notify winner and losers
             self.notify_winner()
             self.notify_losers()
+
+    # Count the number of users watching an auction
+    def watcher_count(self):
+        """Return the number of users watching this auction."""
+        return len(self.watchers.all())
 
 
 # Bid Model

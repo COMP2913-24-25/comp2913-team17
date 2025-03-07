@@ -127,7 +127,7 @@
           <button type="submit" class="btn btn-primary btn-lg">Place Bid</button>
         </div>
         
-        <div class="mt-3">
+        <div class="mt-3 d-flex align-items-center">
           {% if is_watching %}
             <button id="unwatch-btn" class="btn btn-success" data-item-url="{{ item.url }}">
               <i class="fas fa-check"></i> Watched
@@ -137,6 +137,9 @@
               <i class="fas fa-eye"></i> Watch
             </button>
           {% endif %}
+          <span id="watch-counter" class="ms-2 badge bg-secondary">
+            <i class="fas fa-user-friends"></i> {{ item.watcher_count() }} {% if item.watcher_count() == 1 %}watcher{% else %}watchers{% endif %}
+          </span>
         </div>
         
         <div class="mt-3">

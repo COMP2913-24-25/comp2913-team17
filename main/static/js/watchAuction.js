@@ -20,6 +20,15 @@ $(document).ready(function() {
             </button>
           `);
           
+          // Update the watch counter
+          if ($('#watch-counter').length) {
+            const currentCount = parseInt($('#watch-counter').text().match(/\d+/)[0]);
+            const newCount = currentCount + 1;
+            $('#watch-counter').html(`
+              <i class="fas fa-user-friends"></i> ${newCount} ${newCount === 1 ? 'watcher' : 'watchers'}
+            `);
+          }
+          
           // Add event listener for the new unwatch button
           $('#unwatch-btn').on('click', function(e) {
             // Prevent default action and stop propagation to avoid form submission
@@ -92,6 +101,15 @@ $(document).ready(function() {
                 <i class="fas fa-eye"></i> Watch
               </button>
             `);
+            
+            // Update the watch counter
+            if ($('#watch-counter').length) {
+              const currentCount = parseInt($('#watch-counter').text().match(/\d+/)[0]);
+              const newCount = Math.max(0, currentCount - 1);
+              $('#watch-counter').html(`
+                <i class="fas fa-user-friends"></i> ${newCount} ${newCount === 1 ? 'watcher' : 'watchers'}
+              `);
+            }
             
             // Add event listener for the new watch button
             $('#watch-btn').on('click', function(e) {
