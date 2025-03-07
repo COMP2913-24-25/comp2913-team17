@@ -22,7 +22,7 @@ def create_app():
     # Load environment variables
     basedir = os.path.abspath(os.path.dirname(__file__))
     parentdir = os.path.dirname(basedir)
-    load_dotenv(os.path.join(parentdir, '.env'), override=True)
+    load_dotenv(os.path.join(parentdir, '.env'))
 
     # Configure the secret key
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
