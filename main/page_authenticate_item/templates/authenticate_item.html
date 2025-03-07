@@ -28,10 +28,16 @@
   <div id="messages">
     {% for message in messages %}
     <div class="message {% if message.sender_id == current_user.id %}my-messages{% else %}other-messages{% endif %}">
-      {% if message.image %}
-      <img src="{{ url_for('static', filename=message.image) }}" style="max-width: 100%">
-      {% endif %}
       <p>{{ message.message_text }}</p>
+      {% if message.image_urls %}
+      <div class="image-gallery">
+        {% for url in message.image_urls %}
+        <a href="{{ url }}" target="_blank">
+          <img src="{{ url }}" alt="Attached image" class="message-image">
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
       <p class="username">{{ message.sender.username }} ({{ message.sent_at.strftime('%Y-%m-%d %H:%M:%S') }})</p>
     </div>
     {% endfor %}
@@ -40,6 +46,11 @@
   {% if authentication == 1 and (is_expert or is_creator) %}
   <form id="message-form" title="{{ 'Login to send messages' if not current_user.is_authenticated }}" enctype="multipart/form-data">
     <input type="text" id="message" placeholder="Enter your message" required>
+    <div class="image-upload-container">
+      <input type="file" id="images" name="files[]" accept="image/*" multiple>
+      <small class="text-muted">Maximum 5 images, 1MB each</small>
+      <div id="selected-files"></div>
+    </div>
     <button type="submit">Send</button>
   </form>
   {% endif %}

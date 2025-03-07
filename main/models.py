@@ -7,6 +7,7 @@ from uuid import uuid4
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import current_app
 from .email_utils import send_notification_email
+from .s3_utils import init_s3
 
 db = SQLAlchemy()
 logger = logging.getLogger(__name__)
@@ -347,8 +348,37 @@ class Message(db.Model):
     message_text = db.Column(db.Text, nullable=False)
     sent_at = db.Column(db.DateTime, default=datetime.now())
 
+    # Relationship to message images
+    images = db.relationship('MessageImage', backref='message', lazy='joined')
+
+    # Helper method to get image URLs for this message
+    def get_image_urls(self, expiry=3600):
+        """Get all image URLs for this message"""
+        return [image.get_url(expiry) for image in self.images]
+
     def __repr__(self):
         return f"<Message {self.message_id} from User {self.sender_id}>"
+
+# Message Images
+class MessageImage(db.Model):
+    __tablename__ = 'message_images'
+
+    image_id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey('messages.message_id'), nullable=False)
+    # Message attachments are private so we store the key not the URL
+    image_key = db.Column(db.String(256), nullable=False)
+
+    # Get the URL for the image - only needed here because message attachments are private
+    def get_url(self, expiry=3600):
+        s3_client = init_s3()
+        return s3_client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': current_app.config['AWS_BUCKET'], 'Key': self.image_key},
+            ExpiresIn=expiry
+        )
+
+    def __repr__(self):
+        return f"<MessageImage {self.image_id} for Message {self.message_id}>"
 
 # Notification Model
 class Notification(db.Model):

@@ -16,6 +16,56 @@
   100% { opacity: 1; }
 }
 
+.bg-dark-turquoise { 
+  background-color: #008B8B !important; 
+}
+.bg-dark-orange { 
+  background-color: #FF8C00 !important; 
+}
+
+/* Authentication Page Styles */
+.image-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.message-image {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.message-image:hover {
+  transform: scale(1.05);
+}
+
+.image-upload-container {
+  margin: 10px 0;
+}
+
+#selected-files {
+  margin-top: 5px;
+  font-size: 0.9em;
+}
+
+.selected-file {
+  background-color: #f0f0f0;
+  padding: 3px 8px;
+  margin: 2px 0;
+  border-radius: 3px;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: bold;
+}
+
 #messages {
   width: 90%;
   margin: 20px auto;
@@ -46,11 +96,4 @@
 .username {
   font-size: 0.8em;
   margin: 0;
-}
-
-.bg-dark-turquoise { 
-  background-color: #008B8B !important; 
-}
-.bg-dark-orange { 
-  background-color: #FF8C00 !important; 
 }

@@ -58,6 +58,7 @@ def create_app():
     app.config['AWS_ACCESS_KEY'] = os.environ.get('AWS_ACCESS_KEY')
     app.config['AWS_SECRET_KEY'] = os.environ.get('AWS_SECRET_KEY')
     app.config['AWS_BUCKET'] = os.environ.get('AWS_BUCKET')
+    app.config['AWS_REGION'] = os.environ.get('AWS_REGION')
 
     # Configure email settings for Flask-Mail
     app.config.update(

@@ -4,10 +4,22 @@ from app import socketio
 from flask_socketio import join_room, leave_room
 from flask import render_template, flash, redirect, url_for, jsonify, request
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 from datetime import datetime
+from sqlalchemy.orm import joinedload
 from . import authenticate_item_page
-from ..models import db, Item, AuthenticationRequest, Message, Notification
+from ..models import db, Item, AuthenticationRequest, Message, Notification, MessageImage
 from ..email_utils import send_notification_email
+from ..s3_utils import upload_s3
+
+MAX_SIZE = 1024 * 1024
+MAX_IMAGES = 5
+
+
+def allowed_file(filename):
+    """Check if a file is an allowed type."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
+
 
 # SocketIO event handlers
 @socketio.on('join_chat')
@@ -55,7 +67,16 @@ def index(url):
         flash('You are not authorised to view this page.', 'danger')
         return redirect(url_for('home_page.index'))
     
-    messages = Message.query.filter_by(authentication_request_id=authentication.request_id).all()
+    # Get messages with their images
+    messages = Message.query.options(
+        joinedload(Message.images)
+    ).filter(
+        Message.authentication_request_id == authentication.request_id
+    ).all()
+
+    # Pre-compute image URLs for each message
+    for message in messages:
+        setattr(message, 'image_urls', [image.get_url() for image in message.images])
 
     return render_template('authenticate_item.html', item=item, authentication=authentication.status, is_creator=is_creator, is_expert=is_expert, is_admin=is_admin, messages=messages)
 
@@ -184,23 +205,69 @@ def new_message(url):
 
     if not is_creator and not is_expert:
         return jsonify({'error': 'You are not authorised to leave a message.'}), 403
-
-    # Create and emit new message
+    
+    message_text = request.form.get('content')
+    if not message_text:
+        return jsonify({'error': 'Message content is required.'}), 400
+    
+    # Create the message
     message = Message(
         authentication_request_id=authentication.request_id,
         sender_id=current_user.id,
-        message_text=request.json.get('content'),
+        message_text=message_text,
         sent_at=datetime.now()
     )
     db.session.add(message)
     db.session.commit()
+    
+    # Upload image if provided
+    files = request.files.getlist('files[]')
+    image_urls = []
 
+    if len(files) > MAX_IMAGES:
+        return jsonify({'error': f'Maximum {MAX_IMAGES} images allowed per message.'}), 400
+    
+    for file in files:
+        if file and file.filename:
+            # Check file type and size
+            if not allowed_file(file.filename):
+                return jsonify({'error': 'Invalid file type. Only jpg, jpeg, and png are allowed.'}), 400
+        
+            if len(file.read()) > MAX_SIZE:
+                return jsonify({'error': 'Image file too large. Maximum size is 1MB.'}), 400
+
+            file.seek(0)
+            filename = secure_filename(file.filename)
+            image_filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{filename}'
+            path = upload_s3(file, image_filename, folder='message_attachments', private=True)
+            
+            # Create message image entry
+            message_image = MessageImage(
+                message_id=message.message_id,
+                image_key=path
+            )
+            db.session.add(message_image)
+            db.session.commit()
+            
+            # Get image URL for real-time messaging
+            image_url = message_image.get_url()
+            image_urls.append(image_url)
+
+    # Send real-time message
+    socketio.emit('new_message', {
+        'message': message.message_text,
+        'sender': current_user.username,
+        'sender_id': str(current_user.id),
+        'images': image_urls,
+        'sent_at': message.sent_at.strftime('%Y-%m-%d %H:%M:%S')
+    }, room=url)
+
+    # Send notification to recipient
     if is_creator:
         recipient = authentication.expert_assignments[-1].expert if authentication.expert_assignments else None
     else:
         recipient = authentication.requester
 
-    # Send notification to recipient
     if recipient:
         notification = Notification(
             user_id=recipient.id,
@@ -222,12 +289,5 @@ def new_message(url):
             }, room=f'user_{recipient.secret_key}')
         except Exception as e:
             print(f'SocketIO Error: {e}')
-
-    socketio.emit('new_message', {
-        'message': message.message_text,
-        'sender': current_user.username,
-        'sender_id': str(current_user.id),
-        'sent_at': message.sent_at.strftime('%Y-%m-%d %H:%M:%S')
-    }, room=url)
 
     return jsonify({'success': 'Your message has been sent.'})
