@@ -89,7 +89,7 @@ class Item(db.Model):
     item_id = db.Column(db.Integer, primary_key=True)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     # New field for category support
-    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     url = db.Column(db.String(32), unique=True,
                     default=lambda: uuid4().hex, nullable=False, index=True)
     title = db.Column(db.String(256), nullable=False)
@@ -424,14 +424,14 @@ class ManagerConfig(db.Model):
     def __repr__(self):
         return f"<ManagerConfig {self.config_key}>"
 
-# Category Model
+# Item Category Model
 class Category(db.Model):
     __tablename__ = 'categories'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.Text)
-    # One to many, so each item has one category, but each cat has mnay items
+    # One to many, so each item has one category, but each cat has many items
     items = db.relationship('Item', backref='category', lazy=True)
 
     def __repr__(self):

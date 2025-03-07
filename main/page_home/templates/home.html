@@ -50,6 +50,11 @@
               </div>
               <span class="auction-title">{{ item.title }}</span>
               <div>
+                <span class="badge bg-info p-2" {% if item.category.description %}title="{{ item.category.description }}"{% endif %}>
+                  <i class="fas fa-tag"></i> {{ item.category.name }}
+                </span>
+              </div>
+              <div>
                 {% set highest_bid = item.highest_bid() %}
                 {% if highest_bid %}
                   £{{ highest_bid.bid_amount }} <i>{{ item.bids|length }} bids</i>

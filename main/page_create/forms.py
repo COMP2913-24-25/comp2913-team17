@@ -2,11 +2,11 @@
 
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileSize
-from wtforms import StringField, TextAreaField, DecimalField, SubmitField, BooleanField
+from wtforms import StringField, TextAreaField, DecimalField, SubmitField, BooleanField, SelectField
 from wtforms.fields import DateTimeLocalField
 from wtforms.validators import DataRequired, Length, NumberRange, ValidationError
 from datetime import datetime, timedelta
-from ..models import ManagerConfig
+from ..models import ManagerConfig, Category
 
 
 class CreateAuctionForm(FlaskForm):
@@ -20,6 +20,10 @@ class CreateAuctionForm(FlaskForm):
         DataRequired(message="Description is required"),
         Length(min=10, message='Description must be at least 10 characters')
     ])
+
+    category_id = SelectField('Category', coerce=int, validators=[DataRequired(
+        message="Please select a category"
+    )])
 
     auction_end = DateTimeLocalField(
         'Auction End Time',
@@ -44,6 +48,22 @@ class CreateAuctionForm(FlaskForm):
     authenticate_item = BooleanField("Authenticate Item", default=False)
 
     submit = SubmitField('Create Auction')
+
+    def __init__(self, *args, **kwargs):
+        super(CreateAuctionForm, self).__init__(*args, **kwargs)
+
+        # Get all categories and order by name
+        categories = Category.query.order_by(Category.name).all()
+        
+        # Set the choices for the category select field
+        self.category_id.choices = [
+            (c.id, c.name) for c in categories
+        ]
+        
+        # Store descriptions to use in the template
+        self.category_descriptions = {
+            c.id: c.description for c in categories if c.description
+        }
 
     def validate_auction_end(self, field):
         try:

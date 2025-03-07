@@ -33,6 +33,7 @@ def index():
     if form.validate_on_submit():
         title = form.title.data
         description = form.description.data
+        category_id = form.category_id.data
         end = form.auction_end.data
         min_price = form.minimum_price.data
         image = form.image.data
@@ -51,6 +52,7 @@ def index():
             seller_id=current_user.id,
             title=title,
             description=description,
+            category_id=category_id,
             auction_start=datetime.now(),
             auction_end=end,
             minimum_price=min_price,
