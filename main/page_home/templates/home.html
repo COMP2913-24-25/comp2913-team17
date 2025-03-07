@@ -11,6 +11,26 @@
   <!-- Search bar -->
   <div class="search-container mb-4">
     <input type="text" id="search-bar" class="form-control" placeholder="Search auctions...">
+    <!-- Auction Type filter -->
+    <select id="type-filter" class="form-select my-1">
+      <option value="" title="Filter by auction status">All Auctions</option>
+      <option value="1" title="Live Auctions">Live Auctions</option>
+      <option value="2" title="Ended Auctions">Ended Auctions</option>
+    </select>
+    <!-- Category filter -->
+    <select id="category-filter" class="form-select">
+      <option value="" title="Filter by category">All Categories</option>
+      {% for category in categories %}
+      <option value="{{ category.id }}" title="{{ category.description }}">{{ category.name }}</option>
+      {% endfor %}
+    </select>
+    <!-- Authentication filter -->
+    <div class="form-check mt-2">
+      <input class="form-check-input" type="checkbox" id="authenticated-only" value="">
+      <label class="form-check-label" for="authenticated-only">
+        Only show authenticated items
+      </label>
+    </div>
   </div>
 
   {% if items %}
@@ -35,8 +55,8 @@
                 <div class="badge {% if not item.authentication_requests %}bg-secondary
                 {% elif item.authentication_requests[0].status == 2 %}bg-success
                 {% elif item.authentication_requests[0].status == 3 %}bg-danger
-                {% else %}bg-warning{% endif %} p-2"
-                >
+                {% else %}bg-warning{% endif %} p-2 authentication-status" 
+                data-authentication="{{ 0 if not item.authentication_requests else item.authentication_requests[0].status }}" title="Authentication Status">
                 {% if not item.authentication_requests %}
                     Not Authenticated
                 {% elif item.authentication_requests[0].status == 2 %}
@@ -50,7 +70,7 @@
               </div>
               <span class="auction-title">{{ item.title }}</span>
               <div>
-                <span class="badge bg-info p-2" {% if item.category.description %}title="{{ item.category.description }}"{% endif %}>
+                <span class="badge bg-info p-2 category" data-category="{{ item.category.id }}" {% if item.category.description %}title="{{ item.category.description }}"{% endif %}>
                   <i class="fas fa-tag"></i> {{ item.category.name }}
                 </span>
               </div>
