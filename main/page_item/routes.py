@@ -180,3 +180,45 @@ def mark_notifications_read():
     except Exception as e:
         logger.error(f"Error marking specific notifications as read: {str(e)}")
         return jsonify({'error': 'Failed to mark notifications as read'}), 500
+
+
+@item_page.route('/<url>/watch', methods=['POST'])
+@login_required
+def watch_item(url):
+    """Add an item to the user's watched items."""
+    try:
+        item = Item.query.filter_by(url=url).first_or_404()
+        
+        # Check if already watching
+        if item in current_user.watched_items:
+            return jsonify({'error': 'Already watching this auction'}), 400
+            
+        current_user.watched_items.append(item)
+        db.session.commit()
+        
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error watching item: {str(e)}")
+        return jsonify({'error': 'Could not add to watched items'}), 500
+
+
+@item_page.route('/<url>/unwatch', methods=['POST'])
+@login_required
+def unwatch_item(url):
+    """Remove an item from the user's watched items."""
+    try:
+        item = Item.query.filter_by(url=url).first_or_404()
+        
+        # Check if actually watching
+        if item not in current_user.watched_items:
+            return jsonify({'error': 'Not watching this auction'}), 400
+            
+        current_user.watched_items.remove(item)
+        db.session.commit()
+        
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error unwatching item: {str(e)}")
+        return jsonify({'error': 'Could not remove from watched items'}), 500

@@ -128,6 +128,18 @@
         </div>
         
         <div class="mt-3">
+          {% if is_watching %}
+            <button id="unwatch-btn" class="btn btn-success" data-item-url="{{ item.url }}">
+              <i class="fas fa-check"></i> Watched
+            </button>
+          {% else %}
+            <button id="watch-btn" class="btn btn-outline-primary" data-item-url="{{ item.url }}">
+              <i class="fas fa-eye"></i> Watch
+            </button>
+          {% endif %}
+        </div>
+        
+        <div class="mt-3">
           <p class="text-muted small-end">
             Auction ends on: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
           </p>
@@ -151,17 +163,6 @@
           {% endif %}
         </div>
       </form>
-      <div class="mt-3">
-        {% if is_watching %}
-          <button id="unwatch-btn" class="btn btn-outline-secondary" data-item-url="{{ item.url }}">
-            <i class="fas fa-eye-slash"></i> Unwatch
-          </button>
-        {% else %}
-          <button id="watch-btn" class="btn btn-outline-primary" data-item-url="{{ item.url }}">
-            <i class="fas fa-eye"></i> Watch
-          </button>
-        {% endif %}
-      </div>
       {% else %}
       <div class="d-grid gap-2">
         <a href="{{ url_for('auth_page.login') }}" class="btn btn-primary btn-lg">Login to Place Bid</a>

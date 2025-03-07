@@ -15,6 +15,11 @@ logger = logging.getLogger(__name__)
 # Models
 # ---------------------------
 
+user_watched_items = db.Table('user_watched_items',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+    db.Column('item_id', db.Integer, db.ForeignKey('items.item_id'))
+)
+
 # User Model
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -44,6 +49,9 @@ class User(UserMixin, db.Model):
     expert_availabilities = db.relationship('ExpertAvailability', backref='expert', lazy=True)
     messages_sent = db.relationship('Message', backref='sender', lazy=True)
     notifications = db.relationship('Notification', backref='user', lazy=True)
+    watched_items = db.relationship('Item', secondary=user_watched_items, 
+                                   backref=db.backref('watchers', lazy='dynamic'),
+                                   lazy='dynamic')
 
     def __repr__(self):
         return f"<User {self.username}>"

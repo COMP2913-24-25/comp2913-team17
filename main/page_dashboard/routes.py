@@ -146,17 +146,12 @@ def index():
             .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 2)).all()
 
     # General User interface, all users can see their own auctions
-    user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1
-    # Add watched items
-    watched_items = db.session.query(Item)\
-        .join(WatchedItem, WatchedItem.item_id == Item.item_id)\
-        .filter(WatchedItem.user_id == current_user.id)\
-        .all()
-    
-    user['watched_items'] = watched_items
-    # General User interface
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
-    return render_template('dashboard.html', manager=manager, expert=expert, user=user, now=now, get_expert_availability=get_expert_availability)
+    user_data = {
+        'auctions': user['auctions'],
+        'watched_items': current_user.watched_items.all() if hasattr(current_user, 'watched_items') else []
+    }
+    return render_template('dashboard.html', manager=manager, expert=expert, user=user_data, now=now, get_expert_availability=get_expert_availability)
 
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])

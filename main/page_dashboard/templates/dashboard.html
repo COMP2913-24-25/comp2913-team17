@@ -270,42 +270,70 @@
     <p>No auctions available.</p>
     {% endif %}
   </div>
+
+  <!-- Watched Auction Table -->
   <div class="container mt-5">
-    <h2>Watched Auctions</h1>
+    <h2>My Watched Auctions</h2>
     {% if user['watched_items'] %}
-    <ul>
-      {% for item in user['watched_items'] %}
-      <li>
-        <a href="{{ url_for('item_page.index', url=item.url) }}"
-          title="See item details"
-        >
-          {{ item.title }}
-        </a>
-        <!-- Show countdown or status -->
-        <span class="badge {% if now < item.auction_end %}bg-primary{% else %}bg-secondary{% endif %} p-2">
-          {% if now < item.auction_end %}
-            Ends: {{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}
-          {% else %}
-            Ended
-          {% endif %}
-        </span>
-        
-        <!-- Show highest bid information -->
-        {% set highest_bid = item.highest_bid() %}
-        {% if highest_bid %}
-          <span class="badge bg-info p-2">
-            Current Bid: £{{ "%.2f"|format(highest_bid.bid_amount) }}
-          </span>
-        {% else %}
-          <span class="badge bg-light text-dark p-2">
-            No bids
-          </span>
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Status</th>
+              <th>Current Price</th>
+              <th>Time Remaining</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in user['watched_items'] %}
+            <tr>
+              <td>{{ item.title }}</td>
+              <td>
+                {% if now < item.auction_end %}
+                  <span class="badge bg-success">Active</span>
+                {% else %}
+                  <span class="badge bg-secondary">Ended</span>
+                {% endif %}
+              </td>
+              <td>
+                {% set highest_bid = item.highest_bid() %}
+                {% if highest_bid %}
+                  £{{ "%.2f"|format(highest_bid.bid_amount) }}
+                {% else %}
+                  £{{ "%.2f"|format(item.minimum_price) }}
+                {% endif %}
+              </td>
+              <td>
+                {% if now < item.auction_end %}
+                  <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">
+                    {{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}
+                  </span>
+                {% else %}
+                  Ended
+                {% endif %}
+              </td>
+              <td>
+                <div class="btn-group d-flex gap-1">
+                  <a href="{{ url_for('item_page.index', url=item.url) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-eye"></i> View
+                  </a>
+                  <button class="btn btn-sm btn-outline-danger unwatch-btn" data-item-url="{{ item.url }}">
+                    <i class="fas fa-times"></i> Unwatch
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     {% else %}
-    <p>You are not watching any auctions.</p>
+      <div class="alert alert-info">
+        <p>You are not watching any auctions. Browse active auctions to find items to watch!</p>
+        <a href="{{ url_for('home_page.index') }}" class="btn btn-primary">Browse Auctions</a>
+      </div>
     {% endif %}
   </div>
 </div>
@@ -317,4 +345,5 @@
 <script src="{{ url_for('static', filename='js/updateConfig.js') }}"></script>
 <script src="{{ url_for('static', filename='js/assignExpert.js') }}"></script>
 <script src="{{ url_for('static', filename='js/managementCharts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}
