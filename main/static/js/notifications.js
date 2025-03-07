@@ -23,11 +23,22 @@ $(document).ready(function() {
 
     // Update notification count badge
     const badge = $('.btn:contains("Notifications") .badge');
-    const currentCount = parseInt(badge.text()) || 0;
-    badge.text(currentCount + 1);
-    
-    if (badge.hasClass('d-none')) {
-      badge.removeClass('d-none');
+
+    // Create the badge if it doesn't exist
+    if (badge.length === 0) {
+      console.log('Creating badge');
+      $('#notif-button').append(`
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          1
+        </span>
+      `);
+    } else {
+      const currentCount = parseInt(badge.text()) || 0;
+      badge.text(currentCount + 1);
+      
+      if (badge.hasClass('d-none')) {
+        badge.removeClass('d-none');
+      }
     }
 
     // Create new notification element
