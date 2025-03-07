@@ -31,8 +31,8 @@ def send_notification_email(user, notification):
         # Build email body
         body = f"{notification.message}\n\n"
         if notification.item_url:
-            body += f"View item: {current_app.config.get('BASE_URL', 'http://localhost:5000')}/item/{notification.item_url}\n\n"
-        body += "Thank you for using our auction platform!"
+            body += f"View item: {current_app.config.get('BASE_URL', '127.0.0.1:5000')}/item/{notification.item_url}\n\n"
+        body += "Thank you for using Vintage Vault!"
         
         msg = Message(
             subject=subject,
