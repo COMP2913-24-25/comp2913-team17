@@ -50,11 +50,11 @@
       </div>
       <div class="mt-4">
         <h5>Revenue Over Time (Last 6 Months)</h5>
+        <!-- Ensure data is properly serialized using tojson filter without any extra quotes -->
         <canvas id="revenueChart" width="400" height="200"
-          data-labels="{{ manager['revenue_labels'] | tojson | safe }}"
-          data-values="{{ manager['revenue_data'] | tojson | safe }}"
-        >
-        </canvas>
+          data-labels='{{ manager["revenue_labels"]|tojson|safe }}'
+          data-values='{{ manager["revenue_data"]|tojson|safe }}'
+        ></canvas>
       </div>
     </div>
   </div>

@@ -130,19 +130,36 @@ def index():
         manager['user_count'] = User.query.count()
 
         # Revenue Data for Chart (monthly revenue for last 6 months)
-        revenue_data = []
-        revenue_labels = []
+        manager['revenue_data'] = []
+        manager['revenue_labels'] = []
+
         for i in range(5, -1, -1):
             start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i * 30)
             end_date = start_date + timedelta(days=30)
-            monthly_revenue = db.session.query(func.sum(Bid.bid_amount))\
-                .join(Item, Item.item_id == Bid.item_id)\
-                .filter(and_(Item.auction_end >= start_date, Item.auction_end < end_date))\
-                .scalar() or 0.0
-            revenue_data.append(monthly_revenue)
-            revenue_labels.append(start_date.strftime('%b'))
-        manager['revenue_data'] = revenue_data
-        manager['revenue_labels'] = revenue_labels
+            
+            # Get highest bid for each ended auction in this period
+            monthly_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+                .join(Bid, Item.item_id == Bid.item_id)\
+                .filter(and_(
+                    Item.auction_end >= start_date, 
+                    Item.auction_end < end_date,
+                    Item.auction_end < now  # Only include ended auctions
+                ))\
+                .group_by(Item.item_id)\
+                .subquery()
+            
+            # Sum the highest bids from each auction
+            monthly_revenue = db.session.query(func.sum(monthly_auctions.c.highest_bid)).scalar()
+            
+            # Convert None to 0.0 for JSON
+            if monthly_revenue is None:
+                monthly_revenue = 0.0
+            else:
+                # Ensure the value is float
+                monthly_revenue = float(monthly_revenue)
+    
+            manager['revenue_data'].append(monthly_revenue)
+            manager['revenue_labels'].append(start_date.strftime('%b'))
 
     # Expert interface
     elif current_user.role == 2:
