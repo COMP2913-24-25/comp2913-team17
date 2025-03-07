@@ -27,14 +27,6 @@
       <div class="alert alert-danger" role="alert">{{ error }}</div>
       {% endfor %}
     </div>
-    <!-- Auction Start Time -->
-    <div class="form-group">
-      <label for="enter-start-time" class="form-label">Auction Start Time</label>
-      {{ form.auction_start(class_="form-control required-field", id_="enter-start-time", type="datetime-local") }}
-      {% for error in form.auction_start.errors %}
-      <div class="alert alert-danger" role="alert">{{ error }}</div>
-      {% endfor %}
-    </div>
     <!-- Auction End Time -->
     <div class="form-group">
       <label for="enter-end-time" class="form-label">Auction End Time</label>
