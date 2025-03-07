@@ -34,6 +34,15 @@ def get_expert_availability(expert):
     return "Availability not set"
 
 
+def get_expertise(expert, item):
+    # Returns a string indicating the expert's expertise in relation to the item.
+    if expert.expert_categories:
+        for cat in expert.expert_categories:
+            if cat.category_id == item.category_id:
+                return 'Expert'
+    return 'Not an Expert'
+
+
 @dashboard_page.route('/')
 @login_required
 def index():
@@ -183,7 +192,7 @@ def index():
         'auctions': user['auctions'],
         'watched_items': current_user.watched_items.all() if hasattr(current_user, 'watched_items') else []
     }
-    return render_template('dashboard.html', manager=manager, expert=expert, user=user_data, now=now, get_expert_availability=get_expert_availability)
+    return render_template('dashboard.html', manager=manager, expert=expert, user=user_data, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])

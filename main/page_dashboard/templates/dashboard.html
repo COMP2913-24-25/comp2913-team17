@@ -162,6 +162,7 @@
           <tr>
             <th>Requester</th>
             <th>Item</th>
+            <th>Category</th>
             <th>Assign Expert</th>
           </tr>
         </thead>
@@ -171,17 +172,25 @@
             <td>{{ request.requester.username }}</td>
             <td><a href="/item/{{ request.item.url }}">{{ request.item.title }}</a></td>
             <td>
+              <span class="badge bg-info p-2" {% if request.item.category.description %}title="{{ request.item.category.description }}"{% endif %}>
+                <i class="fas fa-tag"></i> {{ request.item.category.name }}
+              </span>
+            </td>
+            <td>
               {% if not eligible_experts %}
                 <p>No available experts</p>
               {% else %}
                 <select class="form-select form-select-sm expert-select" style="width: auto; display: inline-block;">
                   {% for expert in eligible_experts %}
-                  <option value="{{ expert.id }}" data-availability="{{ get_expert_availability(expert) }}">
+                  <option value="{{ expert.id }}" data-availability="{{ get_expert_availability(expert) }}" data-expertise="{{ get_expertise(expert, request.item) }}">
                     {{ expert.username }}
                   </option>
                   {% endfor %}
                 </select>
                 <span class="availability-text ms-2"></span>
+                <span class="badge bg-success p-2 expertise-text">
+                  <i class="fas fa-tag"></i>
+                </span>
                 <button class="btn btn-sm btn-outline-primary assign-expert-btn my-sm-1">
                   Assign
                 </button>
