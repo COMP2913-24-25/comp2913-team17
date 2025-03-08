@@ -22,7 +22,13 @@
     </div>
     <!-- Details Column -->
     <div class="col-md-6">
-      <h1 class="mb-4">{{ item.title }}</h1>
+      <h1 class="mb-2">{{ item.title }}</h1>
+      <!-- Category Badge -->
+      <div class="mb-2">
+        <span class="badge bg-info p-2" {% if item.category.description %}title="{{ item.category.description }}"{% endif %}>
+          <i class="fas fa-tag"></i> {{ item.category.name }}
+        </span>
+      </div>
       <!-- Auction Status -->
       <div class="mb-4">
         <h5>Auction Status</h5>
@@ -65,9 +71,14 @@
         </div>
       </div>
       <!-- Price -->
-      <div class="mb-4">
-        <h5>Minimum Price</h5>
+      <div class="mb-4" id="price-section">
+        {% if item.highest_bid() %}
+        <h5>Highest Bid</h5>
+        <p class="h3 text-primary">£{{ "%.2f"|format(item.highest_bid().bid_amount) }}</p>
+        {% else %}
+        <h5>Starting Price</h5>
         <p class="h3 text-primary">£{{ "%.2f"|format(item.minimum_price) }}</p>
+        {% endif %}
       </div>
       <!-- Auction Times -->
       <div class="mb-4">
@@ -114,7 +125,7 @@
               required
             >
           </div>
-          <div class="form-text">
+          <div class="form-text" id="bid-amount-help">
             {% if item.highest_bid() %}
               Current highest bid: £<span class="max-bid">{{ "%.2f"|format(item.highest_bid().bid_amount) }}</span>
             {% else %}

@@ -3,6 +3,19 @@ $(document).ready(function() {
   $('.expert-select').on('change', function() {
     var availability = $(this).find('option:selected').data('availability');
     $(this).siblings('.availability-text').text(availability);
+
+    const expertise = $(this).find('option:selected').data('expertise');
+    const expertiseText = $(this).siblings('.expertise-text');
+    expertiseText.text(expertise);
+
+    // Update the colouring of the pill
+    if (expertise === 'Expert') {
+      expertiseText.removeClass('bg-danger');
+      expertiseText.addClass('bg-success');
+    } else {
+      expertiseText.removeClass('bg-success');
+      expertiseText.addClass('bg-danger');
+    }
   });
   
   // Trigger change event on page load to set initial availability text

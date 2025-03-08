@@ -2,10 +2,11 @@
 
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileSize
-from wtforms import StringField, TextAreaField, DecimalField, SubmitField, BooleanField
+from wtforms import StringField, TextAreaField, DecimalField, SubmitField, BooleanField, SelectField
 from wtforms.fields import DateTimeLocalField
 from wtforms.validators import DataRequired, Length, NumberRange, ValidationError
 from datetime import datetime, timedelta
+from ..models import ManagerConfig, Category
 
 
 class CreateAuctionForm(FlaskForm):
@@ -20,12 +21,9 @@ class CreateAuctionForm(FlaskForm):
         Length(min=10, message='Description must be at least 10 characters')
     ])
 
-    auction_start = DateTimeLocalField(
-        'Auction Start Time',
-        validators=[DataRequired()],
-        format='%Y-%m-%dT%H:%M',
-        default=datetime.now()
-    )
+    category_id = SelectField('Category', coerce=int, validators=[DataRequired(
+        message="Please select a category"
+    )])
 
     auction_end = DateTimeLocalField(
         'Auction End Time',
@@ -51,22 +49,35 @@ class CreateAuctionForm(FlaskForm):
 
     submit = SubmitField('Create Auction')
 
-    def validate_auction_start(self, field):
-        schedule_limit = timedelta(days=5)
+    def __init__(self, *args, **kwargs):
+        super(CreateAuctionForm, self).__init__(*args, **kwargs)
 
-        if field.data <= datetime.now():
-            raise ValidationError("Auction start time must be in the future.")
-        elif field.data - datetime.now() > schedule_limit:
-            raise ValidationError("Auctions can only be scheduled up to 5 days in advance.")
+        # Get all categories and order by name
+        categories = Category.query.order_by(Category.name).all()
+        
+        # Set the choices for the category select field
+        self.category_id.choices = [
+            (c.id, c.name) for c in categories
+        ]
+        
+        # Store descriptions to use in the template
+        self.category_descriptions = {
+            c.id: c.description for c in categories if c.description
+        }
 
     def validate_auction_end(self, field):
-        maximum_duration = timedelta(days=5)
-        minimum_duration = timedelta(hours=1)
-        req_duration = self.auction_end.data - self.auction_start.data
+        try:
+            days = ManagerConfig.query.filter_by(config_key='max_auction_duration').first()
+            maximum_duration = timedelta(days=int(days.config_value))
+        except:
+            maximum_duration = timedelta(days=5)
 
-        if self.auction_end.data <= self.auction_start.data:
+        minimum_duration = timedelta(hours=1)
+        req_duration = self.auction_end.data - datetime.now()
+
+        if self.auction_end.data <= datetime.now():
             raise ValidationError("Auction end must occur after auction start time.")
         elif req_duration > maximum_duration:
-            raise ValidationError("Auction duration cannot be longer than 5 days.")
+            raise ValidationError(f"Auction duration cannot be longer than {maximum_duration.days} days.")
         elif req_duration < minimum_duration:
-            raise ValidationError("Auctions must last for atleast 1 hour.")
+            raise ValidationError("Auctions must last for at least 1 hour.")

@@ -20,15 +20,50 @@ $(document).ready(function() {
     });
   }, 60000);
   
-  // Search functionality
-  $('#search-bar').on('input', function() {
-    const searchTerm = $(this).val().toLowerCase().trim();
+  // Function to apply all filters
+  function applyFilters() {
+    const searchTerm = $('#search-bar').val().toLowerCase().trim();
+    const categoryFilter = $('#category-filter').val();
+    const typeFilter = $('#type-filter').val();
+    const authenticatedOnly = $('#authenticated-only').is(':checked');
+    
     let visibleItems = 0;
     
     $('.auction-grid').each(function() {
       const title = $(this).data('title').toLowerCase();
+      const category = $(this).find('.category').data('category');
+      const auctionEndElement = $(this).find('.countdown');
+      const isEnded = auctionEndElement.hasClass('countdown-ended');
+      const authStatus = $(this).find('.authentication-status').data('authentication');
       
-      if (title.includes(searchTerm)) {
+      // Type filter: 1 = Live Auctions, 2 = Ended Auctions
+      let passesTypeFilter = true;
+      if (typeFilter === "1") {
+        passesTypeFilter = !isEnded;
+      } else if (typeFilter === "2") {
+        passesTypeFilter = isEnded;
+      }
+      
+      // Category filter
+      let passesCategoryFilter = true;
+      if (categoryFilter && categoryFilter !== "") {
+        passesCategoryFilter = (category == categoryFilter);
+      }
+
+      // Authentication filter, 2 = Authenticated
+      let passesAuthFilter = true;
+      if (authenticatedOnly) {
+        passesAuthFilter = (authStatus == 2);
+      }
+      
+      // Search term filter
+      let passesSearchFilter = true;
+      if (searchTerm !== "") {
+        passesSearchFilter = title.includes(searchTerm);
+      }
+      
+      // Show/hide based on all filters
+      if (passesTypeFilter && passesCategoryFilter && passesAuthFilter && passesSearchFilter) {
         $(this).show();
         visibleItems++;
       } else {
@@ -37,11 +72,28 @@ $(document).ready(function() {
     });
     
     // Show or hide the "no results" message
-    if (visibleItems === 0 && searchTerm !== '') {
+    if (visibleItems === 0) {
       $('#no-results').removeClass('d-none');
     } else {
       $('#no-results').addClass('d-none');
     }
+  }
+  
+  // Event listeners for filters
+  $('#search-bar').on('input', function() {
+    applyFilters();
+  });
+  
+  $('#category-filter').on('change', function() {
+    applyFilters();
+  });
+  
+  $('#type-filter').on('change', function() {
+    applyFilters();
+  });
+
+  $('#authenticated-only').on('change', function() {
+    applyFilters();
   });
   
   function updateCountdown(element) {

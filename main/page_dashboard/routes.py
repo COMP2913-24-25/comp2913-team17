@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 from datetime import date, datetime, timedelta
 from sqlalchemy import and_, or_, func
 from . import dashboard_page
-from ..models import ExpertAvailability, db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig, Bid, Notification, Message
+from ..models import ExpertAvailability, db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig, Bid, Notification, Message, Category, ExpertCategory
 from ..email_utils import send_notification_email
 
 
@@ -32,6 +32,15 @@ def get_expert_availability(expert):
         else:
             return "Not available today"
     return "Availability not set"
+
+
+def get_expertise(expert, item):
+    # Returns a string indicating the expert's expertise in relation to the item.
+    if expert.expert_categories:
+        for cat in expert.expert_categories:
+            if cat.category_id == item.category_id:
+                return 'Expert'
+    return 'Not an Expert'
 
 
 @dashboard_page.route('/')
@@ -130,19 +139,36 @@ def index():
         manager['user_count'] = User.query.count()
 
         # Revenue Data for Chart (monthly revenue for last 6 months)
-        revenue_data = []
-        revenue_labels = []
+        manager['revenue_data'] = []
+        manager['revenue_labels'] = []
+
         for i in range(5, -1, -1):
             start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i * 30)
             end_date = start_date + timedelta(days=30)
-            monthly_revenue = db.session.query(func.sum(Bid.bid_amount))\
-                .join(Item, Item.item_id == Bid.item_id)\
-                .filter(and_(Item.auction_end >= start_date, Item.auction_end < end_date))\
-                .scalar() or 0.0
-            revenue_data.append(monthly_revenue)
-            revenue_labels.append(start_date.strftime('%b'))
-        manager['revenue_data'] = revenue_data
-        manager['revenue_labels'] = revenue_labels
+            
+            # Get highest bid for each ended auction in this period
+            monthly_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+                .join(Bid, Item.item_id == Bid.item_id)\
+                .filter(and_(
+                    Item.auction_end >= start_date, 
+                    Item.auction_end < end_date,
+                    Item.auction_end < now  # Only include ended auctions
+                ))\
+                .group_by(Item.item_id)\
+                .subquery()
+            
+            # Sum the highest bids from each auction
+            monthly_revenue = db.session.query(func.sum(monthly_auctions.c.highest_bid)).scalar()
+            
+            # Convert None to 0.0 for JSON
+            if monthly_revenue is None:
+                monthly_revenue = 0.0
+            else:
+                # Ensure the value is float
+                monthly_revenue = float(monthly_revenue)
+    
+            manager['revenue_data'].append(monthly_revenue)
+            manager['revenue_labels'].append(start_date.strftime('%b'))
 
     # Expert interface
     elif current_user.role == 2:
@@ -150,6 +176,15 @@ def index():
             .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 1)).all()
         expert['complete'] = ExpertAssignment.query\
             .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 2)).all()
+        
+        # Get a list of expert's experise as well as all categories
+        expert['categories'] = Category.query.order_by(Category.name).all()
+        expert['expertise'] = Category.query.join(
+            ExpertCategory, 
+            Category.id == ExpertCategory.category_id
+        ).filter(
+            ExpertCategory.expert_id == current_user.id
+        ).all()
 
     # General User interface, all users can see their own auctions
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
@@ -157,7 +192,7 @@ def index():
         'auctions': user['auctions'],
         'watched_items': current_user.watched_items.all() if hasattr(current_user, 'watched_items') else []
     }
-    return render_template('dashboard.html', manager=manager, expert=expert, user=user_data, now=now, get_expert_availability=get_expert_availability)
+    return render_template('dashboard.html', manager=manager, expert=expert, user=user_data, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])
@@ -480,4 +515,46 @@ def update_dur():
         'message': 'Change successful',
         'config_key': dur.config_key,
         'config_value': dur.config_value
+    }), 200
+
+
+@dashboard_page.route('/api/expert/<int:user_id>', methods=['PUT'])
+@login_required
+def update_expertise(user_id):
+    """Update the expertise of an expert."""
+    if current_user.role != 2:
+        return jsonify({'error': 'Unauthorised'}), 403
+    
+    if current_user.id != int(user_id):
+        return jsonify({'error': 'Cannot modify other user\'s expertise'}), 403
+
+    if not request.is_json:
+        return jsonify({'error': 'Invalid request'}), 400
+
+    new_expertise = request.json.get('expertise')
+
+    if not isinstance(new_expertise, list):
+        return jsonify({'error': 'Invalid expertise format'}), 400
+    
+    # Get all categories
+    categories = Category.query.all()
+    category_ids = {c.id for c in categories}
+
+    # Check if all expertise are valid
+    for cat in new_expertise:
+        if not isinstance(cat, int) or cat not in category_ids:
+            return jsonify({'error': 'Invalid expertise'}), 400
+
+    # Remove all existing expertise
+    ExpertCategory.query.filter_by(expert_id=user_id).delete()
+
+    # Add new expertise
+    for cat in new_expertise:
+        expertise = ExpertCategory(expert_id=user_id, category_id=cat)
+        db.session.add(expertise)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Expertise updated successfully',
+        'expertise': new_expertise
     }), 200

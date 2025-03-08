@@ -5,7 +5,6 @@
 {% block content %}
 
 <div class="container mt-5">
-  <meta name="user-id" content="{{ current_user.id }}">
   <h1>Authentication: {{ item.title }}</h1>
   <a id="item-link" href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
   <span class="badge {% if authentication == 1 %}bg-warning

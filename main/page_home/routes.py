@@ -1,11 +1,12 @@
 from flask import render_template, jsonify
 from . import home_page
-from ..models import Item
+from ..models import Item, Category
 
 @home_page.route('/')
 def index():
     items = Item.query.order_by(Item.auction_end.asc()).all()
-    return render_template('home.html', items=items)
+    categories = Category.query.order_by(Category.name).all()
+    return render_template('home.html', items=items, categories=categories)
 
 @home_page.route('/api/search')
 def search_items():
