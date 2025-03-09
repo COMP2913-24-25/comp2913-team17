@@ -248,6 +248,9 @@ def payment_page(url):
 @item_page.route('/<url>/create-payment-intent', methods=['POST'])
 @login_required
 def create_payment_intent(url):
+    # Set Stripe API key from your app's config
+    stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
+    
     item = Item.query.filter_by(url=url).first_or_404()
     # Use the winning bid amount (or fallback to minimum price)
     amount = int(((item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) * 100))
