@@ -9,8 +9,10 @@ from flask_wtf.csrf import CSRFProtect
 from flask_socketio import SocketIO
 from flask_apscheduler import APScheduler
 from .models import db
+#from flask_migrate import Migrate
 from .init_db import populate_db
 from flask_migrate import Migrate
+
 
 socketio = SocketIO()
 scheduler = APScheduler()
@@ -94,6 +96,8 @@ def create_app():
 
     # Initialise the database
     db.init_app(app)
+    #migrate = Migrate(app, db)
+
 
     migrate = Migrate(app, db)
 
