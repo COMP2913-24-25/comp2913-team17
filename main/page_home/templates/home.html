@@ -8,22 +8,25 @@
 <div class="container mt-5">
   <h1>Current Auctions</h1>
 
-  <!-- Search bar -->
+  <!-- Search bar and filters -->
   <div class="search-container mb-4">
-    <input type="text" id="search-bar" class="form-control" placeholder="Search auctions...">
-    <!-- Auction Type filter -->
-    <select id="type-filter" class="form-select my-1">
-      <option value="" title="Filter by auction status">All Auctions</option>
-      <option value="1" title="Live Auctions">Live Auctions</option>
-      <option value="2" title="Ended Auctions">Ended Auctions</option>
-    </select>
-    <!-- Category filter -->
-    <select id="category-filter" class="form-select">
-      <option value="" title="Filter by category">All Categories</option>
-      {% for category in categories %}
-      <option value="{{ category.id }}" title="{{ category.description }}">{{ category.name }}</option>
-      {% endfor %}
-    </select>
+    <div class="search-filter-wrapper d-flex align-items-center">
+      <!-- Search bar -->
+      <input type="text" id="search-bar" class="form-control" placeholder="Search auctions...">
+      <!-- Auction Type filter -->
+      <select id="type-filter" class="form-select filter-dropdown">
+        <option value="" title="Filter by auction status">All Auctions</option>
+        <option value="1" title="Live Auctions">Live Auctions</option>
+        <option value="2" title="Ended Auctions">Ended Auctions</option>
+      </select>
+      <!-- Category filter -->
+      <select id="category-filter" class="form-select filter-dropdown">
+        <option value="" title="Filter by category">All Categories</option>
+        {% for category in categories %}
+        <option value="{{ category.id }}" title="{{ category.description }}">{{ category.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <!-- Authentication filter -->
     <div class="form-check mt-2">
       <input class="form-check-input" type="checkbox" id="authenticated-only" value="">
