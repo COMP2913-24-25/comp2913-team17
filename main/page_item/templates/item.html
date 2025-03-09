@@ -182,6 +182,18 @@
         <a href="{{ url_for('auth_page.login') }}" class="btn btn-primary btn-lg">Login to Place Bid</a>
       </div>
       {% endif %}
+
+      <!-- Payment Section (Only visible if the auction is over and the current user is the winner) -->
+      <!-- Payment Section (Only visible if the auction is over and the current user is the winner) -->
+      {% if show_payment %}
+      <hr>
+      <div id="payment-section">
+        <h3>Payment</h3>
+        <p>Your winning bid: £{{ "%.2f"|format(item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) }}</p>
+        <a href="{{ url_for('item_page.payment_page', url=item.url) }}" class="btn btn-primary">Make Payment</a>
+      </div>
+      {% endif %}
+
     </div>
   </div>
 </div>

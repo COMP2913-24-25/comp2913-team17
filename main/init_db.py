@@ -55,7 +55,7 @@ def populate_db(app):
             image='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014410_clock.jpg',
             upload_date=now,
             auction_start=now,
-            auction_end=now + timedelta(days=3),
+            auction_end=now + timedelta(minutes=2),
             minimum_price=100.00,
             category_id=cat1.id  # Assign to "Antiques"
         )

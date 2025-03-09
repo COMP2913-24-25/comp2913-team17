@@ -1,13 +1,15 @@
 """Auction viewing routes."""
 
+import stripe
 from app import socketio
 from flask_socketio import join_room, leave_room
-from flask import render_template, request, jsonify
+from flask import flash, redirect, render_template, request, jsonify, url_for, current_app
 from flask_login import login_required, current_user
 from datetime import datetime
 import decimal
 from . import item_page
 from ..models import db, Item, Bid, User, AuthenticationRequest, logger, Notification
+
 
 
 # SocketIO event handlers
@@ -53,8 +55,15 @@ def index(url):
     bids = item.bids[::-1]
     suggested_bid = item.highest_bid().bid_amount + decimal.Decimal('0.01') if item.highest_bid() else item.minimum_price + \
         decimal.Decimal('0.01')
+    
+    # Determine if auction is over and if the current user is the winner
+    is_auction_over = datetime.now() >= item.auction_end
+    is_winner = False
+    if current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id:
+        is_winner = True
+    show_payment = is_auction_over and is_winner
 
-    return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed, suggested_bid=suggested_bid, bids=bids)
+    return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed, suggested_bid=suggested_bid, bids=bids, show_payment=show_payment)
 
 
 @item_page.route('/<url>/bid', methods=['POST'])
@@ -222,3 +231,33 @@ def unwatch_item(url):
         db.session.rollback()
         logger.error(f"Error unwatching item: {str(e)}")
         return jsonify({'error': 'Could not remove from watched items'}), 500
+    
+@item_page.route('/<url>/payment', methods=['GET'])
+@login_required
+def payment_page(url):
+    item = Item.query.filter_by(url=url).first_or_404()
+    # Verify that the auction is over and that the current user is the winner
+    is_auction_over = datetime.now() >= item.auction_end
+    is_winner = current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id
+    if not is_auction_over or not is_winner:
+        flash("You are not authorized to access the payment page.", "danger")
+        return redirect(url_for('item_page.index', url=url))
+    # Pass the Stripe publishable key to the template
+    return render_template('payment.html', item=item, stripe_publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY'))
+
+@item_page.route('/<url>/create-payment-intent', methods=['POST'])
+@login_required
+def create_payment_intent(url):
+    item = Item.query.filter_by(url=url).first_or_404()
+    # Use the winning bid amount (or fallback to minimum price)
+    amount = int(((item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) * 100))
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency='gbp',
+            description=f"Payment for auction item {item.title} (ID: {item.item_id})",
+            automatic_payment_methods={'enabled': True},
+        )
+        return jsonify({'clientSecret': intent.client_secret})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
