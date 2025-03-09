@@ -17,7 +17,7 @@
 <!-- Load Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-  // Initialize Stripe with the publishable key passed from your route.
+  // Initialize Stripe using the publishable key passed from your route.
   const stripe = Stripe("{{ stripe_publishable_key }}");
 
   // Retrieve the CSRF token from the meta tag
@@ -25,44 +25,72 @@
 
   let elements;
 
-  // Initialize the Payment Element on page load.
+  // On page load, initialize the Payment Element.
   initialize();
 
-  // Attach event listener to the correct button id ("submit")
+  // Attach event listener to the "Pay Now" button.
   document.getElementById('submit').addEventListener('click', handleSubmit);
 
   async function initialize() {
-    // Create the PaymentIntent on your server.
-    const response = await fetch("{{ url_for('item_page.create_payment_intent', url=item.url) }}", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrfToken
+    try {
+      const response = await fetch("{{ url_for('item_page.create_payment_intent', url=item.url) }}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken
+        }
+      });
+      const data = await response.json();
+      if (data.error) {
+        document.getElementById("payment-message").innerText = data.error;
+        return;
       }
-    });
-    const { clientSecret, error } = await response.json();
-    if (error) {
-      document.getElementById("payment-message").innerText = error;
-      return;
+      const clientSecret = data.clientSecret;
+      // Initialize Stripe Elements with the client secret.
+      elements = stripe.elements({ clientSecret });
+      const paymentElement = elements.create("payment");
+      paymentElement.mount("#payment-element");
+    } catch (err) {
+      console.error("Error initializing Payment Element:", err);
+      document.getElementById("payment-message").innerText = "Error initializing payment form.";
     }
-
-    // Initialize Stripe Elements with the clientSecret.
-    elements = stripe.elements({ clientSecret });
-    const paymentElement = elements.create("payment");
-    paymentElement.mount("#payment-element");
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const { error: submitError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        // Optionally, you can set a return_url to redirect after payment
-        return_url: "{{ url_for('item_page.index', url=item.url, _external=True) }}"
+    try {
+      // Include a return_url (here we use the current page's URL) and set redirect to 'if_required'
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: "{{ url_for('item_page.index', url=item.url, _external=True) }}"
+        },
+        redirect: 'if_required'
+      });
+      if (confirmError) {
+        document.getElementById("payment-message").innerText = confirmError.message;
+        return;
       }
-    });
-    if (submitError) {
-      document.getElementById("payment-message").innerText = submitError.message;
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Payment succeeded; now mark the item as paid.
+        const markWonResponse = await fetch("{{ url_for('item_page.mark_won', url=item.url) }}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+          }
+        });
+        const markWonData = await markWonResponse.json();
+        if (markWonData.status === 'success') {
+          document.getElementById("payment-message").innerText = "Payment successful and item marked as paid!";
+          // Optionally update the UI further.
+        } else {
+          document.getElementById("payment-message").innerText = markWonData.error || "Payment succeeded but marking item as paid failed.";
+        }
+      }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      document.getElementById("payment-message").innerText = "An unexpected error occurred.";
     }
   }
 </script>
