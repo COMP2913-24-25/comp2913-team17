@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Assign Experts to Items</h2>
+
+    <!-- Display available experts -->
+    <h3>Available Experts</h3>
+    <ul>
+        {% for expert in experts %}
+            <li>{{ expert.name }} - {{ expert.expertise_category }}</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Display existing assignments -->
+    <h3>Current Assignments</h3>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Expert</th>
+                <th>Assigned At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for assignment in assignments %}
+                <tr>
+                    <td>{{ assignment.item_id }}</td>
+                    <td>{{ assignment.expert.name }}</td>
+                    <td>{{ assignment.assigned_at }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Form to assign an expert -->
+    <h3>Assign Expert</h3>
+    <form method="POST">
+        {{ form.hidden_tag() }}  {# This prevents CSRF errors #}
+    
+        <label for="item_id">Select Item:</label>
+        {{ form.item_id(class="form-control") }}
+    
+        <label for="expert_id">Select Expert:</label>
+        {{ form.expert_id(class="form-control") }}
+    
+        {{ form.submit(class="btn btn-primary") }}
+    </form>    
+
+{% endblock %}

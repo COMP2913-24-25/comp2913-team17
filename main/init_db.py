@@ -1,7 +1,7 @@
 from datetime import date, datetime, time, timedelta
 from .models import (
     AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability,
-    Item, ManagerConfig, Message, Notification, Payment, User, db
+    Item, ManagerConfig, Message, Notification, Payment, User, Expert, ItemAssignment, db
 )
 
 def populate_db(app):
@@ -11,7 +11,7 @@ def populate_db(app):
         if User.query.first():
             print('Database already populated. Skipping dummy data load.')
             return
-
+                                                                                          
         now = datetime.now()
 
         # Users
@@ -29,6 +29,15 @@ def populate_db(app):
 
         db.session.add_all([user1, user2, user3, user4])
         db.session.commit()
+
+        print('Added users')
+
+        expert1 = Expert(name="Alice Smith", expertise_category="Antiques")
+        expert2 = Expert(name="John Doe", expertise_category="Electronics")
+        db.session.add_all([expert1, expert2])
+        db.session.commit()
+
+        print('Added Expert Categories')
 
         # Items
         item1 = Item(
@@ -52,6 +61,24 @@ def populate_db(app):
         db.session.add_all([item1, item2])
         db.session.commit()
 
+        print('Added items')
+
+        assignment1 = ItemAssignment(
+            item_id=item1.item_id, 
+            expert_id=expert1.id, 
+            assigned_at=now
+        )
+        assignment2 = ItemAssignment(
+            item_id=item2.item_id, 
+            expert_id=expert2.id, 
+            assigned_at=now
+        )
+
+        db.session.add_all([assignment1, assignment2])
+        db.session.commit()
+
+        print('Assigned Items to Experts')
+
         # Bids
         bid1 = Bid(
             item_id=item1.item_id,
@@ -73,6 +100,8 @@ def populate_db(app):
         )
         db.session.add_all([bid1, bid2, bid3])
         db.session.commit()
+
+        print('Added bids')
 
         # Authentication Request (for item2)
         auth_req = AuthenticationRequest(

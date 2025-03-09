@@ -10,6 +10,7 @@ from flask_socketio import SocketIO
 from flask_apscheduler import APScheduler
 from .models import db
 from .init_db import populate_db
+from flask_migrate import Migrate
 
 socketio = SocketIO()
 scheduler = APScheduler()
@@ -94,6 +95,8 @@ def create_app():
     # Initialise the database
     db.init_app(app)
 
+    migrate = Migrate(app, db)
+
     with app.app_context():
         # Creates tables if they don't exist
         db.create_all()
@@ -108,6 +111,7 @@ def create_app():
     from .page_auth import auth_page
     from .page_authenticate_item import authenticate_item_page
     from .page_experts import expert_page
+    from .page_allocate_expert import allocate_expert_bp
 
     app.register_blueprint(home_page)
     app.register_blueprint(item_page, url_prefix='/item')
@@ -116,6 +120,7 @@ def create_app():
     app.register_blueprint(auth_page)
     app.register_blueprint(authenticate_item_page, url_prefix='/authenticate')
     app.register_blueprint(expert_page, url_prefix='/expert')
+    app.register_blueprint(allocate_expert_bp, url_prefix="/allocate_expert")
 
     @login_manager.user_loader
     def load_user(user_id):

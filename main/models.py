@@ -316,3 +316,27 @@ class ManagerConfig(db.Model):
 
     def __repr__(self):
         return f"<ManagerConfig {self.config_key}>"
+
+# Expert and ItemAssignment models
+class Expert(db.Model):
+    __tablename__ = 'experts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    expertise_category = db.Column(db.String(100), nullable=False)
+
+    def __repr__(self):
+        return f"<Expert {self.name} - {self.expertise_category}>"
+
+class ItemAssignment(db.Model):
+    __tablename__ = 'item_assignments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, nullable=False)
+    expert_id = db.Column(db.Integer, db.ForeignKey('experts.id'), nullable=False)
+    assigned_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    expert = db.relationship('Expert', backref='assignments')
+
+    def __repr__(self):
+        return f"<ItemAssignment {self.item_id} -> Expert {self.expert_id}>"
