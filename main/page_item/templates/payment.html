@@ -19,18 +19,14 @@
 <script>
   // Initialize Stripe using the publishable key passed from your route.
   const stripe = Stripe("{{ stripe_publishable_key }}");
-
-  // Retrieve the CSRF token from the meta tag
+  // Retrieve the CSRF token from the meta tag.
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
   let elements;
-
-  // On page load, initialize the Payment Element.
+  // Initialize the Payment Element on page load.
   initialize();
-
   // Attach event listener to the "Pay Now" button.
   document.getElementById('submit').addEventListener('click', handleSubmit);
-
+  
   async function initialize() {
     try {
       const response = await fetch("{{ url_for('item_page.create_payment_intent', url=item.url) }}", {
@@ -55,15 +51,15 @@
       document.getElementById("payment-message").innerText = "Error initializing payment form.";
     }
   }
-
+  
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      // Include a return_url (here we use the current page's URL) and set redirect to 'if_required'
+      // Use confirmPayment with a return_url and redirect: 'if_required'
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: "{{ url_for('item_page.index', url=item.url, _external=True) }}"
+          return_url: "{{ url_for('item_page.redirect_after_payment', url=item.url, _external=True) }}"
         },
         redirect: 'if_required'
       });
@@ -71,8 +67,8 @@
         document.getElementById("payment-message").innerText = confirmError.message;
         return;
       }
+      // If paymentIntent is returned and its status is succeeded, mark the item as paid.
       if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Payment succeeded; now mark the item as paid.
         const markWonResponse = await fetch("{{ url_for('item_page.mark_won', url=item.url) }}", {
           method: "POST",
           headers: {
@@ -82,8 +78,8 @@
         });
         const markWonData = await markWonResponse.json();
         if (markWonData.status === 'success') {
-          document.getElementById("payment-message").innerText = "Payment successful and item marked as paid!";
-          // Optionally update the UI further.
+          // Redirect to the route that sets a flash message and then sends the user to the item page.
+          window.location.href = "{{ url_for('item_page.redirect_after_payment', url=item.url, _external=True) }}";
         } else {
           document.getElementById("payment-message").innerText = markWonData.error || "Payment succeeded but marking item as paid failed.";
         }

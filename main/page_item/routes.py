@@ -38,7 +38,6 @@ def index(url):
         status = authentication.status
         expert = authentication.expert_assignments[-1] if authentication.expert_assignments else None
 
-    # Determine if the current user is allowed to view authentication details
     if not current_user.is_authenticated:
         is_allowed = False
     else:
@@ -47,16 +46,16 @@ def index(url):
             or (expert and expert.expert_id == current_user.id and expert.status != 3)
             or authentication.requester_id == current_user.id
         )
-    # Get all bids (in descending order) and the suggested bid amount
     bids = item.bids[::-1]
-    suggested_bid = item.highest_bid().bid_amount + decimal.Decimal('0.01') if item.highest_bid() else item.minimum_price + decimal.Decimal('0.01')
+    suggested_bid = (item.highest_bid().bid_amount + decimal.Decimal('0.01')
+                     if item.highest_bid() else item.minimum_price + decimal.Decimal('0.01'))
     
-    # Determine if auction is over and if current user is the winner
     is_auction_over = datetime.now() >= item.auction_end
     is_winner = False
     if current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id:
         is_winner = True
-    show_payment = is_auction_over and is_winner
+    # show_payment is true when auction is over, user is the winner, and the item is not yet paid (status != 3)
+    show_payment = is_auction_over and is_winner and (item.status != 3)
 
     return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed,
                            suggested_bid=suggested_bid, bids=bids, show_payment=show_payment)
@@ -65,16 +64,12 @@ def index(url):
 @login_required
 def place_bid(url):
     item = Item.query.filter_by(url=url).first_or_404()
-
-    # Check if auction is still active
     if datetime.now() >= item.auction_end:
         return jsonify({'error': 'This auction has ended.'}), 400
-
     try:
         bid_amount = float(request.json.get('bid_amount'))
         print(bid_amount)
         current_highest = item.highest_bid()
-
         if not bid_amount:
             return jsonify({'error': 'Please enter a bid amount.'}), 400
         if not isinstance(bid_amount, (int, float)):
@@ -95,7 +90,6 @@ def place_bid(url):
         db.session.add(new_bid)
         db.session.commit()
 
-        # Emit bid update via SocketIO
         socketio.emit('bid_update', {
             'bid_userid': current_user.id,
             'bid_username': current_user.username,
@@ -122,14 +116,12 @@ def check_ended_auctions():
         Item.auction_end <= datetime.now(),
         Item.winning_bid_id.is_(None)
     ).all()
-
     for item in finished_items:
         try:
             logger.info(f"Finalizing auction for item: {item.title}")
-            # The finalise_auction() method should update status to 2 (won)
+            # finalise_auction() should update item.status to 2 (won)
             item.finalise_auction()
             highest_bid = item.highest_bid()
-
             if highest_bid:
                 socketio.emit('auction_ended', {
                     'winner': True,
@@ -195,7 +187,6 @@ def unwatch_item(url):
 @login_required
 def payment_page(url):
     item = Item.query.filter_by(url=url).first_or_404()
-    # Verify auction is over and current user is the winning bidder.
     is_auction_over = datetime.now() >= item.auction_end
     is_winner = current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id
     if not is_auction_over or not is_winner:
@@ -215,6 +206,7 @@ def create_payment_intent(url):
             currency='gbp',
             description=f"Payment for auction item {item.title} (ID: {item.item_id})",
             automatic_payment_methods={'enabled': True},
+            metadata={"item_id": str(item.item_id)}
         )
         return jsonify({'clientSecret': intent.client_secret})
     except Exception as e:
@@ -224,14 +216,18 @@ def create_payment_intent(url):
 @login_required
 def mark_won(url):
     item = Item.query.filter_by(url=url).first_or_404()
-    # Ensure the auction is over.
     if datetime.now() < item.auction_end:
         return jsonify({'error': 'Auction is still active'}), 400
-    # Verify current user is the winning bidder.
     if not item.highest_bid() or item.highest_bid().bidder_id != current_user.id:
         return jsonify({'error': 'You are not the winning bidder'}), 403
-    # Mark the item as locked and update status to 3 (paid).
     item.locked = True
-    item.status = 3
+    item.status = 3  # Mark as paid
     db.session.commit()
     return jsonify({'status': 'success'})
+
+# New route: after successful payment, redirect with a flash message.
+@item_page.route('/<url>/redirect-after-payment')
+@login_required
+def redirect_after_payment(url):
+    flash("Payment successful!", "success")
+    return redirect(url_for('item_page.index', url=url))

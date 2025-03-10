@@ -36,7 +36,7 @@
           <span class="badge {% if item.locked %}bg-danger{% else %}bg-success{% endif %} p-2">
             {{ "Locked" if item.locked else "Open" }}
           </span>
-          <span class="badge bg-secondary p-2">
+          <span class="badge {% if item.status == 1 %}bg-secondary{% elif item.status == 2 %}bg-info{% elif item.status == 3 %}bg-success{% endif %} p-2">
             {% if item.status == 1 %}
               Open
             {% elif item.status == 2 %}
@@ -188,6 +188,7 @@
 
       <!-- Payment Section (Only visible if the auction is over and the current user is the winner) -->
       <!-- Payment Section (Only visible if the auction is over and the current user is the winner) -->
+      <!-- Payment Section (Only visible if the auction is over, the user is the winner, and item is not paid) -->
       {% if show_payment %}
       <hr>
       <div id="payment-section">
@@ -196,6 +197,7 @@
         <a href="{{ url_for('item_page.payment_page', url=item.url) }}" class="btn btn-primary">Make Payment</a>
       </div>
       {% endif %}
+
 
     </div>
   </div>
