@@ -17,77 +17,10 @@
 <!-- Load Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-  // Initialize Stripe using the publishable key passed from your route.
-  const stripe = Stripe("{{ stripe_publishable_key }}");
-  // Retrieve the CSRF token from the meta tag.
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-  let elements;
-  // Initialize the Payment Element on page load.
-  initialize();
-  // Attach event listener to the "Pay Now" button.
-  document.getElementById('submit').addEventListener('click', handleSubmit);
-  
-  async function initialize() {
-    try {
-      const response = await fetch("{{ url_for('item_page.create_payment_intent', url=item.url) }}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken
-        }
-      });
-      const data = await response.json();
-      if (data.error) {
-        document.getElementById("payment-message").innerText = data.error;
-        return;
-      }
-      const clientSecret = data.clientSecret;
-      // Initialize Stripe Elements with the client secret.
-      elements = stripe.elements({ clientSecret });
-      const paymentElement = elements.create("payment");
-      paymentElement.mount("#payment-element");
-    } catch (err) {
-      console.error("Error initializing Payment Element:", err);
-      document.getElementById("payment-message").innerText = "Error initializing payment form.";
-    }
-  }
-  
-  async function handleSubmit(e) {
-    e.preventDefault();
-    try {
-      // Use confirmPayment with a return_url and redirect: 'if_required'
-      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: "{{ url_for('item_page.redirect_after_payment', url=item.url, _external=True) }}"
-        },
-        redirect: 'if_required'
-      });
-      if (confirmError) {
-        document.getElementById("payment-message").innerText = confirmError.message;
-        return;
-      }
-      // If paymentIntent is returned and its status is succeeded, mark the item as paid.
-      if (paymentIntent && paymentIntent.status === 'succeeded') {
-        const markWonResponse = await fetch("{{ url_for('item_page.mark_won', url=item.url) }}", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken
-          }
-        });
-        const markWonData = await markWonResponse.json();
-        if (markWonData.status === 'success') {
-          // Redirect to the route that sets a flash message and then sends the user to the item page.
-          window.location.href = "{{ url_for('item_page.redirect_after_payment', url=item.url, _external=True) }}";
-        } else {
-          document.getElementById("payment-message").innerText = markWonData.error || "Payment succeeded but marking item as paid failed.";
-        }
-      }
-    } catch (err) {
-      console.error("Error in handleSubmit:", err);
-      document.getElementById("payment-message").innerText = "An unexpected error occurred.";
-    }
-  }
+  window.stripePublishableKey = "{{ stripe_publishable_key }}";
+  window.paymentIntentUrl = "{{ url_for('item_page.create_payment_intent', url=item.url, _external=True) }}";
+  window.markWonUrl = "{{ url_for('item_page.mark_won', url=item.url, _external=True) }}";
+  window.redirectAfterPaymentUrl = "{{ url_for('item_page.redirect_after_payment', url=item.url, _external=True) }}";
 </script>
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 {% endblock %}

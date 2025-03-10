@@ -118,7 +118,7 @@ def check_ended_auctions():
     ).all()
     for item in finished_items:
         try:
-            logger.info(f"Finalizing auction for item: {item.title}")
+            logger.info(f"Finalising auction for item: {item.title}")
             # finalise_auction() should update item.status to 2 (won)
             item.finalise_auction()
             highest_bid = item.highest_bid()
@@ -132,7 +132,7 @@ def check_ended_auctions():
             else:
                 socketio.emit('auction_ended', {'winner': False}, room=item.url)
         except Exception as e:
-            logger.error(f"Error finalizing auction {item.item_id}: {e}")
+            logger.error(f"Error finalising auction {item.item_id}: {e}")
 
 @item_page.route('/api/notifications/mark-read', methods=['POST'])
 @login_required
@@ -190,7 +190,7 @@ def payment_page(url):
     is_auction_over = datetime.now() >= item.auction_end
     is_winner = current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id
     if not is_auction_over or not is_winner:
-        flash("You are not authorized to access the payment page.", "danger")
+        flash("You are not authorised to access the payment page.", "danger")
         return redirect(url_for('item_page.index', url=url))
     return render_template('payment.html', item=item, stripe_publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY'))
 
