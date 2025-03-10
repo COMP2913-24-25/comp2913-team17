@@ -71,5 +71,3 @@ def filter_experts():
     experts = query.all()
 
     return jsonify([{'id': e.id, 'username': e.username, 'email': e.email} for e in experts])
-
-# testing

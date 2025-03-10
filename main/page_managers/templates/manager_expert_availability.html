@@ -5,6 +5,16 @@
 {% block content %}
 <div class="container mt-4">
   <h1>Expert Availability Overview</h1>
+
+<div class="mb-3">
+  <label for="categoryFilter" class="form-label">Filter by Category:</label>
+  <select class="form-select" id="categoryFilter">
+    <option value="all" selected>All Categories</option>
+    {% for category in categories %}
+      <option value="{{ category.id }}">{{ category.name }}</option>
+    {% endfor %}
+  </select>
+</div>
   
   <!-- Nav tabs for Daily and Weekly Views (Bootstrap 5) -->
   <ul class="nav nav-tabs" id="viewTabs" role="tablist">
