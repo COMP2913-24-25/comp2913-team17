@@ -188,12 +188,40 @@ def index():
 
     # General User interface, all users can see their own auctions
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
+    
+    # Get auctions the user has participated in (via bidding, winning or paying)
+    # Bidding: any open auction (status == 1) where the user has at least one bid.
+    bidding_items = (
+        Item.query.join(Bid, Item.item_id == Bid.item_id)
+        .filter(Bid.bidder_id == current_user.id, Item.status == 1)
+        .distinct()
+        .all()
+    )
+
+    # Won: auctions that are finalized (status == 2) where the user is the winner.
+    won_items = (
+        Item.query.filter(Item.status == 2, Item.winning_bid.has(bidder_id=current_user.id))
+        .all()
+    )
+    # Paid: auctions where the item is paid for (status == 3) and the user is the winner.
+    paid_items = (
+        Item.query.filter(Item.status == 3, Item.winning_bid.has(bidder_id=current_user.id))
+        .all()
+    )
+    
+    user['participated_auctions'] = {
+        'bidding': bidding_items,
+        'won': won_items,
+        'paid': paid_items
+    }
+    
     user_data = {
         'auctions': user['auctions'],
-        'watched_items': current_user.watched_items.all() if hasattr(current_user, 'watched_items') else []
+        'watched_items': current_user.watched_items.all() if hasattr(current_user, 'watched_items') else [],
+        'participated_auctions': user['participated_auctions']
     }
-    return render_template('dashboard.html', manager=manager, expert=expert, user=user_data, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
+    return render_template('dashboard.html', manager=manager, expert=expert, user=user_data, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])
 @login_required
@@ -557,3 +585,4 @@ def update_expertise(user_id):
         'message': 'Expertise updated successfully',
         'expertise': new_expertise
     }), 200
+
