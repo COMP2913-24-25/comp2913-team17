@@ -57,3 +57,17 @@ def expert_availability():
         current_slot=current_slot,
         timedelta=timedelta
     )
+
+@manager_page.route('/filter-experts', methods=['GET'])
+def filter_experts():
+    #Filter experts based on category or expertise
+    catergory_id = request.args.get('category_id'), type=int)
+
+    query = User.query.filter_by(role=2)
+
+    if category_id:
+        query = query.join(ExpertCategory).filter(ExpertCategory_id==category_id)
+
+    experts = query.all()
+
+    return jsonify([{'id': e.id, 'username': e.username, 'email': e.email} for e in experts])
