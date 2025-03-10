@@ -64,20 +64,31 @@ def index(url):
 @login_required
 def place_bid(url):
     item = Item.query.filter_by(url=url).first_or_404()
+    
+    # Prevent the seller from bidding on their own auction.
+    if current_user.id == item.seller_id:
+        return jsonify({'error': 'You cannot bid on your own auction.'}), 403
+
     if datetime.now() >= item.auction_end:
         return jsonify({'error': 'This auction has ended.'}), 400
+
     try:
         bid_amount = float(request.json.get('bid_amount'))
         print(bid_amount)
         current_highest = item.highest_bid()
+
         if not bid_amount:
             return jsonify({'error': 'Please enter a bid amount.'}), 400
+
         if not isinstance(bid_amount, (int, float)):
             return jsonify({'error': 'Bid amount must be a number.'}), 400
+
         if bid_amount < 0:
             return jsonify({'error': 'Bid amount must be a positive number.'}), 400
+
         if current_highest and bid_amount <= current_highest.bid_amount:
             return jsonify({'error': 'Your bid must be higher than the current bid.'}), 400
+
         if bid_amount < item.minimum_price:
             return jsonify({'error': 'Your bid must be at least the minimum price.'}), 400
 
@@ -109,6 +120,7 @@ def place_bid(url):
         db.session.rollback()
         print(f"Error placing bid: {str(e)}")
         return jsonify({'error': 'Error placing bid. Please try again.'}), 500
+
 
 def check_ended_auctions():
     """Check for auctions that have ended but don't have a winner yet."""
