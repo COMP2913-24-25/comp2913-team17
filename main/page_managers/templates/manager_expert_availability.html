@@ -113,4 +113,37 @@
 
 <script src="{{ url_for('static', filename='js/filterAvailability.js') }}"></script>
 
+<script>
+document.getElmentById("categoryFilter").addEventListener("change", function() {
+  let category = this.value;
+  
+  fetch(`/filter-experts?category_id=${categoryId}`)
+    .then(response => response.json())
+    .then(data => {
+      let dailyTable = document.getElementById("dailyTable").getElementById("tbody")[0];
+      dailyTable.innerHTML = "";
+
+      data.forEach(expert => {
+        let row = document.createElement("tr");
+        let nameCell = document.createElement("td");
+        nameCell.textContent = expert.username;
+        row.appendChild(nameCell);
+
+        //Add empty cells for each time slot
+        let numColumns = document.querySelector("#dailyTable thead tr").children.length - 1;
+        for (let i = 0; i < numColumns; i++) {
+          let emptyCell = document.createElement("td");
+          emptyCell.textContent = "-";
+          row.appendChild(emptyCell);
+        }
+        dailyTable.appendChild(row);
+      });
+    })
+    .catch(error => console.error("Errorn fetching experts:", error));
+});
+</script>
+
+
+
+
 {% endblock %}
