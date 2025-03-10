@@ -115,7 +115,7 @@ def populate_db(app):
         )
         db.session.add(expert_assignment)
         db.session.commit()
-
+    
         # Expert Availabilities (for user3)
         availability1 = ExpertAvailability(
             expert_id=user3.id,
@@ -124,14 +124,7 @@ def populate_db(app):
             end_time=time(12, 0),
             status=False
         )
-        availability2 = ExpertAvailability(
-            expert_id=user3.id,
-            day=date.today(),
-            start_time=time(13, 0),
-            end_time=time(17, 0),
-            status=True
-        )
-        db.session.add_all([availability1, availability2])
+        db.session.add_all([availability1])
         db.session.commit()
 
         # Messages (for the expert assignment)
