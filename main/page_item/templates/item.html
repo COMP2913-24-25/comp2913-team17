@@ -8,12 +8,16 @@
   <div class="row">
     <!-- Image Column -->
     <div class="col-md-6 mb-4">
-      {% if item.image %}
-      <img src="{{ item.image }}" 
-        alt="{{ item.title }}" 
-        class="img-fluid rounded"
-        loading="lazy"
-      >
+      {% if item.images %} 
+      {% for image in item.images %}
+        {% if image.url %}
+        <img src="{{ image.url }}" 
+          alt="{{ item.title }} {{ image.url }}" 
+          class="img-fluid rounded"
+          loading="lazy"
+        >
+        {% endif %}
+      {% endfor %}
       {% else %}
       <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px">
         <p class="text-muted">No image available</p>

@@ -66,12 +66,12 @@
       <div class="alert alert-danger" role="alert">{{ error }}</div>
       {% endfor %}
     </div>
-    <!-- Image Upload -->
+    <!--Images Upload-->
     <div class="form-group">
-      <label for="upload-image" class="form-label">Item Image</label>
-      {{ form.image(class_="form-control", id_="upload-image", accept="image/*") }}
+      <label for="upload-image" class="form-label">Item Images</label>
+      {{ form.images(class_="form-control", id_="upload-images", accept="image/*") }}
       <small class="form-text text-muted">Accepted formats: JPG, JPEG, PNG. Maximum size: 1MB</small>
-      {% for error in form.image.errors %}
+      {% for error in form.images.errors %}
       <div class="alert alert-danger" role="alert">{{ error }}</div>
       {% endfor %}
     </div>

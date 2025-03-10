@@ -7,7 +7,7 @@ from datetime import datetime
 from . import create_page
 from .forms import CreateAuctionForm
 from ..s3_utils import upload_s3
-from ..models import db, Item, AuthenticationRequest, ManagerConfig
+from ..models import db, Item, AuthenticationRequest, ManagerConfig, Image
 
 
 @create_page.route('/', methods=['GET', 'POST'])
@@ -36,17 +36,7 @@ def index():
         category_id = form.category_id.data
         end = form.auction_end.data
         min_price = form.minimum_price.data
-        image = form.image.data
-
-        # If image, try to upload to S3
-        image_url = None
-        if image:
-            filename = secure_filename(image.filename)
-            image_filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{filename}'
-            image_url = upload_s3(image, image_filename, folder='auction_items')
-
-            if not image_url:
-                flash('Error uploading image')
+        images = form.images.data
 
         item = Item(
             seller_id=current_user.id,
@@ -56,10 +46,22 @@ def index():
             auction_start=datetime.now(),
             auction_end=end,
             minimum_price=min_price,
-            image=image_url,
         )
         db.session.add(item)
         db.session.flush()
+
+        if images:
+            for image in images:
+                filename = secure_filename(image.filename)
+                image_filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{filename}'
+                image_url = upload_s3(image, image_filename, folder='auction_items')
+
+                if image_url:
+                    img = Image(item_id=item.item_id, url=image_url)
+                    db.session.add(img)
+        
+        db.session.commit()
+            
 
         if form.authenticate_item.data:
             request = AuthenticationRequest(
