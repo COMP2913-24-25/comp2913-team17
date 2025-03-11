@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from flask import render_template, redirect, url_for, flash
+from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import current_user, login_required
 from ..models import User, ExpertAvailability
 from . import manager_page 
@@ -47,7 +47,7 @@ def expert_availability():
             weekly_availability[expert.id][d] = rec.status if rec else False
     
     categories = Category.query.all()
-    
+
     return render_template(
         'manager_expert_availability.html',
         today=today,

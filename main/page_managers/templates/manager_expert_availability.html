@@ -117,7 +117,7 @@
 document.getElementById("categoryFilter").addEventListener("change", function() {
   let category = this.value;
   
-  fetch(`/filter-experts?category_id=${category}`)
+  fetch(`/manager/filter-experts?category_id=${category}`) 
     .then(response => response.json())
     .then(data => {
       let dailyTable = document.getElementById("dailyTable").querySelector("tbody");
