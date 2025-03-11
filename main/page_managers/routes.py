@@ -46,8 +46,8 @@ def expert_availability():
             rec = ExpertAvailability.query.filter_by(expert_id=expert.id, day=d).first()
             weekly_availability[expert.id][d] = rec.status if rec else False
     
-categories = Category.query.all()
-
+    categories = Category.query.all()
+    
     return render_template(
         'manager_expert_availability.html',
         today=today,
@@ -58,7 +58,7 @@ categories = Category.query.all()
         weekly_availability=weekly_availability,
         current_time=current_time,
         current_slot=current_slot,
-        timedelta=timedelta
+        timedelta=timedelta,
         categories=categories
     )
 

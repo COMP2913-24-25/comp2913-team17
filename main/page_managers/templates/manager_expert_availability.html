@@ -114,13 +114,13 @@
 <script src="{{ url_for('static', filename='js/filterAvailability.js') }}"></script>
 
 <script>
-document.getElmentById("categoryFilter").addEventListener("change", function() {
+document.getElementById("categoryFilter").addEventListener("change", function() {
   let category = this.value;
   
-  fetch(`/filter-experts?category_id=${categoryId}`)
+  fetch(`/filter-experts?category_id=${category}`)
     .then(response => response.json())
     .then(data => {
-      let dailyTable = document.getElementById("dailyTable").getElementById("tbody")[0];
+      let dailyTable = document.getElementById("dailyTable").querySelector("tbody");
       dailyTable.innerHTML = "";
 
       data.forEach(expert => {
