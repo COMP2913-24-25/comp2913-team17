@@ -10,7 +10,7 @@ def update_availability():
     # Only allow users with the expert rol
     if current_user.role != 2:
         flash("You are not authorised to access this page.", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("home_page.index"))
     
     today = date.today()
     # Compute current week's start (most recent Sunday)

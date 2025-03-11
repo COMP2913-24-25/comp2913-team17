@@ -188,12 +188,40 @@ def index():
 
     # General User interface, all users can see their own auctions
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
+    
+    # Get auctions the user has participated in (via bidding, winning or paying)
+    # Bidding: any open auction (status == 1) where the user has at least one bid.
+    bidding_items = (
+        Item.query.join(Bid, Item.item_id == Bid.item_id)
+        .filter(Bid.bidder_id == current_user.id, Item.status == 1)
+        .distinct()
+        .all()
+    )
+
+    # Won: auctions that are finalized (status == 2) where the user is the winner.
+    won_items = (
+        Item.query.filter(Item.status == 2, Item.winning_bid.has(bidder_id=current_user.id))
+        .all()
+    )
+    # Paid: auctions where the item is paid for (status == 3) and the user is the winner.
+    paid_items = (
+        Item.query.filter(Item.status == 3, Item.winning_bid.has(bidder_id=current_user.id))
+        .all()
+    )
+    
+    user['participated_auctions'] = {
+        'bidding': bidding_items,
+        'won': won_items,
+        'paid': paid_items
+    }
+    
     user_data = {
         'auctions': user['auctions'],
-        'watched_items': current_user.watched_items.all() if hasattr(current_user, 'watched_items') else []
+        'watched_items': current_user.watched_items.all() if hasattr(current_user, 'watched_items') else [],
+        'participated_auctions': user['participated_auctions']
     }
-    return render_template('dashboard.html', manager=manager, expert=expert, user=user_data, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
+    return render_template('dashboard.html', manager=manager, expert=expert, user=user_data, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])
 @login_required
@@ -323,23 +351,22 @@ def assign_expert(request_id):
     for record in avail_records:
         if not record.status:
             continue
-        if record.day == now_date:
-            # For today: expert must be available later than now.
-            if now_time < record.end_time:
-                valid = True
-                break
-        elif record.day < auction_end_date:
-            # For intermediate days, any available record counts.
+        # If the availability is on a day before the auction end day, it's valid.
+        if record.day < auction_end_date:
             valid = True
             break
-        else:  # record.day == auction_end_date
-            # On the auction end day, expert must be available at least until threshold_time.
-            if record.end_time >= threshold_time:
+        # If the availability is on the auction end day, then ensure it doesn't start too late.
+        elif record.day == auction_end_date:
+            # Calculate the threshold time (auction end time minus 3 hours)
+            threshold_time = (auction_end - timedelta(hours=3)).time()
+            # The expert's availability is valid only if it starts before the threshold.
+            if record.start_time < threshold_time:
                 valid = True
                 break
 
     if not valid:
-        return jsonify({'error': 'Expert is not available at any time from now until 3 hours before auction end'}), 400
+        return jsonify({'error': 'Expert is not available at any time before the last 3 hours of the auction'}), 400
+
 
     # All checks passed—create the assignment.
     assignment = ExpertAssignment(
@@ -558,3 +585,4 @@ def update_expertise(user_id):
         'message': 'Expertise updated successfully',
         'expertise': new_expertise
     }), 200
+

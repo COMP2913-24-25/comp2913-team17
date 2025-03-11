@@ -99,6 +99,8 @@ class Item(db.Model):
     auction_end = db.Column(db.DateTime, nullable=False)
     minimum_price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     locked = db.Column(db.Boolean, default=False)
+    # Statuses: 1 = Open, 2 = Won, 3 = Paid
+    status = db.Column(db.Integer, nullable=False, default=1)
     # ensures all images are deleted
     images = db.relationship('Image', back_populates='item', cascade='all, delete-orphan')
 
@@ -217,14 +219,14 @@ class Item(db.Model):
     # Set the winning bid and notify users about the auction outcome
     def finalise_auction(self):
         highest = self.highest_bid()
-        
         if highest:
             self.winning_bid_id = highest.bid_id
+            self.status = 2  # Auction is won (but not yet paid)
             db.session.commit()
-            
             # Notify winner and losers
             self.notify_winner()
             self.notify_losers()
+
 
     # Count the number of users watching an auction
     def watcher_count(self):

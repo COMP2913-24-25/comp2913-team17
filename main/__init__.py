@@ -27,6 +27,10 @@ def create_app():
     # Configure the secret key
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
+    # Configure Stripe keys from the environment
+    app.config['STRIPE_SECRET_KEY'] = os.environ.get('STRIPE_SECRET_KEY')
+    app.config['STRIPE_PUBLISHABLE_KEY'] = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+
     # Configure the database
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
