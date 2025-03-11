@@ -153,9 +153,6 @@
       </div>
     {% endif %}
     
-
-      <!-- Payment Section (Only visible if the auction is over and the current user is the winner) -->
-      <!-- Payment Section (Only visible if the auction is over and the current user is the winner) -->
       <!-- Payment Section (Only visible if the auction is over, the user is the winner, and item is not paid) -->
       {% if show_payment %}
       <hr>
@@ -165,7 +162,47 @@
         <a href="{{ url_for('item_page.payment_page', url=item.url) }}" class="btn btn-primary">Make Payment</a>
       </div>
       {% endif %}
-
+      
+      <!-- Item watchers -->
+      <div class="mt-3 d-flex align-items-center">
+        {% if is_watching %}
+          <button id="unwatch-btn" class="btn btn-success" data-item-url="{{ item.url }}">
+            <i class="fas fa-check"></i> Watched
+          </button>
+        {% else %}
+          <button id="watch-btn" class="btn btn-outline-primary" data-item-url="{{ item.url }}">
+            <i class="fas fa-eye"></i> Watch
+          </button>
+        {% endif %}
+        <span id="watch-counter" class="ms-2 badge bg-secondary">
+          <i class="fas fa-user-friends"></i> {{ item.watcher_count() }} {% if item.watcher_count() == 1 %}watcher{% else %}watchers{% endif %}
+        </span>
+      </div>
+      <!-- Auction end date -->
+      <div class="mt-3">
+        <p class="text-muted small-end">
+          Auction ends on: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
+        </p>
+        {% if item.highest_bid() and item.highest_bid().bidder_id == current_user.id %}
+          <div class="alert alert-info mt-2 max-bid-alert">
+            You currently have the highest bid!
+          </div>
+        {% endif %}
+        <!-- Bid History -->
+        <h3>Bid History:</h3>
+        {% if bids %}
+        <ol class="bid-history" reversed start="{{ bids|length }}">
+          {% for bid in bids %}
+          <li>
+            {{ bid.bidder.username }}</strong> - £{{ "%.2f"|format(bid.bid_amount) }}
+            <small class="text-muted">({{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }})</small>
+          </li>
+          {% endfor %}
+        </ol>
+        {% else %}
+        <p class="text-muted no-bids-msg">No bids yet</p>
+        {% endif %}
+      </div>
 
     </div>
   </div>
