@@ -193,7 +193,7 @@
         <p class="text-muted small-end">
           Auction ends on: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
         </p>
-        {% if item.highest_bid() and item.highest_bid().bidder_id == current_user.id %}
+        {% if item.highest_bid() and item.highest_bid().bidder_id == current_user.id and not show_payment %}
           <div class="alert alert-info mt-2 max-bid-alert">
             You currently have the highest bid!
           </div>
