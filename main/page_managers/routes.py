@@ -61,7 +61,7 @@ def expert_availability():
 @manager_page.route('/filter-experts', methods=['GET'])
 def filter_experts():
     #Filter experts based on category or expertise
-    catergory_id = request.args.get('category_id'), type=int)
+    catergory_id = request.args.get('category_id', type=int)
 
     query = User.query.filter_by(role=2)
 
