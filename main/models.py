@@ -94,7 +94,6 @@ class Item(db.Model):
                     default=lambda: uuid4().hex, nullable=False, index=True)
     title = db.Column(db.String(256), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    image = db.Column(db.String(256))
     upload_date = db.Column(db.DateTime, default=datetime.now())
     auction_start = db.Column(db.DateTime, nullable=False)
     auction_end = db.Column(db.DateTime, nullable=False)
@@ -102,6 +101,8 @@ class Item(db.Model):
     locked = db.Column(db.Boolean, default=False)
     # Statuses: 1 = Open, 2 = Won, 3 = Paid
     status = db.Column(db.Integer, nullable=False, default=1)
+    # ensures all images are deleted
+    images = db.relationship('Image', back_populates='item', cascade='all, delete-orphan')
 
     winning_bid_id = db.Column(
         db.Integer, 
@@ -232,6 +233,13 @@ class Item(db.Model):
         """Return the number of users watching this auction."""
         return len(self.watchers.all())
 
+class Image(db.Model):
+    __tablename__ = 'images'
+    image_id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey(Item.item_id), nullable=False)
+    url = db.Column(db.String(256), nullable=False)
+    upload_date = db.Column(db.DateTime, default=datetime.now())
+    item = db.relationship('Item', back_populates='images')
 
 # Bid Model
 class Bid(db.Model):
