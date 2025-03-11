@@ -8,15 +8,25 @@
   <div class="row">
     <!-- Image Column -->
     <div class="col-md-6 mb-4">
-      {% if item.image %}
-      <img src="{{ item.image }}" 
-        alt="{{ item.title }}" 
-        class="img-fluid rounded"
-        loading="lazy"
-      >
+      {% if item.images %} 
+        <!-- Focused Image -->
+        <div id="focused-image-container" class="mb-3">
+          <img id="focused-image" src="{{ item.images[0].url }}" alt="{{ item.title }}" class="rounded focused-image" loading="lazy">
+        </div>
+
+        <!-- Tile Images -->
+        <div id="tile-images-container" class="d-flex">
+          {% for image in item.images %}
+            {% if image.url %}
+              <div class="tile-container">
+                <img class="tile img-fluid rounded" src="{{ image.url }}" alt="{{ item.title }}" onclick="focusImage('{{ image.url }}')">
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
       {% else %}
       <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px">
-        <p class="text-muted">No image available</p>
+        <p class="text-muted">No image(s) available</p>
       </div>
       {% endif %}
     </div>
@@ -174,5 +184,6 @@
 <!-- Scripts -->
 <script src="{{ url_for('static', filename='js/bidding.js') }}"></script>
 <script src="{{ url_for('static', filename='js/watchAuction.js') }}"></script>
+<script src="{{ url_for('static', filename='js/focusImage.js') }}"></script>
 
 {% endblock %}

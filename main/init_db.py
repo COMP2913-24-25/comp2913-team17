@@ -1,7 +1,8 @@
 from datetime import date, datetime, time, timedelta
 from .models import (
     AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability,
-    Item, ManagerConfig, Message, Notification, Payment, User, Category, db
+    Item, ManagerConfig, Message, Notification, Payment, User, Category, Image,
+    db
 )
 
 def populate_db(app):
@@ -52,25 +53,35 @@ def populate_db(app):
             seller_id=user1.id,
             title='Vintage Clock',
             description='An antique clock from 1900',
-            image='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014410_clock.jpg',
             upload_date=now,
             auction_start=now,
             auction_end=now + timedelta(minutes=2),
             minimum_price=100.00,
             category_id=cat1.id  # Assign to "Antiques"
         )
+
+        image1 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014410_clock.jpg',
+            item=item1
+        )
+
         item2 = Item(
             seller_id=user2.id,
             title='Art Painting',
             description='A modern art painting with vibrant colours',
-            image='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014233_art.jpg',
             upload_date=now,
             auction_start=now,
             auction_end=now + timedelta(days=5),
             minimum_price=200.00,
             category_id=cat2.id  # Assign to "Art"
         )
-        db.session.add_all([item1, item2])
+
+        image2 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014233_art.jpg',
+            item=item2
+        )
+
+        db.session.add_all([item1, item2, image1, image2])
         db.session.commit()
 
         # Bids

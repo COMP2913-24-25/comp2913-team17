@@ -97,3 +97,39 @@
   font-size: 0.8em;
   margin: 0;
 }
+
+.focused-image-container {
+  background-color: #f7f7f7;
+}
+
+.focused-image {
+  width: 100%;
+  height: 500px;
+  object-fit: contain;
+  border: 2px solid #ddd;
+  margin-bottom: 15px;
+  background-color: #f7f7f7;
+}
+
+.tile-images-container {
+  margin-right: 10px;
+}
+
+.tile {
+  object-fit: contain;
+  cursor: pointer;
+  transition: transform 0.2s ease, border 0.2s ease;
+  max-width: 125px;
+  max-height: 125px;
+  border: 2px solid transparent;
+  background-color: #f7f7f7;
+}
+
+.tile:hover {
+  transform: scale(1.1);
+  border: 2px solid #007bff;
+}
+
+#tile-images-container {
+  display: inline-block;
+}
