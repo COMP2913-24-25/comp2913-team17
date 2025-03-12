@@ -11,7 +11,26 @@
       {% if item.images %} 
         <!-- Focused Image -->
         <div id="focused-image-container" class="mb-3">
-          <img id="focused-image" src="{{ item.images[0].url }}" alt="{{ item.title }}" class="rounded focused-image" loading="lazy">
+
+          <img 
+              id="focused-image" 
+              src="{{ item.images[0].url }}" 
+              alt="{{ item.title }}" 
+              class="rounded focused-image" 
+              loading="lazy"
+              onclick="imagePopup(event)"
+           >
+
+           <div class="modal fade image-modal">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <button type="button" class="btn-close close-image-modal" data-bs-dismiss="modal"></button>
+                  <div class="modal-body image-modal-body">
+                    <img class="modal-image img-fluid" src="" alt="Pop up image">
+                  </div>
+                </div>
+              </div>
+           </div>
         </div>
 
         <!-- Tile Images -->
@@ -222,5 +241,5 @@
 <script src="{{ url_for('static', filename='js/bidding.js') }}"></script>
 <script src="{{ url_for('static', filename='js/watchAuction.js') }}"></script>
 <script src="{{ url_for('static', filename='js/focusImage.js') }}"></script>
-
+<script src="{{ url_for('static', filename='js/imagePopup.js') }}"></script>
 {% endblock %}
