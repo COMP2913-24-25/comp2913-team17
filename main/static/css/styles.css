@@ -142,6 +142,7 @@
   justify-content: center;
   background-color: #f7f7f7;
   padding: 15px;
+  overflow: hidden;
 }
 
 .close-image-modal {
@@ -152,4 +153,12 @@
 
 .modal-image {
   object-fit: contain;
+  transition: transform 0.25s ease;
+  cursor: zoom-in;
+  max-width: 100%;
+}
+
+.modal-image.is-zoomed {
+  transform: scale(3);
+  cursor: zoom-out;
 }
