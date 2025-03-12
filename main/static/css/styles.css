@@ -109,6 +109,7 @@
   border: 2px solid #ddd;
   margin-bottom: 15px;
   background-color: #f7f7f7;
+  cursor: pointer;
 }
 
 .tile-images-container {
@@ -132,4 +133,23 @@
 
 #tile-images-container {
   display: inline-block;
+}
+
+.image-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f7f7f7;
+  padding: 15px;
+}
+
+.close-image-modal {
+  margin-left: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.modal-image {
+  object-fit: contain;
 }
