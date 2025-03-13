@@ -148,7 +148,7 @@ $(document).ready(function() {
     // Update the current price
     currentPrice.html(`
       <h5>Highest Bid</h5>
-      <p class="h3 text-primary">£${parseFloat(data.bid_amount).toFixed(2)}</p>
+      <div class="h3 text-primary">£${parseFloat(data.bid_amount).toFixed(2)}</div>
     `)
 
     bidHelp.html(`
