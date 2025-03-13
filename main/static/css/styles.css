@@ -199,4 +199,14 @@
 
 .bid-history {
   width: 100%;
+  list-style-position: inside; 
+  padding-left: 0px;
+  list-style: none;
 }
+
+.bid-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+

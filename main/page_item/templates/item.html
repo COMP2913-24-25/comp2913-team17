@@ -77,7 +77,6 @@
       </div>
 
       <!-- Bid History Modal -->
-
       <div class="modal fade bid-history-modal">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content bid-history-content">
@@ -94,10 +93,12 @@
               <ol class="bid-history" reversed start="{{ bids|length }}">
                 {% for bid in bids %}
                 <li style="padding: 10px;">
-                  {{ bid.bidder.username }}</strong> - £{{ "%.2f"|format(bid.bid_amount) }}
-                  <small class="text-muted">({{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }})</small>
+                  <div class="bid-info-row">
+                    {{ bid.bidder.username }}</strong> - £{{ "%.2f"|format(bid.bid_amount) }}
+                    <small class="text-muted">({{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }})</small>
+                  </div>
                 </li>
-                <hr>
+                <hr class="full-width-hr">
                 {% endfor %}
               </ol>
               {% else %}
