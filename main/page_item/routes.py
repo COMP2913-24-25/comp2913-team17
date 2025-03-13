@@ -58,7 +58,8 @@ def index(url):
     show_payment = is_auction_over and is_winner and (item.status != 3)
 
     return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed,
-                           suggested_bid=suggested_bid, bids=bids, show_payment=show_payment)
+                           suggested_bid=suggested_bid, bids=bids, show_payment=show_payment, 
+                           is_auction_over=is_auction_over)
 
 @item_page.route('/<url>/bid', methods=['POST'])
 @login_required

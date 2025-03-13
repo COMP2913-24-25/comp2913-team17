@@ -5,6 +5,7 @@ $(document).ready(function() {
   const maxBid = $('.max-bid');
   let maxBidAlert = $('.max-bid-alert');
   let bidHistory = $('.bid-history');
+  let bidCount = $('.bid-count');
   const noBids = $('.no-bids-msg');
   const auctionEnd = $('.auction-end');
   const countdown = $('.countdown');
@@ -147,7 +148,7 @@ $(document).ready(function() {
     // Update the current price
     currentPrice.html(`
       <h5>Highest Bid</h5>
-      <p class="h3 text-primary">£${parseFloat(data.bid_amount).toFixed(2)}</p>
+      <div class="h3 text-primary">£${parseFloat(data.bid_amount).toFixed(2)}</div>
     `)
 
     bidHelp.html(`
@@ -164,13 +165,20 @@ $(document).ready(function() {
       }
     }
 
-    bidHistory.prepend(`
-      <li>
+    const newBid = `
+      <li style="padding: 10px;">
+      <div class="bid-info-row">
         ${data.bid_username}</strong> - £${parseFloat(data.bid_amount).toFixed(2)}
         <small class='text-muted'>(${data.bid_time})</small>
+      </div>
       </li>
-    `);
-    bidHistory.prop('start', bidHistory.children().length);
+      <hr class="full-width-hr">
+    `;
+
+    bidHistory.prepend(newBid);
+
+    bidCount.html($(`<a href='#' class="bid-count">${bidHistory.children().length / 2} bids</a>`));
+    bidHistory.prop('start', bidHistory.children().length / 2);
 
     // Update suggested bid
     if (bidAmount.length) {
