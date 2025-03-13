@@ -9,9 +9,9 @@
     <!-- Image Column -->
     <div class="col-md-6 mb-4">
       {% if item.images %} 
+
         <!-- Focused Image -->
         <div id="focused-image-container" class="mb-3">
-
           <img 
               id="focused-image" 
               src="{{ item.images[0].url }}" 
@@ -20,7 +20,6 @@
               loading="lazy"
               onclick="imagePopup(event)"
            >
-
            <div class="modal fade image-modal">
               <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -49,58 +48,10 @@
       </div>
       {% endif %}
     </div>
+
     <!-- Details Column -->
     <div class="col-md-6">
-      <h1 class="mb-2">{{ item.title }}</h1>
-      <!-- Category Badge -->
-      <div class="mb-2">
-        <span class="badge bg-info p-2" {% if item.category.description %}title="{{ item.category.description }}"{% endif %}>
-          <i class="fas fa-tag"></i> {{ item.category.name }}
-        </span>
-            </div>
-      <!-- Auction Status -->
-      <div class="mb-4">
-        <h5>Auction Status</h5>
-        <div class="d-flex gap-3">
-          <span class="badge {% if item.locked %}bg-danger{% else %}bg-success{% endif %} p-2">
-            {{ "Locked" if item.locked else "Open" }}
-          </span>
-          <span class="badge {% if item.status == 1 %}bg-secondary{% elif item.status == 2 %}bg-info{% elif item.status == 3 %}bg-success{% endif %} p-2">
-            {% if item.status == 1 %}
-              Open
-            {% elif item.status == 2 %}
-              Won
-            {% elif item.status == 3 %}
-              Paid
-            {% endif %}
-          </span>
-          {% if is_allowed %}
-            <a href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}"
-              title="View authentication request"
-              class="badge mx-2 {% if item.authentication_requests[0].status == 1 %}bg-warning{% elif item.authentication_requests[0].status == 2 %}bg-success{% else %}bg-danger{% endif %} p-2">
-              {% if item.authentication_requests[0].status == 1 %}
-                Authentication Pending
-              {% elif item.authentication_requests[0].status == 2 %}
-                Authenticated
-              {% else %}
-                Authentication Declined
-              {% endif %}
-            </a>
-          {% else %}
-            <span class="badge {% if authentication == 1 %}bg-warning{% elif authentication == 2 %}bg-success{% elif authentication == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
-              {% if authentication == 1 %}
-                Authentication Pending
-              {% elif authentication == 2 %}
-                Authenticated
-              {% elif authentication == 3 %}
-                Authentication Declined
-              {% else %}
-                Not Authenticated
-              {% endif %}
-            </span>
-          {% endif %}
-        </div>
-      </div>
+      <h1 class="mb-2">{{ item.title | capitalize }}</h1>
 
       <!-- Price -->
       <div class="mb-4" id="price-section">
@@ -112,32 +63,58 @@
         <p class="h3 text-primary">£{{ "%.2f"|format(item.minimum_price) }}</p>
         {% endif %}
       </div>
+
       <!-- Auction Times -->
       <div class="mb-4">
-        <h5>Auction Period</h5>
         <div class="row">
           <div class="col">
-            <small class="text-muted">Start Time</small>
-            <p>{{ item.auction_start.strftime('%Y-%m-%d %H:%M') }}</p>
-          </div>
-          <div class="col">
-            <small class="text-muted">End Time</small>
-            <p class="auction-end">{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</p>
-            <p><span class="countdown-label">Time remaining:</span> <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</span></p>
+            <p>
+              <a href='#' class="bid-count" data-bs-toggle="modal" data-bs-target=".bid-history-modal">{{ bids|length }} bids</a>
+              <span class="countdown-label">Ends in:</span> <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</span>
+            </p>
           </div>
         </div>
       </div>
-      <!-- Description -->
-      <div class="mb-4">
-        <h5>Description</h5>
-        <p class="text-break">{{ item.description }}</p>
+
+      <!-- Bid History Modal -->
+
+      <div class="modal fade bid-history-modal">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content bid-history-content">
+            <div class="modal-header bid-history-header" style="padding-bottom: 10px;">
+              <div class="modal-title bid-history-modal-title">
+                <h3>Bid History</h3>
+              </div>
+              <button type="button" class="btn-close" style="margin-right: 5px;" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bid-history-body">
+
+              <!-- Bid History -->
+              {% if bids %}
+              <ol class="bid-history" reversed start="{{ bids|length }}">
+                {% for bid in bids %}
+                <li style="padding: 10px;">
+                  {{ bid.bidder.username }}</strong> - £{{ "%.2f"|format(bid.bid_amount) }}
+                  <small class="text-muted">({{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }})</small>
+                </li>
+                <hr>
+                {% endfor %}
+              </ol>
+              {% else %}
+              <p class="text-muted no-bids-msg">No bids yet</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
       </div>
+
       <!-- Seller Info -->
       <div class="mb-4">
         <h5>Seller Information</h5>
         <p>Posted by: {{ item.seller.username }}</p>
         <p><small class="text-muted">Upload date: {{ item.upload_date.strftime('%Y-%m-%d %H:%M') }}</small></p>
       </div>
+
       <!-- Action Buttons -->
       {% if current_user.is_authenticated %}
         {% if current_user.id != item.seller.id %}
@@ -209,6 +186,7 @@
           </span>
         {% endif %}
       </div>
+
       <!-- Auction end date -->
       <div class="mt-3">
         <p class="text-muted small-end">
@@ -219,23 +197,57 @@
             You currently have the highest bid!
           </div>
         {% endif %}
-        <!-- Bid History -->
-        <h3>Bid History:</h3>
-        {% if bids %}
-        <ol class="bid-history" reversed start="{{ bids|length }}">
-          {% for bid in bids %}
-          <li>
-            {{ bid.bidder.username }}</strong> - £{{ "%.2f"|format(bid.bid_amount) }}
-            <small class="text-muted">({{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }})</small>
-          </li>
-          {% endfor %}
-        </ol>
-        {% else %}
-        <p class="text-muted no-bids-msg">No bids yet</p>
-        {% endif %}
-      </div>
-
     </div>
+  </div>
+  <hr>
+
+  <!-- Description -->
+  <div class="mb-4">
+    <h5>Description</h5>
+    <div class="text-break">{{ item.description }}</div>
+  </div>
+  <!-- Category Badge  -->
+  <div class="mb-2">
+    <span class="badge bg-info p-2" {% if item.category.description %}title="{{ item.category.description }}"{% endif %}>
+      <i class="fas fa-tag"></i> {{ item.category.name }}
+    </span>
+  </div>
+
+  <!-- Auction Status   -->
+  <div class="mb-4">
+    <h5>Auction Status</h5>
+    <div class="d-flex gap-3">
+      <span class="badge {% if item.locked %}bg-danger{% else %}bg-success{% endif %} p-2">
+        {{ "Locked" if item.locked else "Open" }}
+      </span>
+      </span>
+      {% if is_allowed %}
+        <a href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}"
+          title="View authentication request"
+          class="badge mx-2 {% if item.authentication_requests[0].status == 1 %}bg-warning{% elif item.authentication_requests[0].status == 2 %}bg-success{% else %}bg-danger{% endif %} p-2">
+          {% if item.authentication_requests[0].status == 1 %}
+            Authentication Pending
+          {% elif item.authentication_requests[0].status == 2 %}
+            Authenticated
+          {% else %}
+            Authentication Declined
+          {% endif %}
+        </a>
+      {% else %}
+        <span class="badge {% if authentication == 1 %}bg-warning{% elif authentication == 2 %}bg-success{% elif authentication == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
+          {% if authentication == 1 %}
+            Authentication Pending
+          {% elif authentication == 2 %}
+            Authenticated
+          {% elif authentication == 3 %}
+            Authentication Declined
+          {% else %}
+            Not Authenticated
+          {% endif %}
+        </span>
+      {% endif %}
+    </div>
+  </div>
   </div>
 </div>
 
@@ -245,3 +257,4 @@
 <script src="{{ url_for('static', filename='js/focusImage.js') }}"></script>
 <script src="{{ url_for('static', filename='js/imagePopup.js') }}"></script>
 {% endblock %}
+  

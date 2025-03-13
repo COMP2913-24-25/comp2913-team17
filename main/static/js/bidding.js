@@ -5,6 +5,7 @@ $(document).ready(function() {
   const maxBid = $('.max-bid');
   let maxBidAlert = $('.max-bid-alert');
   let bidHistory = $('.bid-history');
+  let bidCount = $('.bid-count');
   const noBids = $('.no-bids-msg');
   const auctionEnd = $('.auction-end');
   const countdown = $('.countdown');
@@ -170,6 +171,8 @@ $(document).ready(function() {
         <small class='text-muted'>(${data.bid_time})</small>
       </li>
     `);
+
+    bidCount.html($(`<a href='#' class="bid-count">${bidHistory.children().length + 1} bids</a>`));
     bidHistory.prop('start', bidHistory.children().length);
 
     // Update suggested bid

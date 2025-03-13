@@ -162,3 +162,41 @@
   transform: scale(3);
   cursor: zoom-out;
 }
+
+.bid-history-modal-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bid-history-modal {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.bid-history-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.bid-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.bid-history-body {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bid-history {
+  width: 100%;
+}
