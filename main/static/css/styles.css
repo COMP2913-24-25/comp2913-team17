@@ -2,8 +2,8 @@
 
 :root {
   --primary-color: #000;
-  --secondary-color: #fff;
-  --accent-color: #FF4D00;
+  --secondary-color: hsl(0, 0%, 100%);
+  --accent-color: #ff9d00;
   --tertiary-color: #f0f0f0;
   --font-mono: monospace, sans-serif;
   --font-sans: 'Inter', sans-serif;
