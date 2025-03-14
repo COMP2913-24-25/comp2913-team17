@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="300" height="300"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <!-- Inverted Black Triangle -->
+  <path d="M75 75 L225 75 L150 225 Z" fill="black"></path>
+  <!-- White Squares Grid -->
+  <rect x="125" y="100" width="12" height="12" fill="white"></rect>
+  <rect x="145" y="100" width="12" height="12" fill="white"></rect>
+  <rect x="165" y="100" width="12" height="12" fill="white"></rect>
+  <rect x="125" y="120" width="12" height="12" fill="white"></rect>
+  <rect x="145" y="120" width="12" height="12" fill="white"></rect>
+  <rect x="165" y="120" width="12" height="12" fill="white"></rect>
+  <rect x="145" y="140" width="12" height="12" fill="white"></rect>
+</svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: invert(100%); } }
+</style></svg>
