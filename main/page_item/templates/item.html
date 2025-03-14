@@ -166,14 +166,18 @@
       </div>
 
       <!-- Bidding modal -->
-      <div class="d-grid gap-2">
-        <button 
-          type="button" 
-          class="place-bid btn btn-primary btn-lg" 
-          data-bs-toggle="modal" 
-          data-bs-target=".place-bid-modal">
-          Submit Bid
-        </button>
+      {% if current_user.is_authenticated 
+        and current_user.id != item.seller.id
+        and not is_auction_over%}
+        <div class="d-grid gap-2">
+          <button 
+            type="button" 
+            class="place-bid btn btn-primary btn-lg" 
+            data-bs-toggle="modal" 
+            data-bs-target=".place-bid-modal">
+            Submit Bid
+          </button>
+      {% endif %}
       </div>
       <div class="modal fade place-bid-modal">
         <div class="modal-dialog modal-dialog-centered">
@@ -234,7 +238,6 @@
 
       <!-- Payment Section (Only visible if the auction is over, the user is the winner, and item is not paid) -->
       {% if show_payment %}
-      <hr>
       <div id="payment-section">
         <h3>Payment</h3>
         <p>Your winning bid: £{{ "%.2f"|format(item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) }}</p>
