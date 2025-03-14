@@ -50,18 +50,19 @@ def index():
         db.session.add(item)
         db.session.flush()
 
-        if images:
-            for image in images:
-                filename = secure_filename(image.filename)
-                image_filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{filename}'
-                image_url = upload_s3(image, image_filename, folder='auction_items')
+        # checks that the user has uploaded an image and skips db entry if not
+        for image in images:
+            if image.filename == '':
+              continue
+            filename = secure_filename(image.filename)
+            image_filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{filename}'
+            image_url = upload_s3(image, image_filename, folder='auction_items')
 
-                if image_url:
-                    img = Image(item_id=item.item_id, url=image_url)
-                    db.session.add(img)
-        
+            if image_url:
+                img = Image(item_id=item.item_id, url=image_url)
+                db.session.add(img)
+
         db.session.commit()
-            
 
         if form.authenticate_item.data:
             request = AuthenticationRequest(
