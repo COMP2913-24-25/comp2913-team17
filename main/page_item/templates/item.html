@@ -125,7 +125,17 @@
           <div class="col">
             <div>
               <a href='#' class="bid-count" data-bs-toggle="modal" data-bs-target=".bid-history-modal">{{ bids|length }} bids</a>
-              <span class="countdown-label">Ends in:</span> <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">{{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}</span>
+              {% if not is_auction_over %}
+              <span class="countdown-label">Ends in:</span> 
+              {% endif %}
+              <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">
+                {{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}
+              </span>
+              {% if is_auction_over %}
+              <span>
+                {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
+              </span>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -166,18 +176,18 @@
       </div>
 
       <!-- Bidding modal -->
-      {% if current_user.is_authenticated 
-        and current_user.id != item.seller.id
-        and not is_auction_over%}
-        <div class="d-grid gap-2">
-          <button 
-            type="button" 
-            class="place-bid btn btn-primary btn-lg" 
-            data-bs-toggle="modal" 
-            data-bs-target=".place-bid-modal">
-            Submit Bid
-          </button>
-      {% endif %}
+      <div class="d-grid gap-2">
+        {% if current_user.is_authenticated 
+          and current_user.id != item.seller.id
+          and not is_auction_over%}
+        <button 
+          type="button" 
+          class="place-bid btn btn-primary btn-lg" 
+          data-bs-toggle="modal" 
+          data-bs-target=".place-bid-modal">
+          Submit Bid
+        </button>
+        {% endif %}
       </div>
       <div class="modal fade place-bid-modal">
         <div class="modal-dialog modal-dialog-centered">
@@ -272,7 +282,7 @@
             You currently have the highest bid!
           </div>
         {% endif %}
-    </div>
+      </div>
   </div>
   <hr>
 
