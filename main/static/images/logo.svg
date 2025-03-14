@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <!-- Inverted Black Triangle -->
+  <path d="M75 75 L225 75 L150 225 Z" fill="black"/>
+  <!-- White Squares Grid -->
+  <rect x="125" y="100" width="12" height="12" fill="white"/>
+  <rect x="145" y="100" width="12" height="12" fill="white"/>
+  <rect x="165" y="100" width="12" height="12" fill="white"/>
+  <rect x="125" y="120" width="12" height="12" fill="white"/>
+  <rect x="145" y="120" width="12" height="12" fill="white"/>
+  <rect x="165" y="120" width="12" height="12" fill="white"/>
+  <rect x="145" y="140" width="12" height="12" fill="white"/>
+</svg>

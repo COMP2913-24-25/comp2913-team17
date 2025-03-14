@@ -29,7 +29,7 @@ $(document).ready(function() {
     
     let visibleItems = 0;
     
-    $('.auction-grid').each(function() {
+    $('.auction-grid-wrapper').each(function() {
       const title = $(this).data('title').toLowerCase();
       const category = $(this).find('.category').data('category');
       const auctionEndElement = $(this).find('.countdown');
@@ -49,7 +49,7 @@ $(document).ready(function() {
       if (categoryFilter && categoryFilter !== "") {
         passesCategoryFilter = (category == categoryFilter);
       }
-
+      
       // Authentication filter, 2 = Authenticated
       let passesAuthFilter = true;
       if (authenticatedOnly) {
@@ -91,7 +91,7 @@ $(document).ready(function() {
   $('#type-filter').on('change', function() {
     applyFilters();
   });
-
+  
   $('#authenticated-only').on('change', function() {
     applyFilters();
   });
@@ -140,4 +140,100 @@ $(document).ready(function() {
       return 'Ends in ' + (days < 2 ? '1 day' : `${days} days`);
     }
   }
+
+  // Hero typing effect
+  const wordElement = $('#rotating-word');
+  const containerElement = $('#rotating-word-container');
+  const categoryNames = [
+    'ANTIQUES',
+    'ART',
+    'BOOKS',
+    'COLLECTIBLES',
+    'ELECTRONICS',
+    'FASHION',
+    'FURNITURE',
+    'INSTRUMENTS',
+    'TOYS',
+    'VEHICLES',
+    'TREASURES'
+  ];
+
+  if (wordElement.length && containerElement.length && categoryNames.length) {
+    // Set minimum width to accommodate the longest word
+    let longestCat = '';
+    for (const category of categoryNames) {
+      if (category.length > longestCat.length) {
+        longestCat = category;
+      }
+    }
+    containerElement.css('min-width', (longestCat.length * 20) + 'px');
+    
+    // Initialise with the first word already displayed
+    let currentWordIndex = 0;
+    let isDeleting = true;
+    let currentText = 'TREASURES';
+    let typingSpeed = 100;
+    let isFirstCycle = true;
+    
+    function typeEffect() {
+      const currentWord = categoryNames[currentWordIndex];
+      
+      if (isDeleting) {
+        // Deleting text
+        currentText = currentText.substring(0, currentText.length - 1);
+        typingSpeed = 75;
+      } else {
+        // Typing text
+        currentText = currentWord.substring(0, currentText.length + 1);
+        typingSpeed = 150;
+      }
+      
+      // Update the displayed text
+      wordElement.text(currentText);
+      
+      // Word cycling logic
+      if (!isDeleting && currentText === currentWord) {
+        // Finished typing the word, pause for 5s then start deleting
+        typingSpeed = 5000;
+        isDeleting = true;
+      } else if (isDeleting && currentText === '') {
+        isDeleting = false;
+        
+        if (isFirstCycle) {
+          isFirstCycle = false;
+        } else {
+          currentWordIndex = (currentWordIndex + 1) % categoryNames.length;
+        }
+        typingSpeed = 500;
+      }
+      setTimeout(typeEffect, typingSpeed);
+    }
+    
+    setTimeout(typeEffect, 1500);
+  }
+
+  // Initialize AOS Animations
+  AOS.init({
+    once: true,
+    disable: 'mobile',
+    duration: 800
+  });
+  
+  // Reveal animations on scroll
+  function reveal() {
+    const reveals = document.querySelectorAll('.reveal');
+    
+    for (let i = 0; i < reveals.length; i++) {
+      const windowHeight = window.innerHeight;
+      const revealTop = reveals[i].getBoundingClientRect().top;
+      const revealPoint = 150;
+      
+      if (revealTop < windowHeight - revealPoint) {
+        reveals[i].classList.add('active');
+      }
+    }
+  }
+  
+  window.addEventListener('scroll', reveal);
+  reveal();
 });

@@ -1,4 +1,20 @@
 $(document).ready(function() {
+  // Disable the modal on page load
+  const bidHistoryModal = document.querySelector('.bid-history-modal'); 
+  if (bidHistoryModal) {
+    bidHistoryModal.style.display = 'none';
+  
+    // Make sure Bootstrap doesn't override our display setting
+    bidHistoryModal.classList.remove('show');
+    document.body.classList.remove('modal-open');
+  
+    // Remove any backdrop that might have been added
+    const backdrop = $('.modal-backdrop');
+    if (backdrop) {
+      backdrop.remove();
+    }
+  }
+
   const userID = $('meta[name="user-id"]').attr('content');
   const bidForm = $('.bid-form');
   const bidAmount = $('#bid_amount');
