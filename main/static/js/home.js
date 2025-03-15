@@ -145,17 +145,17 @@ $(document).ready(function() {
   const wordElement = $('#rotating-word');
   const containerElement = $('#rotating-word-container');
   const categoryNames = [
-    'ANTIQUES',
-    'ART',
-    'BOOKS',
-    'COLLECTIBLES',
-    'ELECTRONICS',
-    'FASHION',
-    'FURNITURE',
-    'INSTRUMENTS',
-    'TOYS',
-    'VEHICLES',
-    'TREASURES'
+    'ANTIQUES.',
+    'ART.',
+    'BOOKS.',
+    'COLLECTIBLES.',
+    'ELECTRONICS.',
+    'FASHION.',
+    'FURNITURE.',
+    'INSTRUMENTS.',
+    'TOYS.',
+    'VEHICLES.',
+    'TREASURES.'
   ];
 
   if (wordElement.length && containerElement.length && categoryNames.length) {
@@ -274,11 +274,11 @@ $(document).ready(function() {
   const footerWordElement = $('#footer-rotating-word');
   const footerContainerElement = $('#footer-rotating-word-container');
   const footerWords = [
-    'WITH US',
-    'ONLINE',
-    'TODAY',
-    'ANYTIME',
-    'SOCIALLY'
+    'WITH US.',
+    'ONLINE.',
+    'TODAY.',
+    'ANYTIME.',
+    'SOCIALLY.'
   ];
 
   if (footerWordElement.length && footerContainerElement.length && footerWords.length) {
@@ -294,7 +294,7 @@ $(document).ready(function() {
     // Initialize with the first word already displayed
     let currentWordIndex = 0;
     let isDeleting = false;
-    let currentText = 'WITH US';
+    let currentText = 'WITH US.';
     let typingSpeed = 100;
     
     function footerTypeEffect() {
