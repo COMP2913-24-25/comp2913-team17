@@ -225,12 +225,19 @@
         </div>
         <div class="col-md-6 text-center text-md-end">
           <p class="mb-0 mt-3 mt-md-2">
-            <small>© 2025 Vintage Vault. All Rights Reserved.</small>
+            <small>© <span id="curr-year">2025</span> Vintage Vault. All Rights Reserved.</small>
           </p>
         </div>
       </div>
     </div>
   </footer>
   <!-- Custom JS -->
+  <script>
+    // Automatically update the current year in the footer
+    $(document).ready(function() {
+      const year = new Date().getFullYear();
+      $('#curr-year').text(year);
+    });
+  </script>
 </body>
 </html>

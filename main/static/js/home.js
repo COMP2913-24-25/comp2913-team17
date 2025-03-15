@@ -166,12 +166,12 @@ $(document).ready(function() {
         longestCat = category;
       }
     }
-    containerElement.css('min-width', (longestCat.length * 20) + 'px');
+    containerElement.css('min-width', ((longestCat.length + 20) * 20) + 'px');
     
     // Initialise with the first word already displayed
     let currentWordIndex = 0;
     let isDeleting = true;
-    let currentText = 'TREASURES';
+    let currentText = 'TREASURES.';
     let typingSpeed = 100;
     let isFirstCycle = true;
     
