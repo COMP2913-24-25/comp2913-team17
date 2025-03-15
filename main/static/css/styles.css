@@ -160,7 +160,7 @@ h1, h2, h3, h4, h5 {
 .btn-secondary {
   background-color: transparent;
   border: 2px solid var(--secondary-color);
-  color: var(--secondary-color);
+  color: var (--secondary-color);
 }
 
 .btn-secondary:hover {
@@ -292,6 +292,33 @@ h1, h2, h3, h4, h5 {
   transform: translateY(0);
 }
 
+/* Rotating text and blinking cursor */
+#rotating-word-container,
+#about-rotating-word-container,
+#footer-rotating-word-container {
+  display: inline-block;
+  position: relative;
+}
+
+#rotating-word,
+#about-rotating-word,
+#footer-rotating-word {
+  display: inline-block;
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+.blinking-cursor {
+  display: inline-block;
+  font-weight: bold;
+  animation: blink 0.7s infinite;
+  color: var(--accent-color);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
 
 /* Authentication Page Styles */
 .image-gallery {
@@ -487,6 +514,62 @@ h1, h2, h3, h4, h5 {
   color: white;
   padding: 5px 10px;
   border-radius: 5px;
+}
+
+/* Custom accent color classes to replace Bootstrap warnings */
+.text-accent {
+  color: var(--accent-color) !important;
+}
+
+.bg-accent {
+  background-color: var(--accent-color) !important;
+}
+
+.btn-accent {
+  background-color: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+  color: var(--secondary-color) !important;
+}
+
+.btn-accent:hover {
+  background-color: transparent !important;
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+}
+
+.border-accent {
+  border-color: var(--accent-color) !important;
+}
+
+/* Top Bar */
+.top-bar {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.top-bar .contact-info {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.top-bar .social-icons a {
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.top-bar .social-icons a:hover {
+  opacity: 1;
+}
+
+/* Media query for mobile responsiveness */
+@media (max-width: 576px) {
+  .top-bar .contact-info span {
+    font-size: 0.7rem;
+    display: block;
+    width: 100%;
+    margin: 0.2rem 0;
+  }
 }
 
 /* Media Queries */
