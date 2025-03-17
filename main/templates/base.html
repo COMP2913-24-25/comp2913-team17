@@ -133,7 +133,7 @@
         </div>
         {% else %}
         <!-- Login/Register Links -->
-        <div class="ms-auto d-flex">
+        <div class="ms-auto d-flex align-items-center">
           <div class="nav-item me-2">
             <a class="btn btn-primary" href="{{ url_for('auth_page.login') }}">
               <i class="fas fa-sign-in-alt me-1"></i> LOGIN
@@ -141,7 +141,7 @@
           </div>
           <div class="nav-item">
             <a class="btn btn-secondary" href="{{ url_for('auth_page.register') }}">
-              <i class="fas fa-user-plus me-1"></i> REGISTER
+              <i class="fas fa-user-plus me-1"></i>REGISTER
             </a>
           </div>
         </div>
@@ -166,8 +166,9 @@
       </div>
     </div>
   </div>
-
-  {% block content %}{% endblock %}
+  <div class="main-content">
+    {% block content %}{% endblock %}
+  </div>
 
   <!-- Footer -->
   <footer class="bg-black text-white py-5">

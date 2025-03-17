@@ -179,13 +179,14 @@
       <div class="d-grid gap-2">
         {% if current_user.is_authenticated 
           and current_user.id != item.seller.id
+          and current_user.role not in [2, 3]
           and not is_auction_over%}
         <button 
           type="button" 
           class="place-bid btn btn-primary btn-lg" 
           data-bs-toggle="modal" 
           data-bs-target=".place-bid-modal">
-          Submit Bid
+          New Bid
         </button>
         {% endif %}
       </div>
@@ -228,7 +229,7 @@
                       </div>
                     </div>
                     <div class="d-grid gap-2">
-                      <button type="submit btn-close" class="btn btn-primary btn-lg" data-bs-dismiss="modal">Review Bid</button>
+                      <button type="submit btn-close" class="btn btn-primary btn-lg" data-bs-dismiss="modal">Submit Bid</button>
                     </div>
                   </form>
                 {% else %}
@@ -257,7 +258,7 @@
       
       <!-- Item watchers -->
       <div class="d-grid gap-2">
-        {% if not is_auction_over %}
+        {% if not is_auction_over and current_user.id != item.seller.id %}
           <div class="d-grid gap-2" style="margin-top: 10px;">
             {% if is_watching %}
               <button id="unwatch-btn" class="btn btn-success btn-lg" data-item-url="{{ item.url }}">

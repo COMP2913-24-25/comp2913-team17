@@ -701,6 +701,11 @@ h1, h2, h3, h4, h5 {
   }
 }
 
+.main-content {
+  min-height: 100vh;
+}
+
+
 @media (max-width: 768px) {
   .hero-section {
     padding: 3rem 0;
