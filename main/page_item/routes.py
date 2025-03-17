@@ -127,7 +127,8 @@ def check_ended_auctions():
     """Check for auctions that have ended but don't have a winner yet."""
     finished_items = Item.query.filter(
         Item.auction_end <= datetime.now(),
-        Item.winning_bid_id.is_(None)
+        Item.winning_bid_id.is_(None),
+        Item.auction_completed.is_(False)
     ).all()
     for item in finished_items:
         try:
@@ -135,6 +136,9 @@ def check_ended_auctions():
             # finalise_auction() should update item.status to 2 (won)
             item.finalise_auction()
             highest_bid = item.highest_bid()
+            item.auction_completed = True
+            db.session.commit()
+
             if highest_bid:
                 socketio.emit('auction_ended', {
                     'winner': True,
@@ -146,6 +150,7 @@ def check_ended_auctions():
                 socketio.emit('auction_ended', {'winner': False}, room=item.url)
         except Exception as e:
             logger.error(f"Error finalising auction {item.item_id}: {e}")
+
 
 @item_page.route('/api/notifications/mark-read', methods=['POST'])
 @login_required

@@ -99,6 +99,8 @@ class Item(db.Model):
     auction_end = db.Column(db.DateTime, nullable=False)
     minimum_price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     locked = db.Column(db.Boolean, default=False)
+    # Allow for items to end without a winner
+    auction_completed = db.Column(db.Boolean, default=False)
     # Statuses: 1 = Open, 2 = Won, 3 = Paid
     status = db.Column(db.Integer, nullable=False, default=1)
     # ensures all images are deleted
