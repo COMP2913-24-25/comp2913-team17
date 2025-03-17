@@ -23,11 +23,14 @@ class RegisterForm(FlaskForm):
     password = PasswordField('Password', validators=[
                              DataRequired(),
                              Length(min=8, max=24, message='Password must be between 8 and 24 characters.'),
-                             Regexp(regex='^(?=.*[A-Z]).+$', message='Password must have at least one uppercase letter')])
+                             Regexp(regex='^(?=.*[A-Z]).+$', message='Password must have at least one uppercase letter'),
+                             Regexp(regex='^(?=.*[0-9]).+$', message='Password must have at least one number'),
+                             Regexp(regex='^(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]).+$', message='Password must have at least one special character')])
     confirm_password = PasswordField('Confirm Password', validators=[
                                      DataRequired(),
                                      EqualTo('password', message='Passwords must match')])
     submit = SubmitField('Register')
+
 
 class UpdateForm(FlaskForm):
     """Form for updating a new user."""
@@ -38,7 +41,9 @@ class UpdateForm(FlaskForm):
     password = PasswordField('Password', validators=[
                              Optional(),
                              Length(min=8, max=24, message='Password must be between 8 and 24 characters.'),
-                             Regexp(regex='^(?=.*[A-Z]).+$', message='Password must have at least one uppercase letter')])
+                             Regexp(regex='^(?=.*[A-Z]).+$', message='Password must have at least one uppercase letter'),
+                             Regexp(regex='^(?=.*[0-9]).+$', message='Password must have at least one number'),
+                             Regexp(regex='^(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]).+$', message='Password must have at least one special character')])
     confirm_password = PasswordField('Confirm Password', validators=[
                                     Optional(),
                                      EqualTo('password', message='Passwords must match')])
