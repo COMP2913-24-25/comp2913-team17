@@ -263,7 +263,7 @@
               <button id="unwatch-btn" class="btn btn-success btn-lg" data-item-url="{{ item.url }}">
                 <i class="fas fa-check"></i> Watched
               </button>
-            {% else %}
+            {% elif current_user.is_authenticated %}
               <button id="watch-btn" class="btn btn-outline-dark btn-lg" data-item-url="{{ item.url }}">
                 <i class="fas fa-eye"></i> Add to Watchlist
               </button>
