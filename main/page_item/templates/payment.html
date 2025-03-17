@@ -6,23 +6,15 @@
 <div class="container mt-5">
   <h2>Payment for {{ item.title }}</h2>
   <p>Your winning bid: £{{ "%.2f"|format(item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) }}</p>
-  <form id="payment-form">
-    <!-- Stripe will inject the Payment Element here -->
-    <div id="payment-element"></div>
-    <button id="submit" class="btn btn-primary mt-3">Pay Now</button>
-    <div id="payment-message" role="alert" class="mt-3 text-danger"></div>
-  </form>
+  <div id="payment-message" role="alert" class="mt-3 text-danger"></div>
+  <button id="checkout-button" class="btn btn-primary mt-3">Checkout</button>
 </div>
 
 <!-- Load Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-  window.paymentIntentUrl = "{{ url_for('item_page.create_payment_intent', url=item.url, _external=True, _scheme='https') }}";
-  window.markWonUrl = "{{ url_for('item_page.mark_won', url=item.url, _external=True, _scheme='https') }}";
-  window.markDefaultPaymentMethodUrl = "{{ url_for('item_page.set_default_payment_method', url=item.url, _external=True, _scheme='https') }}";
-  window.redirectAfterPaymentUrl = "{{ url_for('item_page.redirect_after_payment', url=item.url, _external=True, _scheme='https') }}";
+  window.createCheckoutSessionUrl = "{{ url_for('item_page.create_checkout_session', url=item.url, _external=True, _scheme='https') }}";
   window.stripePublishableKey = "{{ stripe_publishable_key }}";
 </script>
-
 <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 {% endblock %}

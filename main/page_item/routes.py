@@ -214,18 +214,26 @@ def create_payment_intent(url):
     item = Item.query.filter_by(url=url).first_or_404()
     amount = int(((item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) * 100))
     
-    # Check if the user already has a Stripe customer if not create one
+    # Ensure the current user has an associated Stripe Customer
     if not current_user.stripe_customer_id:
         create_stripe_customer(current_user)
     
     try:
-        # Create PaymentIntent with the customer attached
+        # Create a PaymentIntent that:
+        # • Enables automatic payment methods,
+        # • Saves card details for future off-session payments by setting up payment_method_options,
+        # • Attaches the PaymentIntent to the existing customer.
         intent = stripe.PaymentIntent.create(
             amount=amount,
             currency='gbp',
             description=f"Payment for auction item {item.title}",
             automatic_payment_methods={'enabled': True},
-            setup_future_usage='off_session',  # Saves the payment method for future use
+            payment_method_options={
+                'card': {
+                    'setup_future_usage': 'off_session'
+                }
+            },
+            setup_future_usage='off_session',
             customer=current_user.stripe_customer_id,
             metadata={"item_id": str(item.item_id)}
         )
@@ -233,6 +241,7 @@ def create_payment_intent(url):
         return jsonify({'clientSecret': intent.client_secret})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 @item_page.route('/<url>/mark-won', methods=['POST'])
@@ -278,5 +287,44 @@ def set_default_payment_method(url):
             invoice_settings={'default_payment_method': payment_method_id}
         )
         return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@item_page.route('/<url>/create-checkout-session', methods=['POST'])
+@login_required
+def create_checkout_session(url):
+    stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
+    item = Item.query.filter_by(url=url).first_or_404()
+    
+    # Ensure the customer has an associated Stripe Customer
+    if not current_user.stripe_customer_id:
+        create_stripe_customer(current_user)
+    
+    try:
+        session = stripe.checkout.Session.create(
+            mode='payment',
+            customer=current_user.stripe_customer_id,
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'gbp',
+                    'product_data': {
+                        'name': item.title,
+                    },
+                    'unit_amount': int(((item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) * 100)),
+                },
+                'quantity': 1,
+            }],
+            success_url=url_for('item_page.redirect_after_payment', url=item.url, _external=True, _scheme='https'),
+            cancel_url=url_for('item_page.index', url=item.url, _external=True, _scheme='https'),
+            payment_intent_data={
+                'setup_future_usage': 'off_session'
+            },
+            saved_payment_method_options={
+                'payment_method_save': 'enabled'
+            }
+        )
+
+        return jsonify({'checkoutUrl': session.url})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
