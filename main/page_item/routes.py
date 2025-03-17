@@ -213,17 +213,26 @@ def create_payment_intent(url):
     stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
     item = Item.query.filter_by(url=url).first_or_404()
     amount = int(((item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) * 100))
+    
+    # Check if the user already has a Stripe customer if not create one
+    if not current_user.stripe_customer_id:
+        create_stripe_customer(current_user)
+    
     try:
+        # Create PaymentIntent with the customer attached
         intent = stripe.PaymentIntent.create(
             amount=amount,
             currency='gbp',
             description=f"Payment for auction item {item.title} (ID: {item.item_id})",
             automatic_payment_methods={'enabled': True},
+            setup_future_usage='off_session', 
+            customer=current_user.stripe_customer_id,  # associates the PaymentIntent with customer
             metadata={"item_id": str(item.item_id)}
         )
         return jsonify({'clientSecret': intent.client_secret})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @item_page.route('/<url>/mark-won', methods=['POST'])
 @login_required
@@ -244,3 +253,13 @@ def mark_won(url):
 def redirect_after_payment(url):
     flash("Payment successful!", "success")
     return redirect(url_for('item_page.index', url=url))
+
+def create_stripe_customer(user):
+    stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
+    customer = stripe.Customer.create(
+        email=user.email,
+        name=user.username
+    )
+    user.stripe_customer_id = customer.id
+    db.session.commit()
+    return customer

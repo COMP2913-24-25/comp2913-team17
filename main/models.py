@@ -38,6 +38,9 @@ class User(UserMixin, db.Model):
     updated_at = db.Column(db.DateTime,
                            default=datetime.now(),
                            onupdate=datetime.now())
+    
+    # NEW, Stripe Customer ID field for saving card details securely on Stripe
+    stripe_customer_id = db.Column(db.String(255), nullable=True)
 
     # Relationships to other tables:
     items = db.relationship('Item', 
