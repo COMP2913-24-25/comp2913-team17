@@ -7,6 +7,7 @@ from flask_login import login_user, logout_user, current_user
 from urllib.parse import urlparse, urlencode
 from app import socketio
 from flask_socketio import join_room
+from datetime import datetime
 from . import auth_page
 from .forms import LoginForm, RegisterForm, UpdateForm
 from ..models import db, User
@@ -26,7 +27,7 @@ def on_join(data):
 
 @auth_page.route('/login', methods=['GET', 'POST'])
 def login():
-    """Render the login page and handle login requests."""
+    """Log the user in."""
     next_page = request.args.get('next')
 
     # Check for malicious redirects
@@ -38,17 +39,43 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        email = form.email.data
-        password = form.password.data
-        user = db.session.query(User).filter_by(email=email).first()
-
-        if user is None:
-            flash('Invalid email address')
-        elif not user.check_password(password):
-            flash('Invalid password')
-        else:
+        user = User.query.filter_by(email=form.email.data).first()
+        
+        # Check if user exists
+        if not user:
+            flash('Invalid email or password', 'danger')
+            return render_template('login.html', form=form)
+        
+        # Check if account is locked
+        if user.is_account_locked():
+            remaining_time = (user.locked_until - datetime.now()).total_seconds() / 60
+            flash(f'Account is temporarily locked. Try again in {int(remaining_time)} minutes.', 'danger')
+            return render_template('login.html', form=form)
+        
+        # Validate password
+        if user.check_password(form.password.data):
+            # Reset failed attempts on successful login
+            user.reset_login_attempts()
+            db.session.commit()
+            
             login_user(user)
-            return redirect(next_page)
+            flash('Successfully logged in!', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('main_page.index'))
+        else:
+            # Increment failed attempts on unsuccessful login
+            user.increment_login_attempts()
+            db.session.commit()
+            
+            # Calculate and display remaining attempts
+            max_attempts = 5  # This should match the threshold in User.increment_login_attempts
+            remaining_attempts = max_attempts - user.failed_login_attempts
+            
+            if remaining_attempts > 0:
+                flash(f'Invalid password. {remaining_attempts} {"attempt" if remaining_attempts == 1 else "attempts"} remaining before your account is locked.', 'warning')
+            else:
+                flash('Your account has been locked due to multiple failed login attempts. Try again later.', 'danger')
+    
     return render_template('login.html', form=form)
 
 

@@ -1,6 +1,6 @@
 import logging
 from calendar import c
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
@@ -38,6 +38,8 @@ class User(UserMixin, db.Model):
     updated_at = db.Column(db.DateTime,
                            default=datetime.now(),
                            onupdate=datetime.now())
+    failed_login_attempts = db.Column(db.Integer, default=0)
+    locked_until = db.Column(db.DateTime, nullable=True)
 
     # Relationships to other tables:
     items = db.relationship('Item', 
@@ -67,6 +69,21 @@ class User(UserMixin, db.Model):
         if not self.password_hash:
             return False
         return check_password_hash(self.password_hash, password)
+
+    def is_account_locked(self):
+        """Check if the account is currently locked."""
+        return self.locked_until is not None and self.locked_until > datetime.now()
+    
+    def increment_login_attempts(self):
+        """Increment failed login attempts and lock account if threshold reached."""
+        self.failed_login_attempts += 1
+        if self.failed_login_attempts >= 5:  # Lock after 5 failed attempts
+            self.locked_until = datetime.now() + timedelta(minutes=15)  # Lock for 15 minutes
+    
+    def reset_login_attempts(self):
+        """Reset the failed login attempts counter and unlock account."""
+        self.failed_login_attempts = 0
+        self.locked_until = None
 
     # Grab the user's winning items from the database
     def get_won_items(self):
