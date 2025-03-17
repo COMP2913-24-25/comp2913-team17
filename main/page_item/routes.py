@@ -223,12 +223,13 @@ def create_payment_intent(url):
         intent = stripe.PaymentIntent.create(
             amount=amount,
             currency='gbp',
-            description=f"Payment for auction item {item.title} (ID: {item.item_id})",
+            description=f"Payment for auction item {item.title}",
             automatic_payment_methods={'enabled': True},
-            setup_future_usage='off_session', 
-            customer=current_user.stripe_customer_id,  # associates the PaymentIntent with customer
+            setup_future_usage='off_session',  # Saves the payment method for future use
+            customer=current_user.stripe_customer_id,
             metadata={"item_id": str(item.item_id)}
         )
+
         return jsonify({'clientSecret': intent.client_secret})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -263,3 +264,19 @@ def create_stripe_customer(user):
     user.stripe_customer_id = customer.id
     db.session.commit()
     return customer
+
+@item_page.route('/<url>/set-default-payment-method', methods=['POST'])
+@login_required
+def set_default_payment_method(url):
+    data = request.get_json()
+    payment_method_id = data.get('payment_method_id')
+    if not payment_method_id:
+        return jsonify({'error': 'No payment method ID provided.'}), 400
+    try:
+        stripe.Customer.modify(
+            current_user.stripe_customer_id,
+            invoice_settings={'default_payment_method': payment_method_id}
+        )
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

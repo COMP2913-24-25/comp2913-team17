@@ -32,8 +32,8 @@ async function initialise() {
     const paymentElement = elements.create("payment");
     paymentElement.mount("#payment-element");
   } catch (err) {
-    console.error("Error initializing Payment Element:", err);
-    document.getElementById("payment-message").innerText = "Error initializing payment form.";
+    console.error("Error initialising Payment Element:", err);
+    document.getElementById("payment-message").innerText = "Error initialising payment form.";
   }
 }
 
@@ -52,8 +52,27 @@ async function handleSubmit(e) {
       document.getElementById("payment-message").innerText = confirmError.message;
       return;
     }
-    // If the payment succeeded, mark the item as paid.
+    // If the payment succeeded, set the default payment method first.
     if (paymentIntent && paymentIntent.status === 'succeeded') {
+      // Extract the payment method id from the PaymentIntent.
+      const paymentMethodId = paymentIntent.payment_method;
+      
+      // Update the default payment method on the backend.
+      const defaultResponse = await fetch(window.markDefaultPaymentMethodUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken
+        },
+        body: JSON.stringify({ payment_method_id: paymentMethodId })
+      });
+      const defaultData = await defaultResponse.json();
+      if (defaultData.error) {
+        document.getElementById("payment-message").innerText = defaultData.error;
+        return;
+      }
+      
+      // Now mark the item as paid.
       const markWonResponse = await fetch(window.markWonUrl, {
         method: "POST",
         headers: {

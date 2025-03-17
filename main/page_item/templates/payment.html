@@ -17,10 +17,12 @@
 <!-- Load Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
+  window.paymentIntentUrl = "{{ url_for('item_page.create_payment_intent', url=item.url, _external=True, _scheme='https') }}";
+  window.markWonUrl = "{{ url_for('item_page.mark_won', url=item.url, _external=True, _scheme='https') }}";
+  window.markDefaultPaymentMethodUrl = "{{ url_for('item_page.set_default_payment_method', url=item.url, _external=True, _scheme='https') }}";
+  window.redirectAfterPaymentUrl = "{{ url_for('item_page.redirect_after_payment', url=item.url, _external=True, _scheme='https') }}";
   window.stripePublishableKey = "{{ stripe_publishable_key }}";
-  window.paymentIntentUrl = "{{ url_for('item_page.create_payment_intent', url=item.url, _external=True) }}";
-  window.markWonUrl = "{{ url_for('item_page.mark_won', url=item.url, _external=True) }}";
-  window.redirectAfterPaymentUrl = "{{ url_for('item_page.redirect_after_payment', url=item.url, _external=True) }}";
 </script>
+
 <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 {% endblock %}
