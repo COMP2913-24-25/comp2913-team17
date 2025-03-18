@@ -67,25 +67,6 @@
 }
 
 /* Auction items styling */
-.section-title {
-  font-size: 2.2rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  text-transform: uppercase;
-  display: inline-block;
-  padding-bottom: 0.5rem;
-}
-
-.section-title:after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 60px;
-  height: 5px;
-  background-color: var(--accent-color);
-}
-
 .auction-grid-wrapper {
   width: 280px;
   padding: 10px;
@@ -238,14 +219,6 @@
 }
 
 /* Search and filter section */
-.search-container {
-  background-color: white;
-  padding: 2rem;
-  border: 2px solid var(--primary-color);
-  margin-bottom: 2rem;
-  position: relative;
-}
-
 .search-filter-wrapper {
   border: 2px solid var(--primary-color);
   overflow: hidden;

@@ -276,7 +276,7 @@ def new_message(url):
         'sender': current_user.username,
         'sender_id': str(current_user.id),
         'images': image_urls,
-        'sent_at': message.sent_at.strftime('%Y-%m-%d %H:%M:%S')
+        'sent_at': message.sent_at.strftime('%H:%M - %d/%m/%Y')
     }, room=url)
 
     # Send notification to recipient

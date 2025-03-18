@@ -38,9 +38,6 @@ $(document).ready(function() {
         
         $svgElement.addClass('logo-svg');
         $logoImg.replaceWith($svgElement);
-
-        // Add color shift interaction
-        setupColorShift($svgElement);
       });
     }
   }
