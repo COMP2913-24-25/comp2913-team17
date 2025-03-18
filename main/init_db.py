@@ -55,7 +55,7 @@ def populate_db(app):
             description='An antique clock from 1900',
             upload_date=now,
             auction_start=now,
-            auction_end=now + timedelta(minutes=2),
+            auction_end=now + timedelta(minutes=1),
             minimum_price=100.00,
             category_id=cat1.id  # Assign to "Antiques"
         )

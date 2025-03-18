@@ -25,6 +25,7 @@ $(document).ready(function() {
   const noBids = $('.no-bids-msg');
   const auctionEnd = $('.auction-end');
   const countdown = $('.countdown');
+  const shouldReload = new Date() <= new Date(countdown.data('end'));
   const currentPrice = $('#price-section');
   const bidHelp = $('#bid-amount-help');
 
@@ -57,8 +58,9 @@ $(document).ready(function() {
     
     // If auction has ended
     if (now >= target) {
-      element.text('Auction ended');
-      element.removeClass('countdown-active countdown-urgent').addClass('countdown-ended');
+      if (shouldReload && !userID) {
+        location.reload();
+      }
       
       return;
     }
