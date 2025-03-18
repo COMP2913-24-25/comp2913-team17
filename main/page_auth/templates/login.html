@@ -13,17 +13,31 @@
   <div class="login-form-background">
     <div class="login-container">
       <!-- Heading -->
-      <h1 class="mt-5 mb-4 text-center">Login</h1>
+      <h2 class="mt-5 mb-4 text-left login-heading">Log in to your account</h2>
+      <div class="text-left login-msg" style="margin: auto;">Welcome back! Choose a log in method:</div>
+      <br>
+      <div class="gap-2 google-login-container">
+        <a href="{{ url_for('auth_page.oauth2_authorise', provider='google') }}" class="btn google-btn">
+          <img class="google-icon" src="https://img.icons8.com/?size=100&id=17949&format=png&color=000000" alt="Google Icon"> Google
+        </a>
+      </div>
+      <br>
+      <div style="text-align: center; align-items: center;">
+        <h1 class="email-login-break" style="font-size: 13px;">
+          <span>or continue with email</span>
+        </h1>
+      </div>
+      <br>
       <!-- Form -->
       <div id="user-form">
         <form action="#" method="POST" name="Login">
           {{  form.csrf_token }}
           <!-- Email -->
           <div class="form-group login-form">
-            <label for="enter-email" class="form-label">Email</label>
+            <!--<label for="enter-email" class="form-label">Email</label>-->
             <div class="user-container">
               <i class="fas fa-envelope"></i>
-              {{ form.email(class_="form-control required-field", placeholder="Enter your email address", id_="enter-email", maxlength_="100", autocomplete_="email") }}
+              {{ form.email(class_="form-control required-field", placeholder="Email", id_="enter-email", maxlength_="100", autocomplete_="email") }}
               {% for error in form.email.errors %} 
               <div class="alert alert-danger" role="alert">{{ error }}</div>
               {% endfor %}
@@ -31,11 +45,11 @@
           </div>
           <!-- Password -->
           <div class="form-group login-form">
-            <label for="enter-password" class="form-label">Password</label>
+            <!--<label for="enter-password" class="form-label">Password</label>-->
             <div class="pass-container">
               <i class="fas fa-lock"></i>
               {{ form.password(class_="form-control required-field", 
-                placeholder="Enter your password",
+                placeholder="Password",
                 id_="enter-password", minlength_="8",
                 maxlength_="24",
                 autocomplete_="current-password") }}
@@ -44,12 +58,11 @@
             <div class="alert alert-danger" role="alert">{{ error }}</div>
             {% endfor %}
           </div>
-          <!-- Submit Buttons -->
-          <div class="d-flex gap-2 mt-3">
+          <!-- Submit Button -->
+          <div class="d-flex gap-2 mt-3 login-button-container">
             {{ form.submit(class_="btn btn-primary", placeholder="Login", id_="submit-login") }}
-            <a class="btn btn-danger" href="{{ url_for('auth_page.oauth2_authorise', provider='google') }}">Login with Google</a>
           </div>
-          <p class="text-end option-text mt-3">New here?&nbsp; <a href="{{ url_for('auth_page.register') }}">Register</a></p>
+          <p class="text-end option-text mt-3">New here? <a href="{{ url_for('auth_page.register') }}">Register</a></p>
         </form>
       </div>
     </div>
