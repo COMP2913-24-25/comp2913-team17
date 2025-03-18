@@ -21,7 +21,7 @@
     <!-- Password -->
     <div class="form-group login-form">
       <label for="enter-password" class="form-label">Password</label>
-      {{ form.password(class_="form-control required-field", placeholder="Enter your password", id_="enter-password", minlength_="8", maxlength_="24", autocomplete_="current-password") }}
+      {{ form.password(class_="form-control required-field", placeholder="Enter your password", id_="enter-password", autocomplete_="current-password") }}
       {% for error in form.password.errors %}
       <div class="alert alert-danger" role="alert">{{ error }}</div>
       {% endfor %}
