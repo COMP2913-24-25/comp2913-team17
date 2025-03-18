@@ -8,6 +8,7 @@ from datetime import datetime
 import decimal
 from . import item_page
 from ..models import db, Item, Bid, User, AuthenticationRequest, logger, Notification
+from ..extensions import csrf
 
 # SocketIO event handlers
 @socketio.on('join_auction')
@@ -219,10 +220,11 @@ def create_payment_intent(url):
         create_stripe_customer(current_user)
     
     try:
+        '''
         # Create a PaymentIntent that:
-        # • Enables automatic payment methods,
-        # • Saves card details for future off-session payments by setting up payment_method_options,
-        # • Attaches the PaymentIntent to the existing customer.
+        # Enables automatic payment methods,
+        # Saves card details for future off-session payments by setting up payment_method_options,
+        # Attaches the PaymentIntent to the existing customer.'''
         intent = stripe.PaymentIntent.create(
             amount=amount,
             currency='gbp',
@@ -253,11 +255,10 @@ def mark_won(url):
     if not item.highest_bid() or item.highest_bid().bidder_id != current_user.id:
         return jsonify({'error': 'You are not the winning bidder'}), 403
     item.locked = True
-    item.status = 3  # Mark as paid
+    item.status = 3  # paid
     db.session.commit()
     return jsonify({'status': 'success'})
 
-# New route: after successful payment, redirect with a flash message.
 @item_page.route('/<url>/redirect-after-payment')
 @login_required
 def redirect_after_payment(url):
@@ -322,14 +323,15 @@ def create_checkout_session(url):
             },
             saved_payment_method_options={
                 'payment_method_save': 'enabled'
-            }
+            },
+            # *** Add metadata here ***
+            metadata={'item_id': str(item.item_id)}
         )
 
         return jsonify({'checkoutUrl': session.url})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-from ..extensions import csrf  # or "from main.extensions import csrf" depending on your structure
 
 @item_page.route('/stripe-webhook', methods=['POST'])
 @csrf.exempt
@@ -349,7 +351,7 @@ def stripe_webhook():
         current_app.logger.error("Invalid signature")
         return "Invalid signature", 400
 
-    # Process event if verification passed...
+    # Process event if verification has passed
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
         item_id = session.get('metadata', {}).get('item_id')
@@ -357,7 +359,8 @@ def stripe_webhook():
             item = Item.query.filter_by(item_id=item_id).first()
             if item:
                 item.locked = True
-                item.status = 3  # Mark as paid
+                item.status = 3  # paid
                 db.session.commit()
                 current_app.logger.info(f"Item {item.title} marked as paid via webhook.")
     return "", 200
+    # FUNCTION contains loggers, remove in final version
