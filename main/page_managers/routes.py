@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from flask import render_template, redirect, url_for, flash
+from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import current_user, login_required
 from ..models import User, ExpertAvailability, Category
 from . import manager_page 
@@ -10,7 +10,7 @@ def expert_availability():
     # Only allow managers (role 3)
     if current_user.role != 3:
         flash("You are not authorized to access this page.", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("home_page.index"))
     
     today = date.today()
     
@@ -58,7 +58,7 @@ def expert_availability():
         weekly_availability=weekly_availability,
         current_time=current_time,
         current_slot=current_slot,
-        timedelta=timedelta
+        timedelta=timedelta,
         categories=categories
     )
 
