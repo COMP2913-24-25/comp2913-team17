@@ -1,7 +1,7 @@
 from datetime import date, datetime, time, timedelta
 from .models import (
     AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability,
-    Item, ManagerConfig, Message, Notification, Payment, User, Category, Image,
+    Item, ManagerConfig, Message, Notification, User, Category, Image,
     db
 )
 
@@ -71,7 +71,7 @@ def populate_db(app):
             description='A modern art painting with vibrant colours',
             upload_date=now,
             auction_start=now,
-            auction_end=now + timedelta(days=5),
+            auction_end=now + timedelta(minutes=3),
             minimum_price=200.00,
             category_id=cat2.id  # Assign to "Art"
         )

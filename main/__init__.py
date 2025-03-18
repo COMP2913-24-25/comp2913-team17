@@ -11,6 +11,7 @@ from flask_socketio import SocketIO, join_room
 from flask_apscheduler import APScheduler
 from .models import db
 from .init_db import populate_db
+from .extensions import csrf
 
 socketio = SocketIO()
 scheduler = APScheduler()
@@ -30,13 +31,14 @@ def create_app():
     # Configure Stripe keys from the environment
     app.config['STRIPE_SECRET_KEY'] = os.environ.get('STRIPE_SECRET_KEY')
     app.config['STRIPE_PUBLISHABLE_KEY'] = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+    app.config['STRIPE_WEBHOOK_SECRET'] = os.environ.get('STRIPE_WEBHOOK_SECRET')
 
     # Configure the database
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialise security features
-    csrf = CSRFProtect(app)
+    csrf.init_app(app)
     login_manager = LoginManager(app)
     login_manager.login_view = 'auth_page.login'
     login_manager.login_message = 'Please log in to access this page'
