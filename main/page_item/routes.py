@@ -315,8 +315,8 @@ def create_checkout_session(url):
                 },
                 'quantity': 1,
             }],
-            success_url=url_for('item_page.redirect_after_payment', url=item.url, _external=True, _scheme='https'),
-            cancel_url=url_for('item_page.index', url=item.url, _external=True, _scheme='https'),
+            success_url=url_for('item_page.redirect_after_payment', url=item.url, _external=True, _scheme='http'),
+            cancel_url=url_for('item_page.index', url=item.url, _external=True, _scheme='http'),
             payment_intent_data={
                 'setup_future_usage': 'off_session'
             },
@@ -328,3 +328,35 @@ def create_checkout_session(url):
         return jsonify({'checkoutUrl': session.url})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@item_page.route('/stripe-webhook', methods=['POST'])
+def stripe_webhook():
+    payload = request.data
+    sig_header = request.headers.get('Stripe-Signature')
+    current_app.logger.info(f"Webhook payload: {payload}")
+    current_app.logger.info(f"Stripe-Signature header: {sig_header}")
+
+    endpoint_secret = current_app.config.get('STRIPE_WEBHOOK_SECRET')
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+    except ValueError as e:
+        current_app.logger.error("Invalid payload")
+        return "Invalid payload", 400
+    except stripe.error.SignatureVerificationError as e:
+        current_app.logger.error("Invalid signature")
+        return "Invalid signature", 400
+
+    # Handle the checkout session completion event
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        # If you stored the item_id in the session's metadata, retrieve it:
+        item_id = session.get('metadata', {}).get('item_id')
+        if item_id:
+            item = Item.query.filter_by(item_id=item_id).first()
+            if item:
+                item.locked = True
+                item.status = 3  # Mark as paid
+                db.session.commit()
+                logger.info(f"Item {item.title} marked as paid via webhook.")
+    # Return a 200 response to acknowledge receipt of the event
+    return "", 200

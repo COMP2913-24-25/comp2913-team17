@@ -13,7 +13,8 @@
 <!-- Load Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-  window.createCheckoutSessionUrl = "{{ url_for('item_page.create_checkout_session', url=item.url, _external=True, _scheme='https') }}";
+  // Generate a full external URL using localhost and the HTTP scheme.
+  window.createCheckoutSessionUrl = "{{ url_for('item_page.create_checkout_session', url=item.url, _external=True, _scheme='http') }}";
   window.stripePublishableKey = "{{ stripe_publishable_key }}";
 </script>
 <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
