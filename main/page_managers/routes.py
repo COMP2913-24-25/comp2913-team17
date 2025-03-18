@@ -29,6 +29,9 @@ def expert_availability():
     
     # Get all experts (users with role 2)
     experts = User.query.filter_by(role=2).all()
+
+    # Get all categories for filtering
+    categories = Category.query.all()
     
     # For daily view: get each expert's availability for today
     daily_availability = {}
@@ -56,6 +59,7 @@ def expert_availability():
         current_time=current_time,
         current_slot=current_slot,
         timedelta=timedelta
+        categories=categories
     )
 
 @manager_page.route('/filter-experts', methods=['GET'])
