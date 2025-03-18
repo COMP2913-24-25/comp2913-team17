@@ -329,7 +329,10 @@ def create_checkout_session(url):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+from ..__init__ import csrf  # Import the CSRF instance from your package
+
 @item_page.route('/stripe-webhook', methods=['POST'])
+@csrf.exempt  # Exempt this route from CSRF protection
 def stripe_webhook():
     payload = request.data
     sig_header = request.headers.get('Stripe-Signature')

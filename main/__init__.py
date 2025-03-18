@@ -16,6 +16,8 @@ socketio = SocketIO()
 scheduler = APScheduler()
 mail = Mail()
 
+csrf = CSRFProtect()
+
 def create_app():
     app = Flask(__name__, static_url_path='', static_folder='static')
 
@@ -37,7 +39,7 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialise security features
-    csrf = CSRFProtect(app)
+    csrf.init_app(app)
     login_manager = LoginManager(app)
     login_manager.login_view = 'auth_page.login'
     login_manager.login_message = 'Please log in to access this page'
