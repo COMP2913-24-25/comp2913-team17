@@ -9,8 +9,9 @@ class LoginForm(FlaskForm):
     """Form for logging in."""
     email = StringField('Email', validators=[
                         DataRequired(), Email(), Length(max=50)])
-    password = PasswordField('Password', validators=[
-                        DataRequired(), Length(min=8, max=24)])
+    # Login doesn't require restrictions on password length or complexity
+    # since it's being used on UpdateForm and RegisterForm
+    password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
 
@@ -19,7 +20,7 @@ class RegisterForm(FlaskForm):
     username = StringField('Username', validators=[
                            DataRequired(), Length(min=2, max=16)])
     email = StringField('Email', validators=[
-                            DataRequired(), Email(), Length(max=50)])
+                        DataRequired(),Email(),Length(max=50)])
     password = PasswordField('Password', validators=[
                              DataRequired(),
                              Length(min=8, max=24, message='Password must be between 8 and 24 characters.'),
@@ -47,4 +48,4 @@ class UpdateForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[
                                     Optional(),
                                      EqualTo('password', message='Passwords must match')])
-    submit = SubmitField('Register')
+    submit = SubmitField('Update')

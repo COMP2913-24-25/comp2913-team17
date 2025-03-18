@@ -28,8 +28,8 @@ def on_join(data):
 
 # Apply stricter rate limits to login route
 @auth_page.route('/login', methods=['GET', 'POST'])
-@limiter.limit("1000 per minute", methods=["POST"], error_message="Too many login attempts. Please try again later.")
-@limiter.limit("1000 per minute", key_func=lambda: request.form.get('email', ''), methods=["POST"], error_message="Too many login attempts for this account. Please try again later.")
+@limiter.limit("100 per minute", methods=["POST"], error_message="Too many login attempts. Please try again later.")
+@limiter.limit("100 per minute", key_func=lambda: request.form.get('email', ''), methods=["POST"], error_message="Too many login attempts for this account. Please try again later.")
 def login():
     """Log the user in."""
     next_page = request.args.get('next')
@@ -120,7 +120,7 @@ def register():
 
 # Apply rate limits to user update
 @auth_page.route('/update_user', methods=['GET', 'POST'])
-# @limiter.limit("100 per hour", methods=["POST"], error_message="Too many update attempts. Please try again later.")
+@limiter.limit("100 per hour", methods=["POST"], error_message="Too many update attempts. Please try again later.")
 def update_user():
     """Render the update page and update user details."""
     if not current_user.is_authenticated:
