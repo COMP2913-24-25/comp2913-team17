@@ -305,7 +305,7 @@ def create_checkout_session(url):
         session = stripe.checkout.Session.create(
             mode='payment',
             customer=current_user.stripe_customer_id,
-            payment_method_types=['card'],
+            payment_method_types=['card', 'revolut_pay'],
             line_items=[{
                 'price_data': {
                     'currency': 'gbp',
