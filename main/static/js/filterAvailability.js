@@ -53,6 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/manager/filter-experts?category_id=${category}`)
             .then(response => response.json())
             .then(data => {
+                console.log("API response:", data);
+                
                 tbody.innerHTML = ""; // Clear current table rows
 
                 data.forEach(expert => {
