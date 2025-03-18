@@ -265,7 +265,7 @@ Bandit is a security linter designed to find common security issues in Python co
 pip install bandit
 ```
 
-2. Run Bandit:
+2. Basic Usage:
 ```bash
 # Scan all Python files
 bandit -r .
@@ -277,12 +277,30 @@ bandit main/routes.py
 bandit -r . -f html -o security-report.html
 ```
 
-3. Common configurations (add to `bandit.yaml`):
-```yaml
-# filepath: /c:/Users/User/OneDrive/Desktop/bidding_project/bandit.yaml
-exclude_dirs: ['tests', 'venv']
-skips: ['B311']  # Standard pseudo-random generators are not suitable for security/cryptographic purposes
+3. Enhanced Security Scanning:
+```bash
+# Install the security scanning tools
+pip install bandit
+
+# Run the comprehensive security scan
+python scripts/security_scan.py
+
+# Install Git pre-commit hook for automatic scanning
+python scripts/install_hooks.py
 ```
+
+4. Understanding Bandit Configuration:
+   - `bandit.yaml` contains comprehensive settings for security scanning
+   - The scan checks for SQL injections, command injections, weak cryptography, etc.
+   - Security reports are generated in both JSON and HTML formats
+   - High-severity issues will prevent commits when using the pre-commit hook
+
+5. Common Security Issues to Watch For:
+   - SQL Injection: Avoid string formatting in queries, use parameterized queries
+   - Command Injection: Never use user input directly in system commands
+   - Weak Cryptography: Avoid outdated hashing algorithms (MD5, SHA1)
+   - Hard-coded Secrets: Never store API keys, passwords or tokens in code
+   - Cross-Site Scripting: Always escape user input in templates
 
 ### Adding to Development Workflow
 
