@@ -58,7 +58,7 @@ $(document).ready(function() {
     
     // If auction has ended
     if (now >= target) {
-      if (shouldReload && !userID) {
+      if (shouldReload) {
         location.reload();
       }
       
@@ -217,9 +217,8 @@ $(document).ready(function() {
     window.globalSocket.emit('leave', { 'item_url': itemURL });
   });
 
-  // Disconnect the window.globalSocket when the auction ends
+  // Disconnect the socket when the auction ends
   window.globalSocket.on('auction_ended', function(data) {
     window.globalSocket.emit('leave', { 'item_url': itemURL });
-    location.reload();
   });
 });

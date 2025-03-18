@@ -70,8 +70,8 @@
           {% if is_allowed %}
             <a href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}"
               title="View authentication request"
-              class="badge mx-2 {% if item.authentication_requests[0].status == 1 %}bg-warning{% elif item.authentication_requests[0].status == 2 %}bg-success{% elif item.authentication_requests[0].status == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
-              {% if item.authentication_requests[0].status == 1 %}
+              class="badge mx-2 {% if item.authentication_requests[0].status == 1 and not is_auction_over %}bg-warning{% elif item.authentication_requests[0].status == 2 %}bg-success{% elif item.authentication_requests[0].status == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
+              {% if item.authentication_requests[0].status == 1 and not is_auction_over %}
                 Authentication Pending
               {% elif item.authentication_requests[0].status == 2 %}
                 Authenticated
@@ -82,8 +82,8 @@
               {% endif %}
             </a>
           {% else %}
-            <span class="badge {% if authentication == 1 %}bg-warning{% elif authentication == 2 %}bg-success{% elif authentication == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
-              {% if authentication == 1 %}
+            <span class="badge {% if authentication == 1 and not is_auction_over %}bg-warning{% elif authentication == 2 %}bg-success{% elif authentication == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
+              {% if authentication == 1 and not is_auction_over %}
                 Authentication Pending
               {% elif authentication == 2 %}
                 Authenticated
