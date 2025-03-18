@@ -18,12 +18,6 @@ skips: [
   'B106:tests/'
 ]
 
-# Severity and confidence thresholds (LOW, MEDIUM, HIGH)
-# Severity indicates how dangerous the issue is
-severity_level: LOW
-# Confidence indicates how certain Bandit is the issue exists
-confidence_level: LOW
-
 # Output formatting options
 output_format: json
 output_file: security-report.json
