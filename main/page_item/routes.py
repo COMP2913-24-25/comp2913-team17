@@ -8,6 +8,7 @@ from datetime import datetime
 import decimal
 from . import item_page
 from ..models import db, Item, Bid, User, AuthenticationRequest, logger, Notification
+from ..extensions import csrf
 
 # SocketIO event handlers
 @socketio.on('join_auction')
@@ -213,17 +214,37 @@ def create_payment_intent(url):
     stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
     item = Item.query.filter_by(url=url).first_or_404()
     amount = int(((item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) * 100))
+    
+    # Ensure the current user has an associated Stripe Customer
+    if not current_user.stripe_customer_id:
+        create_stripe_customer(current_user)
+    
     try:
+        '''
+        # Create a PaymentIntent that:
+        # Enables automatic payment methods,
+        # Saves card details for future off-session payments by setting up payment_method_options,
+        # Attaches the PaymentIntent to the existing customer.'''
         intent = stripe.PaymentIntent.create(
             amount=amount,
             currency='gbp',
-            description=f"Payment for auction item {item.title} (ID: {item.item_id})",
+            description=f"Payment for auction item {item.title}",
             automatic_payment_methods={'enabled': True},
+            payment_method_options={
+                'card': {
+                    'setup_future_usage': 'off_session'
+                }
+            },
+            setup_future_usage='off_session',
+            customer=current_user.stripe_customer_id,
             metadata={"item_id": str(item.item_id)}
         )
+
         return jsonify({'clientSecret': intent.client_secret})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
 
 @item_page.route('/<url>/mark-won', methods=['POST'])
 @login_required
@@ -234,13 +255,112 @@ def mark_won(url):
     if not item.highest_bid() or item.highest_bid().bidder_id != current_user.id:
         return jsonify({'error': 'You are not the winning bidder'}), 403
     item.locked = True
-    item.status = 3  # Mark as paid
+    item.status = 3  # paid
     db.session.commit()
     return jsonify({'status': 'success'})
 
-# New route: after successful payment, redirect with a flash message.
 @item_page.route('/<url>/redirect-after-payment')
 @login_required
 def redirect_after_payment(url):
     flash("Payment successful!", "success")
     return redirect(url_for('item_page.index', url=url))
+
+def create_stripe_customer(user):
+    stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
+    customer = stripe.Customer.create(
+        email=user.email,
+        name=user.username
+    )
+    user.stripe_customer_id = customer.id
+    db.session.commit()
+    return customer
+
+@item_page.route('/<url>/set-default-payment-method', methods=['POST'])
+@login_required
+def set_default_payment_method(url):
+    data = request.get_json()
+    payment_method_id = data.get('payment_method_id')
+    if not payment_method_id:
+        return jsonify({'error': 'No payment method ID provided.'}), 400
+    try:
+        stripe.Customer.modify(
+            current_user.stripe_customer_id,
+            invoice_settings={'default_payment_method': payment_method_id}
+        )
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@item_page.route('/<url>/create-checkout-session', methods=['POST'])
+@login_required
+def create_checkout_session(url):
+    stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
+    item = Item.query.filter_by(url=url).first_or_404()
+    
+    # Ensure the customer has an associated Stripe Customer
+    if not current_user.stripe_customer_id:
+        create_stripe_customer(current_user)
+    
+    try:
+        session = stripe.checkout.Session.create(
+            mode='payment',
+            customer=current_user.stripe_customer_id,
+            payment_method_types=['card', 'revolut_pay'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'gbp',
+                    'product_data': {
+                        'name': item.title,
+                    },
+                    'unit_amount': int(((item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) * 100)),
+                },
+                'quantity': 1,
+            }],
+            success_url=url_for('item_page.redirect_after_payment', url=item.url, _external=True, _scheme='http'),
+            cancel_url=url_for('item_page.index', url=item.url, _external=True, _scheme='http'),
+            payment_intent_data={
+                'setup_future_usage': 'off_session'
+            },
+            saved_payment_method_options={
+                'payment_method_save': 'enabled'
+            },
+            # *** Add metadata here ***
+            metadata={'item_id': str(item.item_id)}
+        )
+
+        return jsonify({'checkoutUrl': session.url})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@item_page.route('/stripe-webhook', methods=['POST'])
+@csrf.exempt
+def stripe_webhook():
+    payload = request.data
+    sig_header = request.headers.get('Stripe-Signature')
+    current_app.logger.info(f"Webhook payload: {payload}")
+    current_app.logger.info(f"Stripe-Signature header: {sig_header}")
+
+    endpoint_secret = current_app.config.get('STRIPE_WEBHOOK_SECRET')
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+    except ValueError as e:
+        current_app.logger.error("Invalid payload")
+        return "Invalid payload", 400
+    except stripe.error.SignatureVerificationError as e:
+        current_app.logger.error("Invalid signature")
+        return "Invalid signature", 400
+
+    # Process event if verification has passed
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        item_id = session.get('metadata', {}).get('item_id')
+        if item_id:
+            item = Item.query.filter_by(item_id=item_id).first()
+            if item:
+                item.locked = True
+                item.status = 3  # paid
+                db.session.commit()
+                current_app.logger.info(f"Item {item.title} marked as paid via webhook.")
+    return "", 200
+    # FUNCTION contains loggers, remove in final version
