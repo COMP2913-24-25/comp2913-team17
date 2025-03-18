@@ -176,7 +176,7 @@ $(document).ready(function() {
     }
     tempMessageHtml += `</div>`;
 
-    $('#messages').append(tempMessageHtml);
+    $('.messages').append(tempMessageHtml);
     scrollToBottom(300);
 
     try {
@@ -207,7 +207,7 @@ $(document).ready(function() {
 
   // Scroll to the bottom of the messages w/ animation
   function scrollToBottom(delay) {
-    $('#messages').animate({ scrollTop: $('#messages')[0].scrollHeight }, delay);
+    $('.messages').animate({ scrollTop: $('.messages')[0].scrollHeight }, delay);
   }
   
   // Listen for new messages from window.globalSocketIO
@@ -235,7 +235,7 @@ $(document).ready(function() {
         <p class="username">${data.sender} (${data.sent_at})</p>
       </div>
     `;
-    $('#messages').append(messageElement);
+    $('.messages').append(messageElement);
     scrollToBottom(300);
   });
 
