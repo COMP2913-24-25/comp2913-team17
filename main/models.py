@@ -63,27 +63,29 @@ class User(UserMixin, db.Model):
         return f"<User {self.username}>"
 
     def set_password(self, password):
-        """Set the password for the user."""
+        # Set the password for the user
         self.password_hash = generate_password_hash(password, method="pbkdf2")
 
     def check_password(self, password):
-        """Check the password for the user."""
+        # Check the password for the user
         if not self.password_hash:
             return False
         return check_password_hash(self.password_hash, password)
 
     def is_account_locked(self):
-        """Check if the account is currently locked."""
+        # Check if the account is currently locked
         return self.locked_until is not None and self.locked_until > datetime.now()
     
     def increment_login_attempts(self):
-        """Increment failed login attempts and lock account if threshold reached."""
+        # Increment failed login attempts and lock account if threshold reached
         self.failed_login_attempts += 1
-        if self.failed_login_attempts >= 5:  # Lock after 5 failed attempts
-            self.locked_until = datetime.now() + timedelta(minutes=15)  # Lock for 15 minutes
+        # Lock after 5 failed attempts
+        if self.failed_login_attempts >= 2:
+            # Lock for 15 minutes
+            self.locked_until = datetime.now() + timedelta(minutes=15)
     
     def reset_login_attempts(self):
-        """Reset the failed login attempts counter and unlock account."""
+        # Reset the failed login attempts counter and unlock account
         self.failed_login_attempts = 0
         self.locked_until = None
 
