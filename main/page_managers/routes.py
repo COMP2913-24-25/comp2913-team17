@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 from flask import render_template, redirect, url_for, flash
 from flask_login import current_user, login_required
-from ..models import User, ExpertAvailability
+from ..models import User, ExpertAvailability, Category
 from . import manager_page 
 
 @manager_page.route('/expert_availability')
