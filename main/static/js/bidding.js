@@ -60,25 +60,6 @@ $(document).ready(function() {
       element.text('Auction ended');
       element.removeClass('countdown-active countdown-urgent').addClass('countdown-ended');
       
-      // Hide bid form and disable input
-      if (!bidForm.is(':hidden')) {
-        bidForm.hide();
-        bidAmount.prop('disabled', true);
-        bidAmount.attr('title', 'Auction has ended');
-      }
-
-      // If the item wasn't authenticated, then its authentication has been cancelled
-      let authBadge = $(".mb-4 .d-flex.gap-2 span.badge:contains('Authentication')");
-
-      // Privileged users have a different authentication element
-      if (authBadge.length === 0) {
-        authBadge = $(".mb-4 .d-flex.gap-2 a.badge:contains('Authentication')");
-      }
-
-      if (authBadge.hasClass("bg-warning") && authBadge.text().trim().includes("Authentication Pending")) {
-        authBadge.removeClass("bg-warning").addClass("bg-secondary");
-        authBadge.text("Not Authenticated");
-      }
       return;
     }
     
@@ -236,11 +217,7 @@ $(document).ready(function() {
 
   // Disconnect the window.globalSocket when the auction ends
   window.globalSocket.on('auction_ended', function(data) {
-    // Disable bid form
-    bidForm.hide();
-    bidAmount.prop('disabled', true);
-    bidAmount.attr('title', 'Auction has ended');
-
     window.globalSocket.emit('leave', { 'item_url': itemURL });
+    location.reload();
   });
 });
