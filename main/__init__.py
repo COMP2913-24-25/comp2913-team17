@@ -11,12 +11,11 @@ from flask_socketio import SocketIO, join_room
 from flask_apscheduler import APScheduler
 from .models import db
 from .init_db import populate_db
+from .extensions import csrf
 
 socketio = SocketIO()
 scheduler = APScheduler()
 mail = Mail()
-
-csrf = CSRFProtect()
 
 def create_app():
     app = Flask(__name__, static_url_path='', static_folder='static')

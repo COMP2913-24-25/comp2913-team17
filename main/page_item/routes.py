@@ -329,10 +329,10 @@ def create_checkout_session(url):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-from ..__init__ import csrf  # Import the CSRF instance from your package
+from ..extensions import csrf  # or "from main.extensions import csrf" depending on your structure
 
 @item_page.route('/stripe-webhook', methods=['POST'])
-@csrf.exempt  # Exempt this route from CSRF protection
+@csrf.exempt
 def stripe_webhook():
     payload = request.data
     sig_header = request.headers.get('Stripe-Signature')
@@ -349,10 +349,9 @@ def stripe_webhook():
         current_app.logger.error("Invalid signature")
         return "Invalid signature", 400
 
-    # Handle the checkout session completion event
+    # Process event if verification passed...
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-        # If you stored the item_id in the session's metadata, retrieve it:
         item_id = session.get('metadata', {}).get('item_id')
         if item_id:
             item = Item.query.filter_by(item_id=item_id).first()
@@ -360,6 +359,5 @@ def stripe_webhook():
                 item.locked = True
                 item.status = 3  # Mark as paid
                 db.session.commit()
-                logger.info(f"Item {item.title} marked as paid via webhook.")
-    # Return a 200 response to acknowledge receipt of the event
+                current_app.logger.info(f"Item {item.title} marked as paid via webhook.")
     return "", 200
