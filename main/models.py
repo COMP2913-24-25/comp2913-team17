@@ -40,6 +40,9 @@ class User(UserMixin, db.Model):
                            onupdate=datetime.now())
     failed_login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime, nullable=True)
+    
+    # NEW, Stripe Customer ID field for saving card details securely on Stripe
+    stripe_customer_id = db.Column(db.String(255), nullable=True)
 
     # Relationships to other tables:
     items = db.relationship('Item', 
@@ -47,7 +50,6 @@ class User(UserMixin, db.Model):
                           lazy=True,
                           foreign_keys='Item.seller_id')
     bids = db.relationship('Bid', backref='bidder', lazy=True)
-    payments = db.relationship('Payment', backref='user', lazy=True)
     authentication_requests = db.relationship('AuthenticationRequest', backref='requester', lazy=True)
     expert_assignments = db.relationship('ExpertAssignment', backref='expert', lazy=True)
     expert_availabilities = db.relationship('ExpertAvailability', backref='expert', lazy=True)
@@ -272,36 +274,8 @@ class Bid(db.Model):
     bid_amount = db.Column(db.Numeric(10, 2), nullable=False)
     bid_time = db.Column(db.DateTime, default=datetime.now())
 
-    # Relationship to payments (if any)
-    payments = db.relationship('Payment', backref='bid', lazy=True)
-
     def __repr__(self):
         return f"<Bid {self.bid_id} on Item {self.item_id}>"
-
-# Payment Model
-class Payment(db.Model):
-    __tablename__ = 'payments'
-
-    payment_id = db.Column(db.Integer, primary_key=True)
-    bid_id = db.Column(db.Integer, db.ForeignKey('bids.bid_id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    # For now, store card details as a string,  will probably delete later, not a good idea to store
-    card_details = db.Column(
-        db.String(255),
-        nullable=False
-    )
-    # Payment status: 1 = Pending, 2 = Completed, 3 = Failed
-    payment_status = db.Column(
-        db.Integer,
-        nullable=False,
-        default=1
-    )
-    payment_time = db.Column(db.DateTime, default=datetime.now())
-    platform_fee_percent = db.Column(db.Numeric(4, 2), nullable=False)
-    platform_fee_amount = db.Column(db.Numeric(10, 2), nullable=False)
-
-    def __repr__(self):
-        return f"<Payment {self.payment_id} for Bid {self.bid_id}>"
 
 # Authentication Request Model
 class AuthenticationRequest(db.Model):
