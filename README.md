@@ -90,17 +90,7 @@ flask run
 - New feature at: http://localhost:5000/new-feature
 
 ## Security Features
-
-### Rate Limiting
-
-The application implements rate limiting to protect against brute force attacks and API abuse:
-
-- Login: Limited to 10 attempts per minute per IP address and 5 attempts per minute per account
-- Registration: Limited to 5 attempts per hour and 20 per day per IP address
-- Account updates: Limited to 10 attempts per hour per IP address
-- OAuth operations: Limited to 10 per hour per IP address
-
-Rate limits can be configured in the `limiter_utils.py` file.
+TODO
 
 # How to add more features and test them
 
