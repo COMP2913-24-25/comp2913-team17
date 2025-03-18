@@ -72,7 +72,7 @@ def login():
             db.session.commit()
             
             # Calculate and display remaining attempts
-            max_attempts = 5  # This should match the threshold in User.increment_login_attempts
+            max_attempts = 5
             remaining_attempts = max_attempts - user.failed_login_attempts
             
             if remaining_attempts > 0:
