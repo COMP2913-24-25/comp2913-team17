@@ -89,8 +89,92 @@ flask run
 - Open browser at: http://localhost:5000
 - New feature at: http://localhost:5000/new-feature
 
-## Security Features
-TODO
+# Security Features
+
+## 1. Authentication
+The application uses a secure authentication system to protect user accounts and data:
+
+- OAuth integration: Uses Google OAuth 2.0 support for secure third-party authentication (`OAuthSignIn` classes)
+
+Can be configured in `__init__.py` file
+
+## 2. Password Policy
+The application enforces strong password requirements (`RegisterForm`) to prevent common security issues:
+
+- Length: Passwords between 8 and 24 characters
+- Complexity: Requires at least one uppercase letter, one lowercase letter, one digit, and one special character
+- Password Confirmation: Prevent mistyped passwords by requiring users to confirm their password
+- Password Storage: Uses Werkzeug's `generate_password_hash` and `check_password_hash` to securely store passwords in the database (`models.py`)
+
+## 3. Rate Limiting
+The application implements rate limiting to protect against brute force attacks and API abuse:
+
+- Login: Limited to 10 attempts per minute per IP address and 5 attempts per minute per account
+- Registration: Limited to 5 attempts per hour and 20 per day per IP address
+- Account updates: Limited to 10 attempts per hour per IP address
+- OAuth operations: Limited to 10 per hour per IP address
+
+Rate limits can be configured in the `limiter_utils.py` file.
+
+## 4. CSRF Protection
+The application implements comprehensive Cross-Site Request Forgery (CSRF) protection:
+
+- **Server-Side Implementation**: Uses Flask-WTF's CSRFProtect extension (`extensions.py`) to generate and validate tokens
+- **Form-Based Protection**: Each HTML form includes a hidden CSRF token: `{{ form.csrf_token }}`
+- **AJAX Protection**: JavaScript utility `csrf.js` automatically adds CSRF tokens to all AJAX requests.
+
+This protection ensures that all state-changing operations (POST, PUT, DELETE) require a valid CSRF token, preventing attackers from tricking users into submitting unauthorized requests.
+
+## 5. WebSocket Security
+The application implements security measures for WebSocket connections:
+
+- **Authentication Required**: Socket connections are authenticated using the same session as HTTP requests
+- **Room-based Authorization**: Users can only join rooms they have permission to access
+- **Origin Validation**: WebSockets validate connection origins to prevent cross-site WebSocket hijacking
+- **Connection Scope Limitation**: Users can only access resources they're authorized to via scoped room membership
+
+## 6. File Upload Security
+The application includes comprehensive file upload security mechanisms:
+
+- **File Type Validation**: Only permitted file extensions are allowed
+- **File Size Limits**: Maximum size for uploaded files is enforced
+- **Secure Filename Processing**: Sanitizing filenames to prevent directory traversal attacks
+- **External Storage**: Files are stored in AWS S3 rather than on the local filesystem
+- **Private File Access**: Authentication required with temporary signed URLs for accessing sensitive files
+
+## 7. Authorization
+The application implements a robust authorization system:
+
+- **Role-based Access Control**: Three-tier user roles system
+- **Function-level Authorization**: Routes check appropriate role permissions
+- **Resource Ownership Verification**: Users can only modify their own resources
+- **Granular Permissions**: Specific permissions for auction items, bids, authentication requests, etc.
+
+## 8. Account Lockout
+The application implements account lockout mechanisms to prevent brute force attacks:
+
+- **Progressive Lockout**: After 5 failed login attempts, the account is locked temporarily
+- **Account Recovery**: Automatic account unlocking after a set time period (15 minutes)
+- **Login Attempt Tracking**: Failed login attempts are tracked in the database
+- **Failed Attempt Reset**: Counter is reset upon successful login
+
+## 9. Secure Cookies
+The application enforces secure cookie policies:
+
+- **HTTP-Only Cookies**: Session cookies are set with the HttpOnly flag to prevent JavaScript access
+- **Secure Flag**: Cookies are only transmitted over HTTPS when in production
+- **SameSite Policy**: Cookies use `SameSite=Lax` to prevent CSRF attacks
+- **Session Timeout**: Sessions expire after a period of inactivity
+- **Session Invalidation**: On logout, sessions are properly invalidated and cookies cleared
+
+## 10. Security Scripts
+The application includes automated security tools and scripts:
+
+- **Bandit Static Analysis**: Automated security scanning of Python code
+- **Pre-commit Hooks**: Security checks run automatically before git commits
+- **Security Reporting**: Security issues are automatically reported and logged
+- **Vulnerability Scanning**: Regular scanning for known vulnerabilities in dependencies
+- **Security Header Configuration**: Proper security headers setup (HSTS, CSP, etc.)
 
 # How to add more features and test them
 
