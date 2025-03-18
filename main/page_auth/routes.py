@@ -11,6 +11,7 @@ from datetime import datetime
 from . import auth_page
 from .forms import LoginForm, RegisterForm, UpdateForm
 from ..models import db, User
+from ..limiter_utils import limiter
 
 # SocketIO notification rooms
 @socketio.on('join_user')
@@ -25,7 +26,10 @@ def on_join(data):
         join_room(f'user_{room}')
 
 
+# Apply stricter rate limits to login route
 @auth_page.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute", methods=["POST"], error_message="Too many login attempts. Please try again later.")
+@limiter.limit("5 per minute", key_func=lambda: request.form.get('email', ''), methods=["POST"], error_message="Too many login attempts for this account. Please try again later.")
 def login():
     """Log the user in."""
     next_page = request.args.get('next')
@@ -79,7 +83,10 @@ def login():
     return render_template('login.html', form=form)
 
 
+# Apply rate limits to registration
 @auth_page.route('/register', methods=['GET', 'POST'])
+@limiter.limit("5 per hour", methods=["POST"], error_message="Too many registration attempts. Please try again later.")
+@limiter.limit("20 per day", methods=["POST"])
 def register():
     """Render the register page and handle registration requests."""
     if current_user.is_authenticated:
@@ -110,7 +117,10 @@ def register():
             return redirect(url_for('home_page.index'))
     return render_template('register.html', form=form)
 
+
+# Apply rate limits to user update
 @auth_page.route('/update_user', methods=['GET', 'POST'])
+@limiter.limit("10 per hour", methods=["POST"], error_message="Too many update attempts. Please try again later.")
 def update_user():
     """Render the update page and update user details."""
     if not current_user.is_authenticated:
@@ -150,6 +160,7 @@ def update_user():
 
     return render_template('update_user.html', form=form)
 
+
 @auth_page.route('/logout')
 def logout():
     """Log the user out."""
@@ -158,7 +169,9 @@ def logout():
     return redirect(url_for('home_page.index'))
 
 
+# Apply rate limits to OAuth2 authorization
 @auth_page.route('/authorize/<provider>')
+@limiter.limit("10 per hour")
 def oauth2_authorise(provider):
     """Redirect the user to the OAuth2 provider authorisation URL."""
     if not current_user.is_anonymous:
@@ -186,7 +199,9 @@ def oauth2_authorise(provider):
     return redirect(provider_data['authorize_url'] + "?" + qs)
 
 
+# Apply rate limits to OAuth2 callback
 @auth_page.route('/callback/<provider>')
+@limiter.limit("10 per hour")
 def oauth2_callback(provider):
     """Handle the OAuth2 provider callback."""
     if not current_user.is_anonymous:

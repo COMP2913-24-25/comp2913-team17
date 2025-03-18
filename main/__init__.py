@@ -11,6 +11,7 @@ from flask_socketio import SocketIO, join_room
 from flask_apscheduler import APScheduler
 from .models import db
 from .init_db import populate_db
+from .limiter_utils import configure_limiter
 
 socketio = SocketIO()
 scheduler = APScheduler()
@@ -145,5 +146,8 @@ def create_app():
     def load_user(user_id):
         from .models import User
         return db.session.query(User).get(int(user_id))
+
+    # Initialize rate limiter
+    configure_limiter(app)
 
     return app
