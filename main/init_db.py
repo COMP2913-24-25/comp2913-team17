@@ -1,7 +1,7 @@
 from datetime import date, datetime, time, timedelta
 from .models import (
     AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability,
-    Item, ManagerConfig, Message, Notification, Payment, User, Category, Image,
+    Item, ManagerConfig, Message, Notification, User, Category, Image,
     db
 )
 
