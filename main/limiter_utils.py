@@ -7,7 +7,7 @@ from flask_limiter.util import get_remote_address
 # Initialize rate limiter
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["1000 per minutes"],
     storage_uri="memory://",
 )
 
@@ -16,7 +16,7 @@ def configure_limiter(app):
     limiter.init_app(app)
     
     # Set default limits for all routes
-    limiter.default_limits = ["200 per day", "50 per hour"]
+    limiter.default_limits = ["1000 per minutes"]
     
     # Add exempt paths for static files
     @limiter.request_filter

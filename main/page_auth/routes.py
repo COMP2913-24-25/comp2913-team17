@@ -28,8 +28,8 @@ def on_join(data):
 
 # Apply stricter rate limits to login route
 @auth_page.route('/login', methods=['GET', 'POST'])
-@limiter.limit("10 per minute", methods=["POST"], error_message="Too many login attempts. Please try again later.")
-@limiter.limit("5 per minute", key_func=lambda: request.form.get('email', ''), methods=["POST"], error_message="Too many login attempts for this account. Please try again later.")
+@limiter.limit("1000 per minute", methods=["POST"], error_message="Too many login attempts. Please try again later.")
+@limiter.limit("1000 per minute", key_func=lambda: request.form.get('email', ''), methods=["POST"], error_message="Too many login attempts for this account. Please try again later.")
 def login():
     """Log the user in."""
     next_page = request.args.get('next')
@@ -65,7 +65,7 @@ def login():
             login_user(user)
             flash('Successfully logged in!', 'success')
             next_page = request.args.get('next')
-            return redirect(next_page or url_for('main_page.index'))
+            return redirect(next_page or url_for('home_page.index'))
         else:
             # Increment failed attempts on unsuccessful login
             user.increment_login_attempts()
@@ -85,8 +85,8 @@ def login():
 
 # Apply rate limits to registration
 @auth_page.route('/register', methods=['GET', 'POST'])
-@limiter.limit("5 per hour", methods=["POST"], error_message="Too many registration attempts. Please try again later.")
-@limiter.limit("20 per day", methods=["POST"])
+@limiter.limit("100 per hour", methods=["POST"], error_message="Too many registration attempts. Please try again later.")
+@limiter.limit("100 per day", methods=["POST"])
 def register():
     """Render the register page and handle registration requests."""
     if current_user.is_authenticated:
@@ -120,7 +120,7 @@ def register():
 
 # Apply rate limits to user update
 @auth_page.route('/update_user', methods=['GET', 'POST'])
-@limiter.limit("10 per hour", methods=["POST"], error_message="Too many update attempts. Please try again later.")
+# @limiter.limit("100 per hour", methods=["POST"], error_message="Too many update attempts. Please try again later.")
 def update_user():
     """Render the update page and update user details."""
     if not current_user.is_authenticated:
