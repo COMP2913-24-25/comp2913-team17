@@ -47,7 +47,7 @@ def login():
         
         # Check if user exists
         if not user:
-            flash('Invalid email or password', 'danger')
+            flash('This user account is not exist. Please create a new account.', 'danger')
             return render_template('login.html', form=form)
         
         # Check if account is locked
@@ -76,9 +76,9 @@ def login():
             remaining_attempts = max_attempts - user.failed_login_attempts
             
             if remaining_attempts > 0:
-                flash(f'Invalid password. {remaining_attempts} {"attempt" if remaining_attempts == 1 else "attempts"} remaining before your account is locked.', 'warning')
+                flash(f'Failed login. {remaining_attempts} {"attempt" if remaining_attempts == 1 else "attempts"} remaining before your account is locked.', 'danger')
             else:
-                flash('Your account has been locked due to multiple failed login attempts. Try again later.', 'danger')
+                flash('Your account has been locked due to multiple failed login attempts. Try again in 15 minutes.', 'danger')
     
     return render_template('login.html', form=form)
 
