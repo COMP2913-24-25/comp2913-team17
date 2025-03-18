@@ -106,6 +106,15 @@ $(document).ready(function() {
     if (now >= target) {
       element.text('Auction ended');
       element.removeClass('countdown-active countdown-urgent').addClass('countdown-ended');
+
+      // If the authentication was pending, then it's been cancelled
+      const authStatusElement = element.closest('.auction-info').find('.authentication-status');
+      
+      if (authStatusElement.data('authentication') == 1) {
+          authStatusElement.attr('data-authentication', '4');
+          authStatusElement.removeClass('bg-warning').addClass('bg-secondary');
+          authStatusElement.html('<i class="fas fa-question-circle me-1"></i> NOT AUTHENTICATED');
+      }
       return;
     }
     
