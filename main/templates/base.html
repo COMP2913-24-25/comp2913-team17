@@ -56,11 +56,13 @@
     <div class="container">
       <!-- Logo -->
       <a class="logo-container py-2" href="{{ url_for('home_page.index') }}">
-        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Vintage Vault Logo" class="logo-svg">
+        <span class="logo-svg-wrapper">
+          <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Vintage Vault Logo" class="logo-svg">
+        </span>
         <h1 class="logo-text">VINTAGE <span>VAULT.</span></h1>
       </a>
       <!-- Mobile Toggle Button -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler mx-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <!-- Nav Items -->
@@ -240,5 +242,7 @@
       $('#curr-year').text(year);
     });
   </script>
+  <script src="{{ url_for('static', filename='js/logoAnimation.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/rotatingFooter.js') }}"></script>
 </body>
 </html>
