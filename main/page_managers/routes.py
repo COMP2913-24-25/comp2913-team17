@@ -65,13 +65,28 @@ def expert_availability():
 @manager_page.route('/filter-experts', methods=['GET'])
 def filter_experts():
     """Filter experts based on category or expertise."""
+
+    from ..models import ExpertCategory
+
     category_id = request.args.get('category_id', type=int)
-    query = User.query.filter_by(role=2)  # Filter for experts only
+
+    if category_id: is None:
+        return jsonify({"error": "Invalid category ID."}), 400
+
+    try:
+        query = User.query.filter_by(role=2)
 
     if category_id:
         query = query.join(ExpertCategory, User.id == ExpertCategory.expert_id) \
                      .filter(ExpertCategory.category_id == category_id)
 
     experts = query.all()
+
+    if not experts:
+        return jsonify({"error": "No experts found for this category"}), 404
+
     return jsonify([{'id': e.id, 'username': e.username, 'email': e.email} for e in experts])
+
+except Exception as e:
+    return jsonify({"error": f"Databse error: {str(e)}"}), 500
 
