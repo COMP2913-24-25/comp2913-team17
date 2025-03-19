@@ -101,6 +101,8 @@ class Item(db.Model):
     auction_end = db.Column(db.DateTime, nullable=False)
     minimum_price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     locked = db.Column(db.Boolean, default=False)
+    # Allow for items to end without a winner
+    auction_completed = db.Column(db.Boolean, default=False)
     # Statuses: 1 = Open, 2 = Won, 3 = Paid
     status = db.Column(db.Integer, nullable=False, default=1)
     # ensures all images are deleted
@@ -271,7 +273,7 @@ class AuthenticationRequest(db.Model):
     requester_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     request_date = db.Column(db.DateTime, default=datetime.now())
     fee_percent = db.Column(db.Numeric(4, 2), nullable=False, default=5.00)
-    # Request status: 1 = Pending, 2 = Approved, 3 = Declined
+    # Request status: 1 = Pending, 2 = Approved, 3 = Declined, 4 = Cancelled
     status = db.Column(
         db.Integer,
         nullable=False,
@@ -298,7 +300,7 @@ class ExpertAssignment(db.Model):
     request_id = db.Column(db.Integer, db.ForeignKey('authentication_requests.request_id'), nullable=False)
     expert_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     assigned_date = db.Column(db.DateTime, default=datetime.now())
-    # Assignment status: 1 = Notified, 2 = Completed, 3 = Reassigned
+    # Assignment status: 1 = Notified, 2 = Completed, 3 = Reassigned, 4 = Cancelled
     status = db.Column(
         db.Integer,
         nullable=False,

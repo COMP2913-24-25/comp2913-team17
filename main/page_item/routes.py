@@ -8,6 +8,7 @@ from datetime import datetime
 import decimal
 from . import item_page
 from ..models import db, Item, Bid, User, AuthenticationRequest, logger, Notification
+from ..email_utils import send_notification_email
 from ..extensions import csrf
 
 # SocketIO event handlers
@@ -128,7 +129,8 @@ def check_ended_auctions():
     """Check for auctions that have ended but don't have a winner yet."""
     finished_items = Item.query.filter(
         Item.auction_end <= datetime.now(),
-        Item.winning_bid_id.is_(None)
+        Item.winning_bid_id.is_(None),
+        Item.auction_completed.is_(False)
     ).all()
     for item in finished_items:
         try:
@@ -136,6 +138,59 @@ def check_ended_auctions():
             # finalise_auction() should update item.status to 2 (won)
             item.finalise_auction()
             highest_bid = item.highest_bid()
+            item.auction_completed = True
+            db.session.commit()
+
+            # Cancel any pending authentication requests
+            if item.authentication_requests and item.authentication_requests[0].status == 1:
+                item.authentication_requests[0].status = 4
+                # Send notification to the requester
+                notification_user = Notification(
+                    user_id=item.seller_id,
+                    message=f"Your authentication request for '{item.title}' has been cancelled as the auction has ended.",
+                    item_url=item.url,
+                    item_title=item.title,
+                    notification_type=4
+                )
+                db.session.add(notification_user)
+                db.session.commit()
+
+                socketio.emit('new_notification', {
+                    'message': notification_user.message,
+                    'item_url': notification_user.item_url,
+                    'created_at': notification_user.created_at.strftime('%Y-%m-%d %H:%M')
+                }, room=f'user_{item.seller.secret_key}')
+
+                # Send email
+                send_notification_email(item.seller, notification_user)
+
+                # Update the authentication room
+                socketio.emit('force_reload', { 'status': 'Auction ended' }, room=item.authentication_requests[0].url)
+
+                # Send notification to the expert
+                if item.authentication_requests[0].expert_assignments:
+                    item.authentication_requests[0].expert_assignments[-1].status = 4
+
+                    notification_expert = Notification(
+                        user_id=item.authentication_requests[0].expert_assignments[-1].expert_id,
+                        message=f"The authentication request for '{item.title}' has been cancelled as the auction has ended.",
+                        item_url=item.url,
+                        item_title=item.title,
+                        notification_type=4
+                    )
+                    db.session.add(notification_expert)
+                    db.session.commit()
+
+                    socketio.emit('new_notification', {
+                        'message': notification_expert.message,
+                        'item_url': notification_expert.item_url,
+                        'created_at': notification_expert.created_at.strftime('%Y-%m-%d %H:%M')
+                    }, room=f'user_{item.authentication_requests[0].expert_assignments[-1].expert.secret_key}')
+        
+            
+                    # Send email
+                    send_notification_email(item.authentication_requests[0].expert_assignments[-1].expert, notification_expert)
+
             if highest_bid:
                 socketio.emit('auction_ended', {
                     'winner': True,
@@ -147,6 +202,7 @@ def check_ended_auctions():
                 socketio.emit('auction_ended', {'winner': False}, room=item.url)
         except Exception as e:
             logger.error(f"Error finalising auction {item.item_id}: {e}")
+
 
 @item_page.route('/api/notifications/mark-read', methods=['POST'])
 @login_required

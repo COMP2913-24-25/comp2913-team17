@@ -57,6 +57,11 @@ def index(url):
     authentication = AuthenticationRequest.query.filter_by(url=url).first_or_404()
     item = Item.query.filter_by(item_id=authentication.item_id).first()
 
+    # If the item has expired and the authentication request is still pending, mark it as cancelled
+    if item.auction_end < datetime.now() and authentication.status == 1:
+        authentication.status = 4
+        db.session.commit()
+
     # Check user is allowed to view this page
     expert = authentication.expert_assignments[-1] if authentication.expert_assignments else None
     is_creator = authentication.requester_id == current_user.id
@@ -78,7 +83,7 @@ def index(url):
     for message in messages:
         setattr(message, 'image_urls', [image.get_url() for image in message.images])
 
-    return render_template('authenticate_item.html', item=item, authentication=authentication.status, is_creator=is_creator, is_expert=is_expert, is_admin=is_admin, messages=messages)
+    return render_template('authenticate_item.html', item=item, authentication=authentication.status, is_creator=is_creator, is_expert=is_expert, messages=messages)
 
 
 @authenticate_item_page.route('/<url>/api/accept', methods=['POST'])
@@ -93,6 +98,9 @@ def accept(url):
     
     if authentication.expert_assignments and (authentication.expert_assignments[-1].expert_id != current_user.id or authentication.expert_assignments[-1].status != 1):
         return jsonify({'error': 'You are not assigned to this authentication request.'}), 403
+    
+    if authentication.item.auction_end < datetime.now():
+        return jsonify({'error': 'Auction has ended.'}), 400
     
     authentication.status = 2
     authentication.expert_assignments[-1].status = 2
@@ -138,6 +146,9 @@ def reject(url):
     if authentication.expert_assignments and (authentication.expert_assignments[-1].expert_id != current_user.id or authentication.expert_assignments[-1].status != 1):
         return jsonify({'error': 'You are not assigned to this authentication request.'}), 403
     
+    if authentication.item.auction_end < datetime.now():
+        return jsonify({'error': 'Auction has ended.'}), 400
+    
     authentication.status = 3
     authentication.expert_assignments[-1].status = 2
     
@@ -182,6 +193,9 @@ def reassign(url):
     if authentication.expert_assignments and (authentication.expert_assignments[-1].expert_id != current_user.id or authentication.expert_assignments[-1].status != 1):
         return jsonify({'error': 'You are not assigned to this authentication request.'}), 403
     
+    if authentication.item.auction_end < datetime.now():
+        return jsonify({'error': 'Auction has ended.'}), 400
+    
     authentication.expert_assignments[-1].status = 3
     db.session.commit()
 
@@ -197,6 +211,9 @@ def new_message(url):
     
     if authentication.status != 1:
         return jsonify({'error': 'Authentication request is not pending.'}), 400
+    
+    if authentication.item.auction_end < datetime.now():
+        return jsonify({'error': 'Auction has ended.'}), 400
     
     # Check user is allowed to leave message
     expert = authentication.expert_assignments[-1] if authentication.expert_assignments else None
@@ -259,7 +276,7 @@ def new_message(url):
         'sender': current_user.username,
         'sender_id': str(current_user.id),
         'images': image_urls,
-        'sent_at': message.sent_at.strftime('%Y-%m-%d %H:%M:%S')
+        'sent_at': message.sent_at.strftime('%H:%M - %d/%m/%Y')
     }, room=url)
 
     # Send notification to recipient

@@ -56,11 +56,13 @@
     <div class="container">
       <!-- Logo -->
       <a class="logo-container py-2" href="{{ url_for('home_page.index') }}">
-        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Vintage Vault Logo" class="logo-svg">
+        <span class="logo-svg-wrapper">
+          <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Vintage Vault Logo" class="logo-svg">
+        </span>
         <h1 class="logo-text">VINTAGE <span>VAULT.</span></h1>
       </a>
       <!-- Mobile Toggle Button -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler mx-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <!-- Nav Items -->
@@ -133,7 +135,7 @@
         </div>
         {% else %}
         <!-- Login/Register Links -->
-        <div class="ms-auto d-flex">
+        <div class="ms-auto d-flex align-items-center">
           <div class="nav-item me-2">
             <a class="btn btn-primary" href="{{ url_for('auth_page.login') }}">
               <i class="fas fa-sign-in-alt me-1"></i> LOGIN
@@ -141,7 +143,7 @@
           </div>
           <div class="nav-item">
             <a class="btn btn-secondary" href="{{ url_for('auth_page.register') }}">
-              <i class="fas fa-user-plus me-1"></i> REGISTER
+              <i class="fas fa-user-plus me-1"></i>REGISTER
             </a>
           </div>
         </div>
@@ -166,8 +168,9 @@
       </div>
     </div>
   </div>
-
-  {% block content %}{% endblock %}
+  <div class="main-content">
+    {% block content %}{% endblock %}
+  </div>
 
   <!-- Footer -->
   <footer class="bg-black text-white py-5">
@@ -239,5 +242,7 @@
       $('#curr-year').text(year);
     });
   </script>
+  <script src="{{ url_for('static', filename='js/logoAnimation.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/rotatingFooter.js') }}"></script>
 </body>
 </html>

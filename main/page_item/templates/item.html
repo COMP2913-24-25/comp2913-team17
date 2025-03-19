@@ -67,25 +67,23 @@
           <span class="badge bg-info p-2" {% if item.category.description %}title="{{ item.category.description }}"{% endif %}>
             <i class="fas fa-tag"></i> {{ item.category.name }}
           </span>
-          <span class="badge {% if item.locked %}bg-danger{% else %}bg-success{% endif %} p-2">
-            {{ "Locked" if item.locked else "Open" }}
-          </span>
-          </span>
           {% if is_allowed %}
             <a href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}"
               title="View authentication request"
-              class="badge mx-2 {% if item.authentication_requests[0].status == 1 %}bg-warning{% elif item.authentication_requests[0].status == 2 %}bg-success{% else %}bg-danger{% endif %} p-2">
-              {% if item.authentication_requests[0].status == 1 %}
+              class="badge mx-2 {% if item.authentication_requests[0].status == 1 and not is_auction_over %}bg-warning{% elif item.authentication_requests[0].status == 2 %}bg-success{% elif item.authentication_requests[0].status == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
+              {% if item.authentication_requests[0].status == 1 and not is_auction_over %}
                 Authentication Pending
               {% elif item.authentication_requests[0].status == 2 %}
                 Authenticated
-              {% else %}
+              {% elif item.authentication_requests[0].status == 3 %}
                 Authentication Declined
+              {% else %}
+                Not Authenticated
               {% endif %}
             </a>
           {% else %}
-            <span class="badge {% if authentication == 1 %}bg-warning{% elif authentication == 2 %}bg-success{% elif authentication == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
-              {% if authentication == 1 %}
+            <span class="badge {% if authentication == 1 and not is_auction_over %}bg-warning{% elif authentication == 2 %}bg-success{% elif authentication == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
+              {% if authentication == 1 and not is_auction_over %}
                 Authentication Pending
               {% elif authentication == 2 %}
                 Authenticated
@@ -179,13 +177,14 @@
       <div class="d-grid gap-2">
         {% if current_user.is_authenticated 
           and current_user.id != item.seller.id
+          and current_user.role not in [2, 3]
           and not is_auction_over%}
         <button 
           type="button" 
           class="place-bid btn btn-primary btn-lg" 
           data-bs-toggle="modal" 
           data-bs-target=".place-bid-modal">
-          Submit Bid
+          New Bid
         </button>
         {% endif %}
       </div>
@@ -228,7 +227,7 @@
                       </div>
                     </div>
                     <div class="d-grid gap-2">
-                      <button type="submit btn-close" class="btn btn-primary btn-lg" data-bs-dismiss="modal">Review Bid</button>
+                      <button type="submit btn-close" class="btn btn-primary btn-lg" data-bs-dismiss="modal">Submit Bid</button>
                     </div>
                   </form>
                 {% else %}
@@ -257,13 +256,13 @@
       
       <!-- Item watchers -->
       <div class="d-grid gap-2">
-        {% if not is_auction_over %}
+        {% if not is_auction_over and current_user.id != item.seller.id %}
           <div class="d-grid gap-2" style="margin-top: 10px;">
             {% if is_watching %}
               <button id="unwatch-btn" class="btn btn-success btn-lg" data-item-url="{{ item.url }}">
                 <i class="fas fa-check"></i> Watched
               </button>
-            {% else %}
+            {% elif current_user.is_authenticated %}
               <button id="watch-btn" class="btn btn-outline-dark btn-lg" data-item-url="{{ item.url }}">
                 <i class="fas fa-eye"></i> Add to Watchlist
               </button>

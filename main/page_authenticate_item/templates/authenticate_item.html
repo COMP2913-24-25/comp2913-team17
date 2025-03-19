@@ -3,63 +3,86 @@
 {% block title %}Authenticate: {{ item.title }}{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/item-auth-styles.css') }}">
 
-<div class="container mt-5">
-  <h1>Authentication: {{ item.title }}</h1>
-  <a id="item-link" href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a>
-  <span class="badge {% if authentication == 1 %}bg-warning
-    {% elif authentication == 2 %}bg-success
-    {% elif authentication == 3 %}bg-danger
-    {% else %}bg-secondary{% endif %} p-2"
-  >
-    {% if authentication == 1 %}
-      Authentication Pending
-    {% elif authentication == 2 %}
-      Authenticated
-    {% elif authentication == 3 %}
-      Authentication Declined
-    {% else %}
-      Not Authenticated
-    {% endif %}
-  </span>
-  <!-- Chat box -->
-  <h2>Messages</h2>
-  <div id="messages">
-    {% for message in messages %}
-    <div class="message {% if message.sender_id == current_user.id %}my-messages{% else %}other-messages{% endif %}">
-      <p>{{ message.message_text }}</p>
-      {% if message.image_urls %}
-      <div class="image-gallery">
-        {% for url in message.image_urls %}
-        <a href="{{ url }}" target="_blank">
-          <img src="{{ url }}" alt="Attached image" class="message-image">
+<div class="container mt-5 mb-5">
+  <div class="row">
+    <div class="col-12">
+      <h1 class="section-title mb-4">Authentication Request</h1>
+      <div class="item-header-container mb-4 d-flex justify-content-between gap-3">
+        <a id="item-link" href="{{ url_for('item_page.index', url=item.url) }}" class="mx-2">
+          <i class="fas fa-arrow-left me-2"></i>{{ item.title }}
         </a>
+        <span class="badge {% if authentication == 1 %}bg-warning
+          {% elif authentication == 2 %}bg-success
+          {% elif authentication == 3 %}bg-danger
+          {% else %}bg-secondary{% endif %} p-2"
+        >
+          {% if authentication == 1 %}
+            Authentication Pending
+          {% elif authentication == 2 %}
+            Authenticated
+          {% elif authentication == 3 %}
+            Authentication Declined
+          {% else %}
+            Not Authenticated
+          {% endif %}
+        </span>
+      </div>
+      <!-- Messages -->
+      <div class="messages" id="{% if authentication != 1 or not (is_expert or is_creator) %}messages-tall{% elif is_creator%}messages-mid{% else %}messages-short{% endif %}">
+        {% for message in messages %}
+        <div class="message {% if message.sender_id == current_user.id %}my-messages{% else %}other-messages{% endif %}">
+          <p>{{ message.message_text }}</p>
+          {% if message.image_urls %}
+          <div class="image-gallery">
+            {% for url in message.image_urls %}
+            <a href="{{ url }}" target="_blank">
+              <img src="{{ url }}" alt="Attached image" class="message-image">
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <p class="username">{{ message.sender.username }} ({{ message.sent_at.strftime('%H:%M - %d/%m/%Y') }})</p>
+        </div>
         {% endfor %}
       </div>
+      <!-- Only experts and the creator can chat -->
+      {% if authentication == 1 and (is_expert or is_creator) %}
+      <form id="message-form" enctype="multipart/form-data">
+        <textarea id="message" placeholder="Enter your message" required></textarea>
+        <div class="image-upload-container">
+          <input type="file" id="images" name="files[]" accept="image/*" multiple>
+          <small class="text-muted">
+            <label><i class="fas fa-upload"></i> Click to add images</label><br>
+            Maximum 5 images, 1MB each
+          </small>
+          <div id="selected-files"></div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-paper-plane me-2"></i>Send Message
+        </button>
+      </form>
       {% endif %}
-      <p class="username">{{ message.sender.username }} ({{ message.sent_at.strftime('%Y-%m-%d %H:%M:%S') }})</p>
+      <!-- Show authentication options if authentication pending -->
+      {% if is_expert and authentication == 1 %}
+      <div class="search-container mt-4">
+        <h2 class="text-center"><i class="fas fa-user-shield me-2"></i>Expert Options</h2>
+        <div class="expert-menu mt-3 text-center">
+          <button id="authenticate-item" class="btn btn-success authenticate-btn m-1">
+            <i class="fas fa-check-circle me-2"></i>Authenticate
+          </button>
+          <button id="decline-item" class="btn btn-danger decline-btn m-1">
+            <i class="fas fa-times-circle me-2"></i>Decline
+          </button>
+          <button id="reassign-item" class="btn btn-warning reassign-btn m-1">
+            <i class="fas fa-user-plus me-2"></i>Reassign
+          </button>
+        </div>
+      </div>
+      {% endif %}
     </div>
-    {% endfor %}
   </div>
-  <!-- Only experts and the creator can chat -->
-  {% if authentication == 1 and (is_expert or is_creator) %}
-  <form id="message-form" title="{{ 'Login to send messages' if not current_user.is_authenticated }}" enctype="multipart/form-data">
-    <input type="text" id="message" placeholder="Enter your message" required>
-    <div class="image-upload-container">
-      <input type="file" id="images" name="files[]" accept="image/*" multiple>
-      <small class="text-muted">Maximum 5 images, 1MB each</small>
-      <div id="selected-files"></div>
-    </div>
-    <button type="submit">Send</button>
-  </form>
-  {% endif %}
-  <!-- Show authentication options if authentication pending -->
-  {% if is_expert and authentication == 1 %}
-  <h2>Expert Options</h2>
-  <button id="authenticate-item">Authenticate</button>
-  <button id="decline-item">Decline</button>
-  <button id="reassign-item">Reassign</button>
-  {% endif %}
 </div>
 
 <!-- Scripts -->

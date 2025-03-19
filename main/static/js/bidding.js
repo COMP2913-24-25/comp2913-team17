@@ -25,6 +25,7 @@ $(document).ready(function() {
   const noBids = $('.no-bids-msg');
   const auctionEnd = $('.auction-end');
   const countdown = $('.countdown');
+  const shouldReload = new Date() <= new Date(countdown.data('end'));
   const currentPrice = $('#price-section');
   const bidHelp = $('#bid-amount-help');
 
@@ -57,15 +58,10 @@ $(document).ready(function() {
     
     // If auction has ended
     if (now >= target) {
-      element.text('Auction ended');
-      element.removeClass('countdown-active countdown-urgent').addClass('countdown-ended');
-      
-      // Hide bid form and disable input
-      if (!bidForm.is(':hidden')) {
-        bidForm.hide();
-        bidAmount.prop('disabled', true);
-        bidAmount.attr('title', 'Auction has ended');
+      if (shouldReload) {
+        location.reload();
       }
+      
       return;
     }
     
@@ -221,13 +217,8 @@ $(document).ready(function() {
     window.globalSocket.emit('leave', { 'item_url': itemURL });
   });
 
-  // Disconnect the window.globalSocket when the auction ends
+  // Disconnect the socket when the auction ends
   window.globalSocket.on('auction_ended', function(data) {
-    // Disable bid form
-    bidForm.hide();
-    bidAmount.prop('disabled', true);
-    bidAmount.attr('title', 'Auction has ended');
-
     window.globalSocket.emit('leave', { 'item_url': itemURL });
   });
 });

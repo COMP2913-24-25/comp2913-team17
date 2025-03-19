@@ -77,12 +77,12 @@
               </div>
               <div class="auction-info">
                 <div class="badges">
-                  <div class="badge {% if not item.authentication_requests %}bg-secondary
+                  <div class="badge {% if not item.authentication_requests or item.authentication_requests[0].status == 4 %}bg-secondary
                   {% elif item.authentication_requests[0].status == 2 %}bg-success
                   {% elif item.authentication_requests[0].status == 3 %}bg-danger
                   {% else %}bg-warning{% endif %} authentication-status" 
                   data-authentication="{{ 0 if not item.authentication_requests else item.authentication_requests[0].status }}" title="Authentication Status">
-                  {% if not item.authentication_requests %}
+                  {% if not item.authentication_requests or item.authentication_requests[0].status == 4 %}
                       <i class="fas fa-question-circle me-1"></i> NOT AUTHENTICATED
                   {% elif item.authentication_requests[0].status == 2 %}
                       <i class="fas fa-check-circle me-1"></i> AUTHENTICATED

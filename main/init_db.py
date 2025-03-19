@@ -55,7 +55,7 @@ def populate_db(app):
             description='An antique clock from 1900',
             upload_date=now,
             auction_start=now,
-            auction_end=now + timedelta(minutes=2),
+            auction_end=now + timedelta(days=4),
             minimum_price=100.00,
             category_id=cat1.id  # Assign to "Antiques"
         )
@@ -71,7 +71,7 @@ def populate_db(app):
             description='A modern art painting with vibrant colours',
             upload_date=now,
             auction_start=now,
-            auction_end=now + timedelta(minutes=3),
+            auction_end=now + timedelta(minutes=1),
             minimum_price=200.00,
             category_id=cat2.id  # Assign to "Art"
         )
@@ -84,7 +84,7 @@ def populate_db(app):
         db.session.add_all([item1, item2, image1, image2])
         db.session.commit()
 
-        # Bids
+        # Bids - Managers and experts cannot bid
         bid1 = Bid(
             item_id=item1.item_id,
             bidder_id=user2.id,
@@ -92,18 +92,12 @@ def populate_db(app):
             bid_time=now
         )
         bid2 = Bid(
-            item_id=item1.item_id,
-            bidder_id=user3.id,
-            bid_amount=130.00,
-            bid_time=now
-        )
-        bid3 = Bid(
             item_id=item2.item_id,
             bidder_id=user1.id,
             bid_amount=210.00,
             bid_time=now
         )
-        db.session.add_all([bid1, bid2, bid3])
+        db.session.add_all([bid1, bid2])
         db.session.commit()
 
         # Authentication Request (for item2)
