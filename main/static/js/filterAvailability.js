@@ -51,34 +51,47 @@ document.addEventListener('DOMContentLoaded', function() {
         let category = categoryFilter.value;
 
         fetch(`/manager/filter-experts?category_id=${category}`)
-            .then(response => response.json())
-            .then(data => {
-                console.log("API response:", data);
-                
-                tbody.innerHTML = ""; // Clear current table rows
-
-                data.forEach(expert => {
-                    let row = document.createElement("tr");
-                    let nameCell = document.createElement("td");
-                    nameCell.textContent = expert.username;
-                    row.appendChild(nameCell);
-
-                    // Add empty cells for each time slot
-                    let numColumns = document.querySelector("#dailyTable thead tr").children.length - 1;
-                    for (let i = 0; i < numColumns; i++) {
-                        let emptyCell = document.createElement("td");
-                        emptyCell.textContent = "-";
-                        row.appendChild(emptyCell);
-                    }
-
-                    tbody.appendChild(row);
-                });
-
-                // Ensure toggle filter is reset when new data is loaded
-                filterOn = false;
-                toggleBtn.textContent = "Show Only Currently Available Experts";
-            })
-            .catch(error => console.error("Error fetching experts:", error));
+        .then(response => response.json())
+        .then(data => {
+            console.log("API response:", data);
+            
+            tbody.innerHTML = "";
+    
+            // Check if the API response contains an error
+            if (data.error) {  
+                console.error("API Error:", data.error);
+                tbody.innerHTML = `<tr><td colspan="100%">No experts found.</td></tr>`;
+                return;
+            }
+    
+            // Check if the API response is in the expected format
+            if (!Array.isArray(data)) {
+                console.error("Unexpected API response format:", data);
+                tbody.innerHTML = `<tr><td colspan="100%">Unexpected error.</td></tr>`;
+                return;
+            }
+    
+            data.forEach(expert => {  
+                let row = document.createElement("tr");
+                let nameCell = document.createElement("td");
+                nameCell.textContent = expert.username;
+                row.appendChild(nameCell);
+    
+                let numColumns = document.querySelector("#dailyTable thead tr").children.length - 1;
+                for (let i = 0; i < numColumns; i++) {
+                    let emptyCell = document.createElement("td");
+                    emptyCell.textContent = "-";
+                    row.appendChild(emptyCell);
+                }
+    
+                tbody.appendChild(row);
+            });
+    
+            // Reset the toggle button when new data is loaded
+            filterOn = false;
+            toggleBtn.textContent = "Show Only Currently Available Experts";
+        })
+        .catch(error => console.error("Error fetching experts:", error));    
     });
 
     categoryFilter.addEventListener('change', function() {
