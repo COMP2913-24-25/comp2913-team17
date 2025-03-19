@@ -230,7 +230,23 @@
       </div>
     </div>
   </footer>
+  
+  <!-- Cookie Consent Popup -->
+  <div id="cookie-consent-popup" class="cookie-consent">
+    <div class="cookie-content">
+      <div class="cookie-text">
+        <h6>Cookie Consent</h6>
+        <p>We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.</p>
+      </div>
+      <div class="cookie-buttons">
+        <button id="reject-cookies" class="btn btn-outline-light btn-sm">Reject</button>
+        <button id="accept-cookies" class="btn btn-accent btn-sm">Accept</button>
+      </div>
+    </div>
+  </div>
+  
   <!-- Custom JS -->
+  <script src="{{ url_for('static', filename='js/cookieConsent.js') }}"></script>
   <script>
     // Automatically update the current year in the footer
     $(document).ready(function() {
