@@ -7,9 +7,11 @@ from flask_login import login_user, logout_user, current_user
 from urllib.parse import urlparse, urlencode
 from app import socketio
 from flask_socketio import join_room
+from datetime import datetime
 from . import auth_page
 from .forms import LoginForm, RegisterForm, UpdateForm
 from ..models import db, User
+from ..limiter_utils import limiter
 
 # SocketIO notification rooms
 @socketio.on('join_user')
@@ -24,9 +26,12 @@ def on_join(data):
         join_room(f'user_{room}')
 
 
+# Apply stricter rate limits to login route
 @auth_page.route('/login', methods=['GET', 'POST'])
+@limiter.limit("100 per minute", methods=["POST"], error_message="Too many login attempts. Please try again later.")
+@limiter.limit("100 per minute", key_func=lambda: request.form.get('email', ''), methods=["POST"], error_message="Too many login attempts for this account. Please try again later.")
 def login():
-    """Render the login page and handle login requests."""
+    """Log the user in."""
     next_page = request.args.get('next')
 
     # Check for malicious redirects
@@ -38,21 +43,50 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        email = form.email.data
-        password = form.password.data
-        user = db.session.query(User).filter_by(email=email).first()
-
-        if user is None:
-            flash('Invalid email address')
-        elif not user.check_password(password):
-            flash('Invalid password')
-        else:
+        user = User.query.filter_by(email=form.email.data).first()
+        
+        # Check if user exists
+        if not user:
+            flash('This user account is not exist. Please create a new account.', 'danger')
+            return render_template('login.html', form=form)
+        
+        # Check if account is locked
+        if user.is_account_locked():
+            remaining_time = (user.locked_until - datetime.now()).total_seconds() / 60
+            flash(f'Account is temporarily locked. Try again in {int(remaining_time)} minutes.', 'danger')
+            return render_template('login.html', form=form)
+        
+        # Validate password
+        if user.check_password(form.password.data):
+            # Reset failed attempts on successful login
+            user.reset_login_attempts()
+            db.session.commit()
+            
             login_user(user)
-            return redirect(next_page)
+            flash('Successfully logged in!', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('home_page.index'))
+        else:
+            # Increment failed attempts on unsuccessful login
+            user.increment_login_attempts()
+            db.session.commit()
+            
+            # Calculate and display remaining attempts
+            max_attempts = 5
+            remaining_attempts = max_attempts - user.failed_login_attempts
+            
+            if remaining_attempts > 0:
+                flash(f'Failed login. {remaining_attempts} {"attempt" if remaining_attempts == 1 else "attempts"} remaining before your account is locked.', 'danger')
+            else:
+                flash('Your account has been locked due to multiple failed login attempts. Try again in 15 minutes.', 'danger')
+    
     return render_template('login.html', form=form)
 
 
+# Apply rate limits to registration
 @auth_page.route('/register', methods=['GET', 'POST'])
+@limiter.limit("100 per hour", methods=["POST"], error_message="Too many registration attempts. Please try again later.")
+@limiter.limit("100 per day", methods=["POST"])
 def register():
     """Render the register page and handle registration requests."""
     if current_user.is_authenticated:
@@ -83,7 +117,10 @@ def register():
             return redirect(url_for('home_page.index'))
     return render_template('register.html', form=form)
 
+
+# Apply rate limits to user update
 @auth_page.route('/update_user', methods=['GET', 'POST'])
+@limiter.limit("100 per hour", methods=["POST"], error_message="Too many update attempts. Please try again later.")
 def update_user():
     """Render the update page and update user details."""
     if not current_user.is_authenticated:
@@ -123,6 +160,7 @@ def update_user():
 
     return render_template('update_user.html', form=form)
 
+
 @auth_page.route('/logout')
 def logout():
     """Log the user out."""
@@ -131,7 +169,9 @@ def logout():
     return redirect(url_for('home_page.index'))
 
 
+# Apply rate limits to OAuth2 authorization
 @auth_page.route('/authorize/<provider>')
+@limiter.limit("10 per hour")
 def oauth2_authorise(provider):
     """Redirect the user to the OAuth2 provider authorisation URL."""
     if not current_user.is_anonymous:
@@ -159,7 +199,9 @@ def oauth2_authorise(provider):
     return redirect(provider_data['authorize_url'] + "?" + qs)
 
 
+# Apply rate limits to OAuth2 callback
 @auth_page.route('/callback/<provider>')
+@limiter.limit("10 per hour")
 def oauth2_callback(provider):
     """Handle the OAuth2 provider callback."""
     if not current_user.is_anonymous:

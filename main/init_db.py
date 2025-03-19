@@ -17,16 +17,16 @@ def populate_db(app):
 
         # Users
         user1 = User(username='alice', email='alice@example.com', role=1)
-        user1.set_password('alice123')
+        user1.set_password('Alice@123')
 
         user2 = User(username='robert', email='robert@example.com', role=1)
-        user2.set_password('robert123')
+        user2.set_password('Robert@123')
 
         user3 = User(username='charlie', email='charlie@example.com', role=2)
-        user3.set_password('charlie123')
+        user3.set_password('Charlie@123')
 
         user4 = User(username='diana', email='diana@example.com', role=3)
-        user4.set_password('diana123')
+        user4.set_password('Diana@123')
 
         db.session.add_all([user1, user2, user3, user4])
         db.session.commit()

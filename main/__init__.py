@@ -11,6 +11,7 @@ from flask_socketio import SocketIO, join_room
 from flask_apscheduler import APScheduler
 from .models import db
 from .init_db import populate_db
+from .limiter_utils import configure_limiter
 from .extensions import csrf
 
 socketio = SocketIO()
@@ -133,6 +134,7 @@ def create_app():
     from .page_authenticate_item import authenticate_item_page
     from .page_experts import expert_page
     from .page_managers import manager_page
+    from .page_addons import addons_page
 
     app.register_blueprint(home_page)
     app.register_blueprint(item_page, url_prefix='/item')
@@ -142,10 +144,14 @@ def create_app():
     app.register_blueprint(authenticate_item_page, url_prefix='/authenticate')
     app.register_blueprint(expert_page, url_prefix='/expert')
     app.register_blueprint(manager_page, url_prefix='/manager')
+    app.register_blueprint(addons_page, url_prefix='/addons')
 
     @login_manager.user_loader
     def load_user(user_id):
         from .models import User
         return db.session.query(User).get(int(user_id))
+
+    # Initialize rate limiter
+    configure_limiter(app)
 
     return app

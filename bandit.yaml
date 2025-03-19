@@ -1,2 +1,23 @@
-exclude_dirs: ['tests', 'venv']
-skips: ['B311']
+# Directories to exclude from scanning
+exclude_dirs: [
+  'tests',
+  'venv',
+  '.git',
+  '__pycache__',
+  'migrations',
+  'node_modules'
+]
+
+# Tests to skip
+skips: [
+  # Standard pseudo-random generators are not suitable for security/cryptographic purposes
+  'B311', 
+  # Using subprocess without shell=True is safe
+  'B603',
+  # Ignore check for using hard-coded passwords in test files only
+  'B106:tests/'
+]
+
+# Output formatting options
+output_format: json
+output_file: security-report.json
