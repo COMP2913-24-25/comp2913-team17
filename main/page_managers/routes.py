@@ -65,28 +65,31 @@ def expert_availability():
 @manager_page.route('/filter-experts', methods=['GET'])
 def filter_experts():
     """Filter experts based on category or expertise."""
-
     from ..models import ExpertCategory
 
     category_id = request.args.get('category_id', type=int)
 
-    if category_id: is None:
+    if category_id is None:
         return jsonify({"error": "Invalid category ID."}), 400
 
     try:
+        #Get all users with role=2 (experts)
         query = User.query.filter_by(role=2)
 
-    if category_id:
-        query = query.join(ExpertCategory, User.id == ExpertCategory.expert_id) \
-                     .filter(ExpertCategory.category_id == category_id)
+        #Only filter by category if a valid category ID is provided
+        if category_id:
+            query = query.join(ExpertCategory, User.id == ExpertCategory.expert_id) \
+                         .filter(ExpertCategory.category_id == category_id)
 
-    experts = query.all()
+        experts = query.all()
 
-    if not experts:
-        return jsonify({"error": "No experts found for this category"}), 404
+        #If no experts match, return a 404 error
+        if not experts:
+            return jsonify({"error": "No experts found for this category"}), 404
 
-    return jsonify([{'id': e.id, 'username': e.username, 'email': e.email} for e in experts])
+        return jsonify([{'id': e.id, 'username': e.username, 'email': e.email} for e in experts])
 
-except Exception as e:
-    return jsonify({"error": f"Databse error: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500 # Internal server error
+
 
