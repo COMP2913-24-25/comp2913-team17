@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}About Vintage Vault{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <!-- Hero Section -->
+  <div class="row mb-5">
+    <div class="col-lg-8 mx-auto text-center">
+      <h1 class="display-4 mb-3">About Vintage Vault</h1>
+      <p class="lead">Connecting collectors with authentic treasures since 2022.</p>
+      <hr class="my-4 w-25 mx-auto" style="border-top: 5px solid var(--accent-color);">
+    </div>
+  </div>
+  
+  <!-- Our Story Section -->
+  <div class="row align-items-center mb-5">
+    <div class="col-md-6 mb-4 mb-md-0">
+    <img src="{{ url_for('static', filename='images/slide-item1.jpeg') }}" 
+           alt="Vintage items on display" 
+           class="img-fluid rounded shadow" 
+           style="max-height: 400px; object-fit: cover; width: 100%;">
+    </div>
+    <div class="col-md-6">
+      <h2>Our Story</h2>
+      <p>Vintage Vault was founded in 2025 by a group of antique enthusiasts who recognized the need for a specialized online platform for collectors and sellers of unique vintage items.</p>
+      <p>What began as a small operation in Leeds quickly grew into a trusted marketplace for authentic antiques and collectibles, attracting buyers and sellers from across the country and beyond.</p>
+      <p>Today, Vintage Vault stands as the UK's premier destination for antiques and collectibles, offering unparalleled authentication services and a seamless auction experience.</p>
+    </div>
+  </div>
+  
+  <!-- Mission & Values -->
+  <div class="row mb-5">
+    <div class="col-12 text-center mb-4">
+      <h2>Our Mission & Values</h2>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="bi bi-award text-accent mb-3" style="font-size: 2.5rem;"></i>
+          <h3 class="h4">Authenticity</h3>
+          <p>We believe in the importance of genuine artifacts and employ rigorous authentication processes to ensure the items on our platform are exactly as described.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="bi bi-shield-check text-accent mb-3" style="font-size: 2.5rem;"></i>
+          <h3 class="h4">Trust</h3>
+          <p>Building trust between buyers and sellers is at the core of what we do. Our platform is designed with transparency and security as top priorities.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="bi bi-people text-accent mb-3" style="font-size: 2.5rem;"></i>
+          <h3 class="h4">Community</h3>
+          <p>We foster a community of passionate collectors and sellers, creating connections between people who share a love for history and craftsmanship.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Our Team -->
+  <div class="row mb-5">
+    <div class="col-12 text-center mb-4">
+      <h2>Meet Our Team</h2>
+      <p class="lead">The experts and enthusiasts who make Vintage Vault possible</p>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm text-center h-100">
+        <div class="card-body">
+          <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center bg-light" style="width: 120px; height: 120px;">
+            <i class="bi bi-person-fill" style="font-size: 3rem; color: var(--primary-color);"></i>
+          </div>
+          <h3 class="h5">Emma Thompson</h3>
+          <p class="text-muted mb-2">Founder & CEO</p>
+          <p class="small">Antiques expert with over 15 years of experience in authentication and valuation.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm text-center h-100">
+        <div class="card-body">
+          <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center bg-light" style="width: 120px; height: 120px;">
+            <i class="bi bi-person-fill" style="font-size: 3rem; color: var(--primary-color);"></i>
+          </div>
+          <h3 class="h5">James Wilson</h3>
+          <p class="text-muted mb-2">Chief Authentication Officer</p>
+          <p class="small">Former museum curator with expertise in 18th and 19th century artifacts.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm text-center h-100">
+        <div class="card-body">
+          <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center bg-light" style="width: 120px; height: 120px;">
+            <i class="bi bi-person-fill" style="font-size: 3rem; color: var(--primary-color);"></i>
+          </div>
+          <h3 class="h5">Sarah Chen</h3>
+          <p class="text-muted mb-2">Head of Technology</p>
+          <p class="small">Tech innovator ensuring our platform remains secure, fast, and user-friendly.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm text-center h-100">
+        <div class="card-body">
+          <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center bg-light" style="width: 120px; height: 120px;">
+            <i class="bi bi-person-fill" style="font-size: 3rem; color: var(--primary-color);"></i>
+          </div>
+          <h3 class="h5">Oliver Reed</h3>
+          <p class="text-muted mb-2">Customer Experience Director</p>
+          <p class="small">Dedicated to ensuring both buyers and sellers have a seamless experience on our platform.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Why Choose Us -->
+  <div class="row mb-5 bg-black text-white p-5 rounded">
+    <div class="col-12 text-center mb-4">
+      <h2 class="text-white">Why Choose Vintage Vault?</h2>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="d-flex align-items-start">
+        <i class="bi bi-check-circle-fill text-accent me-3 mt-1" style="font-size: 1.5rem;"></i>
+        <div>
+          <h3 class="h5 text-white">Expert Authentication</h3>
+          <p>Our team of specialists verifies items to ensure authenticity and accurate descriptions.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="d-flex align-items-start">
+        <i class="bi bi-check-circle-fill text-accent me-3 mt-1" style="font-size: 1.5rem;"></i>
+        <div>
+          <h3 class="h5 text-white">Secure Transactions</h3>
+          <p>State-of-the-art security measures protect your personal information and financial transactions.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="d-flex align-items-start">
+        <i class="bi bi-check-circle-fill text-accent me-3 mt-1" style="font-size: 1.5rem;"></i>
+        <div>
+          <h3 class="h5 text-white">Dedicated Support</h3>
+          <p>Our customer service team is ready to assist with any questions or concerns about your auctions.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="d-flex align-items-start">
+        <i class="bi bi-check-circle-fill text-accent me-3 mt-1" style="font-size: 1.5rem;"></i>
+        <div>
+          <h3 class="h5 text-white">Specialized Categories</h3>
+          <p>Browse through carefully curated categories designed specifically for antiques and collectibles.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="d-flex align-items-start">
+        <i class="bi bi-check-circle-fill text-accent me-3 mt-1" style="font-size: 1.5rem;"></i>
+        <div>
+          <h3 class="h5 text-white">Fair Pricing</h3>
+          <p>Transparent fee structure with no hidden costs for buyers or sellers.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="d-flex align-items-start">
+        <i class="bi bi-check-circle-fill text-accent me-3 mt-1" style="font-size: 1.5rem;"></i>
+        <div>
+          <h3 class="h5 text-white">Community Focus</h3>
+          <p>Join a growing community of collectors who share your passion for vintage treasures.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Call to Action -->
+  <div class="row">
+    <div class="col-lg-8 mx-auto text-center">
+      <h2>Ready to Start Your Journey with Vintage Vault?</h2>
+      <p class="lead mb-4">Whether you're looking to find that perfect piece for your collection or sell a treasured item to a passionate new owner, we're here to help.</p>
+      <div class="d-flex justify-content-center gap-4 flex-wrap">
+        <a href="{{ url_for('home_page.index') }}" class="btn btn-primary btn-lg px-4 py-3" style="font-size: 1.2rem; font-weight: 600;">
+          <i class="bi bi-search me-2"></i>Browse Auctions
+        </a>
+        {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth_page.register') }}" class="btn btn-accent btn-lg px-4 py-3" style="font-size: 1.2rem; font-weight: 600;">
+          <i class="bi bi-person-plus me-2"></i>Create Account
+        </a>
+        {% else %}
+        <a href="{{ url_for('create_page.index') }}" class="btn btn-accent btn-lg px-4 py-3" style="font-size: 1.2rem; font-weight: 600;">
+          <i class="bi bi-plus-circle me-2"></i>Create Auction
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add additional space at the bottom -->
+  <div class="mb-5"></div>
+</div>
+{% endblock %}
