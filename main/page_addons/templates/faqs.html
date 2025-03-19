@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Frequently Asked Questions{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+  <h1 class="text-center mb-4">Frequently Asked Questions</h1>
+  <p class="text-center mb-5">Find answers to common questions about Vintage Vault's auction platform.</p>
+  
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+      <!-- General Questions -->
+      <div class="card mb-4">
+        <div class="card-header bg-black text-white">
+          <h2 class="h5 mb-0">General Questions</h2>
+        </div>
+        <div class="card-body">
+          <div class="accordion" id="accordionGeneral">
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                  What is Vintage Vault?
+                </button>
+              </h3>
+              <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionGeneral">
+                <div class="accordion-body">
+                  <p>Vintage Vault is an online auction platform specialized for antiques and collectibles. We connect sellers with authentic items to passionate collectors worldwide. Our mission is to provide a secure, transparent, and enjoyable auction experience.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                  How do I create an account?
+                </button>
+              </h3>
+              <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionGeneral">
+                <div class="accordion-body">
+                  <p>Creating an account is simple:</p>
+                  <ol>
+                    <li>Click the "Register" button in the top right corner of any page</li>
+                    <li>Fill out the registration form with your details</li>
+                    <li>You can register using your email address or with your Google account</li>
+                    <li>Verify your email address if prompted</li>
+                    <li>You're ready to start bidding or selling!</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bidding Questions -->
+      <div class="card mb-4">
+        <div class="card-header bg-black text-white">
+          <h2 class="h5 mb-0">Bidding Questions</h2>
+        </div>
+        <div class="card-body">
+          <div class="accordion" id="accordionBidding">
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingBid1">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBid1" aria-expanded="false" aria-controls="collapseBid1">
+                  How do I place a bid?
+                </button>
+              </h3>
+              <div id="collapseBid1" class="accordion-collapse collapse" aria-labelledby="headingBid1" data-bs-parent="#accordionBidding">
+                <div class="accordion-body">
+                  <p>To place a bid on an item:</p>
+                  <ol>
+                    <li>Navigate to the item's page</li>
+                    <li>Click the "Submit Bid" button</li>
+                    <li>Enter your bid amount (must be higher than the current highest bid)</li>
+                    <li>Confirm your bid</li>
+                  </ol>
+                  <p>You'll receive notifications about your bid status, including if you're outbid or if you win the auction.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingBid2">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBid2" aria-expanded="false" aria-controls="collapseBid2">
+                  What happens when I win an auction?
+                </button>
+              </h3>
+              <div id="collapseBid2" class="accordion-collapse collapse" aria-labelledby="headingBid2" data-bs-parent="#accordionBidding">
+                <div class="accordion-body">
+                  <p>When you win an auction:</p>
+                  <ol>
+                    <li>You'll receive a notification confirming your win</li>
+                    <li>You'll be directed to make a payment for your winning bid amount</li>
+                    <li>Once payment is completed, the seller will be notified to ship your item</li>
+                    <li>You can track the status of your won auctions in your dashboard</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+            
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingBid3">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBid3" aria-expanded="false" aria-controls="collapseBid3">
+                  Can I cancel a bid?
+                </button>
+              </h3>
+              <div id="collapseBid3" class="accordion-collapse collapse" aria-labelledby="headingBid3" data-bs-parent="#accordionBidding">
+                <div class="accordion-body">
+                  <p>For auction integrity, bids generally cannot be canceled once placed. This ensures fair competition among all bidders. If you have exceptional circumstances, please contact our support team who may consider your request on a case-by-case basis.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Selling Questions -->
+      <div class="card mb-4">
+        <div class="card-header bg-black text-white">
+          <h2 class="h5 mb-0">Selling Questions</h2>
+        </div>
+        <div class="card-body">
+          <div class="accordion" id="accordionSelling">
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingSell1">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSell1" aria-expanded="false" aria-controls="collapseSell1">
+                  How do I list an item for auction?
+                </button>
+              </h3>
+              <div id="collapseSell1" class="accordion-collapse collapse" aria-labelledby="headingSell1" data-bs-parent="#accordionSelling">
+                <div class="accordion-body">
+                  <p>To list an item for auction:</p>
+                  <ol>
+                    <li>Log into your account</li>
+                    <li>Click on "Create Auction" in the navigation bar</li>
+                    <li>Fill out the item details including title, description, category, and minimum price</li>
+                    <li>Upload quality photos of your item (up to 5 images)</li>
+                    <li>Set the auction end date and time</li>
+                    <li>Optionally select to have your item authenticated by our experts</li>
+                    <li>Submit your listing</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+            
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingSell2">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSell2" aria-expanded="false" aria-controls="collapseSell2">
+                  What fees does Vintage Vault charge?
+                </button>
+              </h3>
+              <div id="collapseSell2" class="accordion-collapse collapse" aria-labelledby="headingSell2" data-bs-parent="#accordionSelling">
+                <div class="accordion-body">
+                  <p>Vintage Vault charges a base platform fee on successful sales, calculated as a percentage of the final selling price. Currently, our fee structure is:</p>
+                  <ul>
+                    <li>Base platform fee: Varies (check current rate in your Create Auction page)</li>
+                    <li>Additional fee for authenticated items</li>
+                    <li>No listing fees - you only pay when your item sells</li>
+                  </ul>
+                  <p>These fees help us maintain the platform, provide authentication services, and ensure secure transactions.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Authentication Questions -->
+      <div class="card mb-4">
+        <div class="card-header bg-black text-white">
+          <h2 class="h5 mb-0">Authentication Process</h2>
+        </div>
+        <div class="card-body">
+          <div class="accordion" id="accordionAuth">
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingAuth1">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAuth1" aria-expanded="false" aria-controls="collapseAuth1">
+                  How does the authentication process work?
+                </button>
+              </h3>
+              <div id="collapseAuth1" class="accordion-collapse collapse" aria-labelledby="headingAuth1" data-bs-parent="#accordionAuth">
+                <div class="accordion-body">
+                  <p>Our authentication process ensures that items are genuine:</p>
+                  <ol>
+                    <li>When creating a listing, select the "Authenticate Item" option</li>
+                    <li>Your request is reviewed by our management team</li>
+                    <li>An expert specializing in your item's category is assigned</li>
+                    <li>The expert reviews images and information about your item</li>
+                    <li>You may be asked additional questions or to provide more images</li>
+                    <li>The expert makes a determination on authenticity</li>
+                    <li>Your item is marked as "Authenticated" or "Authentication Declined"</li>
+                  </ol>
+                  <p>Authenticated items typically attract more bidders and higher final prices.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingAuth2">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAuth2" aria-expanded="false" aria-controls="collapseAuth2">
+                  Who are your authentication experts?
+                </button>
+              </h3>
+              <div id="collapseAuth2" class="accordion-collapse collapse" aria-labelledby="headingAuth2" data-bs-parent="#accordionAuth">
+                <div class="accordion-body">
+                  <p>Our authentication experts are specialists in various categories of collectibles and antiques. They have extensive experience and qualifications in their areas of expertise. Each expert undergoes a thorough vetting process before joining our team. Their identities are kept confidential to ensure unbiased evaluations.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Payment Questions -->
+      <div class="card mb-4">
+        <div class="card-header bg-black text-white">
+          <h2 class="h5 mb-0">Payment & Security</h2>
+        </div>
+        <div class="card-body">
+          <div class="accordion" id="accordionPayment">
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingPay1">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePay1" aria-expanded="false" aria-controls="collapsePay1">
+                  What payment methods are accepted?
+                </button>
+              </h3>
+              <div id="collapsePay1" class="accordion-collapse collapse" aria-labelledby="headingPay1" data-bs-parent="#accordionPayment">
+                <div class="accordion-body">
+                  <p>We accept the following payment methods:</p>
+                  <ul>
+                    <li>Credit and debit cards (Visa, MasterCard, American Express)</li>
+                    <li>KlanaPay</li>
+                    <li>Revolut</li>
+                  </ul>
+                  <p>All payments are processed securely through our payment providers.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="headingPay2">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePay2" aria-expanded="false" aria-controls="collapsePay2">
+                  How does Vintage Vault ensure security?
+                </button>
+              </h3>
+              <div id="collapsePay2" class="accordion-collapse collapse" aria-labelledby="headingPay2" data-bs-parent="#accordionPayment">
+                <div class="accordion-body">
+                  <p>Security is a top priority at Vintage Vault:</p>
+                  <ul>
+                    <li>All data is encrypted using industry-standard protocols</li>
+                    <li>Payment information is never stored on our servers</li>
+                    <li>All transactions are processed through secure, trusted payment providers</li>
+                    <li>We use authentication protections including CSRF tokens and secure cookie practices</li>
+                    <li>Regular security audits and updates are performed on our platform</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Contact Section -->
+      <div class="text-center mt-5">
+        <h3>Still have questions?</h3>
+        <p class="mb-4">Our support team is ready to help you with any additional questions or concerns.</p>
+        <a href="mailto:support@vintagevault.co.uk" class="btn btn-primary">Contact Support</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
