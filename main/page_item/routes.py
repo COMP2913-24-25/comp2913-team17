@@ -226,6 +226,9 @@ def mark_notifications_read():
 @item_page.route('/<url>/watch', methods=['POST'])
 @login_required
 def watch_item(url):
+    if current_user.role != 1:
+        return jsonify({'error': 'Only general users can watch auctions'}), 403
+
     try:
         item = Item.query.filter_by(url=url).first_or_404()
         if item in current_user.watched_items:
