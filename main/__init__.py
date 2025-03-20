@@ -3,7 +3,7 @@
 import os
 import logging
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
@@ -150,6 +150,10 @@ def create_app():
     def load_user(user_id):
         from .models import User
         return db.session.query(User).get(int(user_id))
+    
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('404.html'), 404
 
     # Initialize rate limiter
     configure_limiter(app)
