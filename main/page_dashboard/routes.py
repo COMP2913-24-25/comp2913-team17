@@ -184,8 +184,13 @@ def handle_expert(now):
     """Handle the dashboard for an expert."""
     expert = {}
 
+    # Authentication assignments
     expert['pending'] = ExpertAssignment.query\
-        .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 1)).all()
+        .join(ExpertAssignment.authentication_request)\
+        .join(AuthenticationRequest.item)\
+        .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 1))\
+        .order_by(Item.auction_end.asc())\
+        .all()
     expert['complete'] = ExpertAssignment.query\
         .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 2)).all()
     
