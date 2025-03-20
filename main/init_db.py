@@ -2,7 +2,7 @@ from datetime import date, datetime, time, timedelta
 from .models import (
     AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability,
     Item, ManagerConfig, Message, Notification, User, Category, Image,
-    db
+    MessageImage, db
 )
 
 def populate_db(app):
@@ -53,14 +53,14 @@ def populate_db(app):
             seller_id=user1.id,
             title='Vintage Clock',
             description='An antique clock from 1900',
-            upload_date=now,
-            auction_start=now,
-            auction_end=now + timedelta(days=4),
+            upload_date=now - timedelta(days=1),
+            auction_start=now - timedelta(days=1),
+            auction_end=now + timedelta(days=3),
             minimum_price=100.00,
             category_id=cat1.id  # Assign to "Antiques"
         )
 
-        image1 = Image(
+        image1_1 = Image(
             url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014410_clock.jpg',
             item=item1
         )
@@ -69,19 +69,45 @@ def populate_db(app):
             seller_id=user2.id,
             title='Art Painting',
             description='A modern art painting with vibrant colours',
-            upload_date=now,
-            auction_start=now,
+            upload_date=now - timedelta(days=2),
+            auction_start=now - timedelta(days=2),
             auction_end=now + timedelta(minutes=1),
             minimum_price=200.00,
             category_id=cat2.id  # Assign to "Art"
         )
 
-        image2 = Image(
+        image2_1 = Image(
             url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014233_art.jpg',
             item=item2
         )
 
-        db.session.add_all([item1, item2, image1, image2])
+        item3 = Item(
+            seller_id=user2.id,
+            title='Vintage Camera',
+            description='A classic camera from the 1960s!',
+            upload_date=now - timedelta(days=3),
+            auction_start=now - timedelta(days=3),
+            auction_end=now + timedelta(minutes=2),
+            minimum_price=150.00,
+            category_id=cat3.id  # Assign to "Electronics"
+        )
+
+        image3_1 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250320_001933_camera1.jpg',
+            item=item3
+        )
+
+        image3_2 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250320_001933_camera2.jpg',
+            item=item3
+        )
+
+        image3_3 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250320_001935_camera3.jpg',
+            item=item3
+        )
+
+        db.session.add_all([item1, item2, image1_1, image2_1, item3, image3_1, image3_2, image3_3])
         db.session.commit()
 
         # Bids - Managers and experts cannot bid
@@ -97,28 +123,49 @@ def populate_db(app):
             bid_amount=210.00,
             bid_time=now
         )
-        db.session.add_all([bid1, bid2])
+        bid3 = Bid(
+            item_id=item3.item_id,
+            bidder_id=user1.id,
+            bid_amount=160.00,
+            bid_time=now
+        )
+
+        db.session.add_all([bid1, bid2, bid3])
         db.session.commit()
 
         # Authentication Request (for item2)
-        auth_req = AuthenticationRequest(
+        auth_req1 = AuthenticationRequest(
             item_id=item2.item_id,
             requester_id=user2.id,
-            request_date=now,
+            request_date=now - timedelta(days=2),
             fee_percent=5.00,
             status=1
         )
-        db.session.add(auth_req)
+        auth_req2 = AuthenticationRequest(
+            item_id=item3.item_id,
+            requester_id=user2.id,
+            request_date=now - timedelta(days=3),
+            fee_percent=5.00,
+            status=2
+        )
+
+        db.session.add_all([auth_req1, auth_req2])
         db.session.commit()
 
         # Expert Assignment (for the authentication request)
-        expert_assignment = ExpertAssignment(
-            request_id=auth_req.request_id,
+        expert_assignment1 = ExpertAssignment(
+            request_id=auth_req1.request_id,
             expert_id=user3.id,
-            assigned_date=now,
+            assigned_date=now - timedelta(days=1),
             status=1
         )
-        db.session.add(expert_assignment)
+        expert_assignment2 = ExpertAssignment(
+            request_id=auth_req2.request_id,
+            expert_id=user3.id,
+            assigned_date=now - timedelta(days=2),
+            status=2
+        )
+        db.session.add_all([expert_assignment1, expert_assignment2])
         db.session.commit()
     
         # Expert Availabilities (for user3)
@@ -134,18 +181,49 @@ def populate_db(app):
 
         # Messages (for the expert assignment)
         message1 = Message(
-            authentication_request_id=auth_req.request_id,
+            authentication_request_id=auth_req1.request_id,
             sender_id=user3.id,
             message_text='Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
-            sent_at=now + timedelta(hours=1)
+            sent_at=now - timedelta(days=1)
         )
         message2 = Message(
-            authentication_request_id=auth_req.request_id,
+            authentication_request_id=auth_req1.request_id,
             sender_id=user2.id,
             message_text='I\'ll provide the necessary information shortly.',
-            sent_at=now + timedelta(hours=2)
+            sent_at=now - timedelta(minutes=1)
         )
-        db.session.add_all([message1, message2])
+        message3 = Message(
+            authentication_request_id=auth_req2.request_id,
+            sender_id=user3.id,
+            message_text='Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
+            sent_at=now - timedelta(days=2)
+        )
+        message4 = Message(
+            authentication_request_id=auth_req2.request_id,
+            sender_id=user2.id,
+            message_text='Hi, here are some additional images.',
+            sent_at=now - timedelta(days=1)
+        )
+        db.session.add_all([message1, message2, message3, message4])
+        db.session.commit()
+
+        message4_image1 = MessageImage(
+            image_key='message_attachments/20250320_002304_auth1.jpg',
+            message_id=message4.message_id
+        )
+        message4_image2 = MessageImage(
+            image_key='message_attachments/20250320_002304_auth2.jpg',
+            message_id=message4.message_id
+        )
+        message4_image3 = MessageImage(
+            image_key='message_attachments/20250320_002305_auth3.jpg',
+            message_id=message4.message_id
+        )
+        message4_image4 = MessageImage(
+            image_key='message_attachments/20250320_002306_auth4.jpg',
+            message_id=message4.message_id
+        )
+        db.session.add_all([message4_image1, message4_image2, message4_image3, message4_image4])
         db.session.commit()
 
         # Notification (for user2)
@@ -153,7 +231,7 @@ def populate_db(app):
             user_id=user2.id,
             message='Your bid has been accepted.',
             is_read=False,
-            created_at=now + timedelta(days=2)
+            created_at=now
         )
         db.session.add(notification1)
         db.session.commit()
