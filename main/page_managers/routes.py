@@ -55,7 +55,8 @@ def expert_availability():
         weekly_availability=weekly_availability,
         current_time=current_time,
         current_slot=current_slot,
-        timedelta=timedelta
+        timedelta=timedelta,
+        categories=categories
     )
 
 @manager_page.route('/filter-experts', methods=['GET'])
