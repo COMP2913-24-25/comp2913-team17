@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
               // Check if the API response is in the expected format
               if (!Array.isArray(data)) {
                   console.error("Unexpected API response format:", data);
-                  tbody.innerHTML = `<tr><td colspan="100%">Unexpected error.</td></tr>`;
+                  tbody.innerHTML = `<tr><td colspan="100%">No experts found for this category.</td></tr>`;
                   return;
               }
       
@@ -93,36 +93,4 @@ document.addEventListener('DOMContentLoaded', function() {
           })
           .catch(error => console.error("Error fetching experts:", error));    
     });
-
-        categoryFilter.addEventListener('change', function() {
-          let category = categoryFilter.value;
-
-          fetch(`/manager/filter-experts?category_id=${category}`)
-              .then(response => response.json())
-              .then(data => {
-                  tbody.innerHTML = ""; // Clear current table rows
-
-                  data.forEach(expert => {
-                      let row = document.createElement("tr");
-                      let nameCell = document.createElement("td");
-                      nameCell.textContent = expert.username;
-                      row.appendChild(nameCell);
-
-                      // Add empty cells for each time slot
-                      let numColumns = document.querySelector("#dailyTable thead tr").children.length - 1;
-                      for (let i = 0; i < numColumns; i++) {
-                          let emptyCell = document.createElement("td");
-                          emptyCell.textContent = "-";
-                          row.appendChild(emptyCell);
-                      }
-
-                      tbody.appendChild(row);
-                  });
-
-                  // Ensure toggle filter is reset when new data is loaded
-                  filterOn = false;
-                  toggleBtn.textContent = "Show Only Currently Available Experts";
-              })
-              .catch(error => console.error("Error fetching experts:", error));
-      });
   });
