@@ -250,7 +250,7 @@
       <div id="payment-section">
         <h3>Payment</h3>
         <p>Your winning bid: £{{ "%.2f"|format(item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) }}</p>
-        <a href="{{ url_for('item_page.payment_page', url=item.url) }}" class="btn btn-primary">Make Payment</a>
+        <button class="checkout-button btn btn-primary" data-item-url="{{ item.url }}">Make Payment</button>
       </div>
       {% endif %}
       
@@ -277,9 +277,15 @@
           Auction ends on: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
         </p>
         {% if item.highest_bid() and item.highest_bid().bidder_id == current_user.id and not show_payment %}
-          <div class="alert alert-info mt-2 max-bid-alert">
-            You currently have the highest bid!
-          </div>
+          {% if item.winning_bid.bidder_id == current_user.id %}
+            <div class="alert alert-success mt-2 max-bid-alert">
+              You have paid for this item!
+            </div>
+          {% else %}
+            <div class="alert alert-info mt-2 max-bid-alert">
+              You currently have the highest bid!
+            </div>
+          {% endif %}
         {% endif %}
       </div>
   </div>
@@ -298,5 +304,12 @@
 <script src="{{ url_for('static', filename='js/watchAuction.js') }}"></script>
 <script src="{{ url_for('static', filename='js/focusImage.js') }}"></script>
 <script src="{{ url_for('static', filename='js/imagePopup.js') }}"></script>
+{% if show_payment %}
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    window.stripePublishableKey = "{{ stripe_publishable_key }}";
+  </script>
+  <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+{% endif %}
 {% endblock %}
   

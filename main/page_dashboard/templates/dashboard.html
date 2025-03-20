@@ -456,9 +456,9 @@
                   <a href="{{ url_for('item_page.index', url=item.url) }}" class="btn btn-sm btn-primary">
                     <i class="fas fa-eye"></i> View
                   </a>
-                  <a href="{{ url_for('item_page.payment_page', url=item.url) }}" class="btn btn-sm btn-success">
+                  <button class="checkout-button btn btn-sm btn-success" data-item-url="{{ item.url }}">
                     <i class="fas fa-credit-card"></i> Pay
-                  </a>
+                  </button>
                 </td>
               </tr>
               {% endfor %}
@@ -603,4 +603,5 @@
 <script src="{{ url_for('static', filename='js/managementCharts.js') }}"></script>
 <script src="{{ url_for('static', filename='js/changeExpertise.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 {% endblock %}
