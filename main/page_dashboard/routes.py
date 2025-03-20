@@ -40,151 +40,170 @@ def get_expertise(expert, item):
         for cat in expert.expert_categories:
             if cat.category_id == item.category_id:
                 return 'Expert'
-    return 'Not an Expert'
+    return 'Not Expert'
 
 
 @dashboard_page.route('/')
 @login_required
 def index():
-    """Dashboard page."""
-    manager = {}
-    expert = {}
-    user = {}
+    """Dashboard page that redirects to relevant dashboard based on user role."""
     now = datetime.now()
 
-    # Manager interface
     if current_user.role == 3:
-        # Check manager configuration and set if not present
-        manager['base_fee'] = ManagerConfig.query.filter_by(config_key='base_platform_fee').first()
-        manager['authenticated_fee'] = ManagerConfig.query.filter_by(config_key='authenticated_platform_fee').first()
-        manager['max_duration'] = ManagerConfig.query.filter_by(config_key='max_auction_duration').first()
+        return handle_manager(now)
+    elif current_user.role == 2:
+        return handle_expert(now)
+    else:
+        return handle_user(now)
 
-        if not manager['base_fee']:
-            base_fee = ManagerConfig(config_key='base_platform_fee', config_value='1.00', description='Base platform fee percentage for standard items')
-            db.session.add(base_fee)
-            manager['base_fee'] = base_fee.config_value
-        else:
-            manager['base_fee'] = float(manager['base_fee'].config_value)
 
-        if not manager['authenticated_fee']:
-            authenticated_fee = ManagerConfig(config_key='authenticated_platform_fee', config_value='5.00', description='Platform fee percentage for authenticated items')
-            db.session.add(authenticated_fee)
-            manager['authenticated_fee'] = authenticated_fee.config_value
-        else:
-            manager['authenticated_fee'] = float(manager['authenticated_fee'].config_value)
+def handle_manager(now):
+    """Handle the dashboard for a manager."""
+    manager = {}
 
-        if not manager['max_duration']:
-            max_duration = ManagerConfig(config_key='max_auction_duration', config_value='5', description='Maximum auction duration in days')
-            db.session.add(max_duration)
-            manager['max_duration'] = max_duration.config_value
-        else:
-            manager['max_duration'] = int(manager['max_duration'].config_value)
+    # Check manager configuration and set if not present
+    manager['base_fee'] = ManagerConfig.query.filter_by(config_key='base_platform_fee').first()
+    manager['authenticated_fee'] = ManagerConfig.query.filter_by(config_key='authenticated_platform_fee').first()
+    manager['max_duration'] = ManagerConfig.query.filter_by(config_key='max_auction_duration').first()
 
-        db.session.commit()
+    if not manager['base_fee']:
+        base_fee = ManagerConfig(config_key='base_platform_fee', config_value='1.00', description='Base platform fee percentage for standard items')
+        db.session.add(base_fee)
+        manager['base_fee'] = base_fee.config_value
+    else:
+        manager['base_fee'] = float(manager['base_fee'].config_value)
 
-        # Get all user roles except managers
-        manager['users'] = db.session.query(User).filter(User.role != 3).all()
+    if not manager['authenticated_fee']:
+        authenticated_fee = ManagerConfig(config_key='authenticated_platform_fee', config_value='5.00', description='Platform fee percentage for authenticated items')
+        db.session.add(authenticated_fee)
+        manager['authenticated_fee'] = authenticated_fee.config_value
+    else:
+        manager['authenticated_fee'] = float(manager['authenticated_fee'].config_value)
 
-        # Get all pending authentication requests without valid assignments
-        pending_requests = AuthenticationRequest.query\
+    if not manager['max_duration']:
+        max_duration = ManagerConfig(config_key='max_auction_duration', config_value='5', description='Maximum auction duration in days')
+        db.session.add(max_duration)
+        manager['max_duration'] = max_duration.config_value
+    else:
+        manager['max_duration'] = int(manager['max_duration'].config_value)
+
+    db.session.commit()
+
+    # Get all user roles except managers
+    manager['users'] = db.session.query(User).filter(User.role != 3).all()
+
+    # Get all pending authentication requests without valid assignments
+    pending_requests = AuthenticationRequest.query\
+        .filter(and_(
+            AuthenticationRequest.status == 1,
+            or_(
+                ~AuthenticationRequest.expert_assignments.any(),
+                ~AuthenticationRequest.expert_assignments.any(ExpertAssignment.status != 3)
+            )
+        )).all()
+    requests = []
+    for req in pending_requests:
+        eligible_experts = User.query\
             .filter(and_(
-                AuthenticationRequest.status == 1,
-                or_(
-                    ~AuthenticationRequest.expert_assignments.any(),
-                    ~AuthenticationRequest.expert_assignments.any(ExpertAssignment.status != 3)
+                User.role == 2,
+                User.id != req.requester_id,
+                ~User.expert_assignments.any(
+                    ExpertAssignment.request_id == req.request_id
                 )
             )).all()
-        requests = []
-        for req in pending_requests:
-            eligible_experts = User.query\
-                .filter(and_(
-                    User.role == 2,
-                    User.id != req.requester_id,
-                    ~User.expert_assignments.any(
-                        ExpertAssignment.request_id == req.request_id
-                    )
-                )).all()
-            requests.append((req, eligible_experts))
-        manager['requests'] = requests
+        requests.append((req, eligible_experts))
+    manager['requests'] = requests
 
-        # Statistics Calculations
-        # Total Revenue (sum of highest bids for completed auctions)
-        completed_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+    # Statistics Calculations
+    # Total Revenue (sum of highest bids for completed auctions)
+    completed_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+        .join(Bid, Item.item_id == Bid.item_id)\
+        .filter(Item.auction_end < now)\
+        .group_by(Item.item_id)\
+        .subquery()
+    total_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid)).scalar() or 0.0
+    manager['total_revenue'] = total_revenue
+
+    # Commission Income (based on base_fee and authenticated_fee)
+    authenticated_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid))\
+        .join(Item, Item.item_id == completed_auctions.c.item_id)\
+        .join(AuthenticationRequest, AuthenticationRequest.item_id == Item.item_id)\
+        .filter(AuthenticationRequest.status == 2)\
+        .scalar() or 0.0
+    
+    total_revenue = float(total_revenue)
+    authenticated_revenue = float(authenticated_revenue)
+    
+    standard_revenue = total_revenue - authenticated_revenue
+    commission_income = (standard_revenue * (manager['base_fee'] / 100)) + (authenticated_revenue * (manager['authenticated_fee'] / 100))
+    manager['commission_income'] = commission_income
+    manager['commission_percentage'] = round((commission_income / total_revenue) * 100, 2) if total_revenue > 0 else 0.0
+
+    # Active Auctions
+    manager['active_auctions'] = Item.query.filter(and_(Item.auction_start <= now, Item.auction_end >= now)).count()
+
+    # Total Users
+    manager['user_count'] = User.query.count()
+
+    # Revenue Data for Chart (monthly revenue for last 6 months)
+    manager['revenue_data'] = []
+    manager['revenue_labels'] = []
+
+    for i in range(5, -1, -1):
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i * 30)
+        end_date = start_date + timedelta(days=30)
+        
+        # Get highest bid for each ended auction in this period
+        monthly_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
-            .filter(Item.auction_end < now)\
+            .filter(and_(
+                Item.auction_end >= start_date, 
+                Item.auction_end < end_date,
+                Item.auction_end < now  # Only include ended auctions
+            ))\
             .group_by(Item.item_id)\
             .subquery()
-        total_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid)).scalar() or 0.0
-        manager['total_revenue'] = total_revenue
-
-        # Commission Income (based on base_fee and authenticated_fee)
-        authenticated_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid))\
-            .join(Item, Item.item_id == completed_auctions.c.item_id)\
-            .join(AuthenticationRequest, AuthenticationRequest.item_id == Item.item_id)\
-            .filter(AuthenticationRequest.status == 2)\
-            .scalar() or 0.0
         
-        total_revenue = float(total_revenue)
-        authenticated_revenue = float(authenticated_revenue)
+        # Sum the highest bids from each auction
+        monthly_revenue = db.session.query(func.sum(monthly_auctions.c.highest_bid)).scalar()
         
-        standard_revenue = total_revenue - authenticated_revenue
-        commission_income = (standard_revenue * (manager['base_fee'] / 100)) + (authenticated_revenue * (manager['authenticated_fee'] / 100))
-        manager['commission_income'] = commission_income
-        manager['commission_percentage'] = round((commission_income / total_revenue) * 100, 2) if total_revenue > 0 else 0.0
+        # Convert None to 0.0 for JSON
+        if monthly_revenue is None:
+            monthly_revenue = 0.0
+        else:
+            # Ensure the value is float
+            monthly_revenue = float(monthly_revenue)
 
-        # Active Auctions
-        manager['active_auctions'] = Item.query.filter(and_(Item.auction_start <= now, Item.auction_end >= now)).count()
+        manager['revenue_data'].append(monthly_revenue)
+        manager['revenue_labels'].append(start_date.strftime('%b'))
 
-        # Total Users
-        manager['user_count'] = User.query.count()
+    return render_template('dashboard_manager.html', manager=manager, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
-        # Revenue Data for Chart (monthly revenue for last 6 months)
-        manager['revenue_data'] = []
-        manager['revenue_labels'] = []
 
-        for i in range(5, -1, -1):
-            start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i * 30)
-            end_date = start_date + timedelta(days=30)
-            
-            # Get highest bid for each ended auction in this period
-            monthly_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
-                .join(Bid, Item.item_id == Bid.item_id)\
-                .filter(and_(
-                    Item.auction_end >= start_date, 
-                    Item.auction_end < end_date,
-                    Item.auction_end < now  # Only include ended auctions
-                ))\
-                .group_by(Item.item_id)\
-                .subquery()
-            
-            # Sum the highest bids from each auction
-            monthly_revenue = db.session.query(func.sum(monthly_auctions.c.highest_bid)).scalar()
-            
-            # Convert None to 0.0 for JSON
-            if monthly_revenue is None:
-                monthly_revenue = 0.0
-            else:
-                # Ensure the value is float
-                monthly_revenue = float(monthly_revenue)
+def handle_expert(now):
+    """Handle the dashboard for an expert."""
+    expert = {}
+
+    expert['pending'] = ExpertAssignment.query\
+        .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 1)).all()
+    expert['complete'] = ExpertAssignment.query\
+        .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 2)).all()
     
-            manager['revenue_data'].append(monthly_revenue)
-            manager['revenue_labels'].append(start_date.strftime('%b'))
+    # Get a list of expert's experise as well as all categories
+    expert['categories'] = Category.query.order_by(Category.name).all()
+    expert['expertise'] = Category.query.join(
+        ExpertCategory, 
+        Category.id == ExpertCategory.category_id
+    ).filter(
+        ExpertCategory.expert_id == current_user.id
+    ).all()
 
-    # Expert interface
-    elif current_user.role == 2:
-        expert['pending'] = ExpertAssignment.query\
-            .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 1)).all()
-        expert['complete'] = ExpertAssignment.query\
-            .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 2)).all()
-        
-        # Get a list of expert's experise as well as all categories
-        expert['categories'] = Category.query.order_by(Category.name).all()
-        expert['expertise'] = Category.query.join(
-            ExpertCategory, 
-            Category.id == ExpertCategory.category_id
-        ).filter(
-            ExpertCategory.expert_id == current_user.id
-        ).all()
+    return render_template('dashboard_expert.html', expert=expert, now=now)
+
+
+def handle_user(now):
+    """Handle the dashboard for a user."""
+    user = {}
 
     # General User interface, all users can see their own auctions
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
@@ -221,7 +240,8 @@ def index():
         'participated_auctions': user['participated_auctions']
     }
 
-    return render_template('dashboard.html', manager=manager, expert=expert, user=user_data, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
+    return render_template('dashboard_user.html', user=user_data, now=now)
+
 
 @dashboard_page.route('/api/users/<user_id>/role', methods=['PATCH'])
 @login_required
