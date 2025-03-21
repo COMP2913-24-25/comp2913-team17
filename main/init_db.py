@@ -388,45 +388,102 @@ def populate_db(app):
                 current_bid = new_bid_amount
 
         # Authentication Requests for auctions (except certain titles)
-        excluded_titles = ['Electric Guitar', 'Designer Jacket', 'Rare Comic Book', 'iPhone']
-        regular_users = [user1, user2, user3, user4, user5]
+        excluded_titles = ['Ferrari', 'Moby Dick: A First Edition', 'Modern Sculpture', 'Electric Guitar', 'Designer Jacket', 'Vintage Vase', 'iPhone']
         for auction in items:
             if auction.title not in excluded_titles:
-                # Choose a requester (a regular user) who is not the seller
-                possible_requesters = [u for u in regular_users if u.id != auction.seller_id]
-                if possible_requesters:
-                    requester = random.choice(possible_requesters)
-                    auth_req = AuthenticationRequest(
-                        item_id=auction.item_id,
-                        requester_id=requester.id,
-                        request_date=now,
-                        fee_percent=5.00,
-                        status=1  # Pending
-                    )
-                    db.session.add(auth_req)
+                auth_req = AuthenticationRequest(
+                    item_id=auction.item_id,
+                    requester_id=auction.seller_id,
+                    request_date=now,
+                    fee_percent=5.00,
+                    status=1  # Pending status
+                )
+                db.session.add(auth_req)
         db.session.commit()
 
 
-        # Authentication Request (for item2)
-        auth_req = AuthenticationRequest(
-            item_id=auction2.item_id,
-            requester_id=user2.id,
+        # ---------------------------
+        # Mark Specific Auctions as Authenticated and Create Expert Assignments
+        # We want to mark the following auctions as authenticated:
+        # - Art Painting (auction2)
+        # - Modern Sculpture (auction4)
+        # - Moby Dick: A First Edition (auction9)
+        # - Ferrari (auction11)
+        # ---------------------------
+        # For Art Painting:
+        auth_req_art = AuthenticationRequest.query.filter_by(item_id=auction2.item_id).first()
+        if auth_req_art:
+            auth_req_art.status = 2  # Authenticated
+            db.session.commit()
+            if auth_req_art.expert_assignments:
+                auth_req_art.expert_assignments[0].status = 2
+            else:
+                expert_assignment_art = ExpertAssignment(
+                    request_id=auth_req_art.request_id,
+                    expert_id=user6.id,  # Assign Charlie (for example)
+                    assigned_date=now,
+                    status=2
+                )
+                db.session.add(expert_assignment_art)
+            db.session.commit()
+
+        # For Modern Sculpture:
+        auth_req_sculpt = AuthenticationRequest(
+            item_id=auction4.item_id,
+            requester_id=auction4.seller_id,
             request_date=now,
             fee_percent=5.00,
-            status=1
+            status=2  # Authenticated
         )
-        db.session.add(auth_req)
+        db.session.add(auth_req_sculpt)
+        db.session.commit()
+        expert_assignment_sculpt = ExpertAssignment(
+            request_id=auth_req_sculpt.request_id,
+            expert_id=user7.id,  # Assign Emma (for example)
+            assigned_date=now,
+            status=2
+        )
+        db.session.add(expert_assignment_sculpt)
         db.session.commit()
 
-        # Expert Assignment (for the authentication request)
-        expert_assignment = ExpertAssignment(
-            request_id=auth_req.request_id,
-            expert_id=user6.id,
-            assigned_date=now,
-            status=1
+        # For Moby Dick:
+        auth_req_moby = AuthenticationRequest(
+            item_id=auction9.item_id,
+            requester_id=auction9.seller_id,
+            request_date=now,
+            fee_percent=5.00,
+            status=2  # Authenticated
         )
-        db.session.add(expert_assignment)
+        db.session.add(auth_req_moby)
         db.session.commit()
+        expert_assignment_moby = ExpertAssignment(
+            request_id=auth_req_moby.request_id,
+            expert_id=user8.id,  # Assign Oliver (for example)
+            assigned_date=now,
+            status=2
+        )
+        db.session.add(expert_assignment_moby)
+        db.session.commit()
+
+        # For Ferrari:
+        auth_req_ferrari = AuthenticationRequest(
+            item_id=auction11.item_id,
+            requester_id=auction11.seller_id,
+            request_date=now,
+            fee_percent=5.00,
+            status=2  # Authenticated
+        )
+        db.session.add(auth_req_ferrari)
+        db.session.commit()
+        expert_assignment_ferrari = ExpertAssignment(
+            request_id=auth_req_ferrari.request_id,
+            expert_id=user6.id,  # Assign Charlie (for example)
+            assigned_date=now,
+            status=2
+        )
+        db.session.add(expert_assignment_ferrari)
+        db.session.commit()
+
     
         # For Charlie (user6) – next 14 days:
         for i in range(14):
@@ -502,16 +559,6 @@ def populate_db(app):
             sent_at=now + timedelta(hours=2)
         )
         db.session.add_all([message1, message2])
-        db.session.commit()
-
-        # Notification (for user2)
-        notification1 = Notification(
-            user_id=user2.id,
-            message='Your bid has been accepted.',
-            is_read=False,
-            created_at=now + timedelta(days=2)
-        )
-        db.session.add(notification1)
         db.session.commit()
 
         # Manager Config
