@@ -58,7 +58,7 @@
 
       <!-- Details Column -->
       <div class="col-md-6">
-        <h1 class="mb-2">{{ item.title | capitalize }}</h1>
+        <h1 class="mb-2 auction-page-title">{{ item.title | capitalize }}</h1>
 
       <!-- Auction Status   -->
       <div class="mb-4">
@@ -102,7 +102,7 @@
       <div class="mb-4">
         <h5>Seller Information</h5>
         <div>Posted by: {{ item.seller.username }}</div>
-        <div><small class="text-muted">Upload date: {{ item.upload_date.strftime('%Y-%m-%d %H:%M') }}</small></div>
+        <div><small class="text-muted">Uploaded: {{ item.upload_date.strftime('%d/%m/%Y, %H:%M') }}</small></div>
       </div>
       <hr>
 
@@ -126,13 +126,14 @@
               {% if not is_auction_over %}
               <span class="countdown-label">Ends in:</span> 
               {% endif %}
+              {% if not is_auction_over %}
               <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">
                 {{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}
               </span>
-              {% if is_auction_over %}
-              <span>
-                {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
-              </span>
+              {% else %}
+              <p class="my-1">
+                Auction Ended: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
+              </p>
               {% endif %}
             </div>
           </div>
@@ -250,7 +251,7 @@
       <div id="payment-section">
         <h3>Payment</h3>
         <p>Your winning bid: £{{ "%.2f"|format(item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) }}</p>
-        <button class="checkout-button btn btn-primary" data-item-url="{{ item.url }}">Make Payment</button>
+        <button class="checkout-button btn btn-primary mb-2" data-item-url="{{ item.url }}">Make Payment</button>
       </div>
       {% endif %}
       
@@ -272,10 +273,12 @@
       </div>
 
       <!-- Auction end date -->
-      <div class="mt-3">
-        <p class="text-muted small-end">
-          Auction ends on: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
-        </p>
+        <div class="mt-1">
+          {% if not is_auction_over %}
+          <p class="text-muted small-end">
+            Auction ends: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
+          </p>
+          {% endif %}
         {% if item.highest_bid() and item.highest_bid().bidder_id == current_user.id and not show_payment %}
           {% if item.winning_bid.bidder_id == current_user.id %}
             <div class="alert alert-success mt-2 max-bid-alert">

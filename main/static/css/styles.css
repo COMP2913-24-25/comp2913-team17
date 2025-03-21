@@ -261,6 +261,10 @@ h1, h2, h3, h4, h5 {
   background-color: var(--tertiary-color);
 }
 
+.auction-page-title {
+  word-wrap: break-word;
+}
+
 /* Flashes */
 .alert {
   border: 1.5px solid var(--primary-color);

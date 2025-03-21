@@ -127,7 +127,7 @@
 }
 
 .auth-table th {
-  background-color: var(--tertiary-color);
+  background-color: var(--seconary-color);
   color: var(--primary-color);
   font-family: var(--font-mono);
   font-weight: 700;
