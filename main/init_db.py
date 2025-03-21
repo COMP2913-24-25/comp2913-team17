@@ -1,4 +1,6 @@
 from datetime import date, datetime, time, timedelta
+from decimal import Decimal
+import random
 from .models import (
     AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability,
     Item, ManagerConfig, Message, Notification, User, Category, Image,
@@ -290,12 +292,12 @@ def populate_db(app):
         # Auction 11: Sports Car (ended)
         auction11 = Item(
             seller_id=user1.id,
-            title='Ferarri',
+            title='Ferrari',
             description='A vintage sports car in pristine condition.',
             upload_date=now - timedelta(days=10),
             auction_start=now - timedelta(days=10),
             auction_end=now - timedelta(days=1),
-            minimum_price=51700000.00,
+            minimum_price=50000000.00,
             category_id=cat9.id
         )
         image19 = Image(
@@ -336,19 +338,54 @@ def populate_db(app):
 
         # Bids - Managers and experts cannot bid
         bid1 = Bid(
-            item_id=auction1.item_id,
+            item_id=auction11.item_id,
             bidder_id=user2.id,
-            bid_amount=120.00,
+            bid_amount=51000000.00,
             bid_time=now
         )
         bid2 = Bid(
-            item_id=auction2.item_id,
+            item_id=auction11.item_id,
             bidder_id=user1.id,
-            bid_amount=210.00,
+            bid_amount=51700000.00,
             bid_time=now
         )
         db.session.add_all([bid1, bid2])
         db.session.commit()
+
+         # -------------------------
+        # Add Additional Fake Bids for Auctions (except Antique Desk and Electric Guitar)
+        # -------------------------
+        regular_users = [user1, user2, user3, user4, user5]
+        for auction in items:
+            if auction.title in ['Antique Desk', 'Electric Guitar', 'Ferrari']:
+                continue
+
+            # Determine total number of bids desired (between 1 and 3)
+            if auction.highest_bid():
+                total_bids = random.randint(1, 3)
+                additional_bids = total_bids - 1  # one bid already exists
+            else:
+                total_bids = random.randint(1, 3)
+                additional_bids = total_bids
+
+            # Set the starting bid amount: highest bid if exists; otherwise, the minimum price.
+            current_bid = auction.highest_bid().bid_amount if auction.highest_bid() else auction.minimum_price
+
+            for _ in range(additional_bids):
+                possible_bidders = [u for u in regular_users if u.id != auction.seller_id]
+                bidder = random.choice(possible_bidders)
+                # Increase the current bid by a random 5% to 15%
+                increment = current_bid * Decimal(str(random.uniform(0.05, 0.15)))
+                new_bid_amount = current_bid + increment
+                new_bid = Bid(
+                    item_id=auction.item_id,
+                    bidder_id=bidder.id,
+                    bid_amount=new_bid_amount,
+                    bid_time=now + timedelta(minutes=random.randint(1, 60))
+                )
+                db.session.add(new_bid)
+                db.session.commit()
+                current_bid = new_bid_amount
 
         # Authentication Request (for item2)
         auth_req = AuthenticationRequest(
