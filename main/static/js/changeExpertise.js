@@ -13,7 +13,7 @@ $(document).ready(function() {
     currentExpertiseDiv.empty();
     
     if (expertiseIds.length === 0) {
-      currentExpertiseDiv.html('<p class="text-muted">No areas of expertise selected yet.</p>');
+      currentExpertiseDiv.html('<p class="text-muted mono text-center my-1">No areas of expertise selected yet.</p>');
       return;
     }
     
@@ -25,7 +25,7 @@ $(document).ready(function() {
         const description = checkbox.next('label').attr('title') || '';
         
         currentExpertiseDiv.append(`
-          <span class="badge bg-primary me-2 mb-2" title="${description}">${name}</span>
+          <span class="badge expertise-badge" title="${description}">${name}</span>
         `);
       }
     });

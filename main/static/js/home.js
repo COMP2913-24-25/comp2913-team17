@@ -196,9 +196,10 @@ $(document).ready(function() {
         currentText = currentWord.substring(0, currentText.length + 1);
         typingSpeed = 150;
       }
-      
-      // Update the displayed text
-      wordElement.text(currentText);
+
+      // Ensure element never displays as completely empty or the layout will break
+      const displayText = currentText === '' ? '\u200B' : currentText;
+      wordElement.text(displayText);
       
       // Word cycling logic
       if (!isDeleting && currentText === currentWord) {

@@ -1,18 +1,19 @@
 $(document).ready(function() {
   // Update availability text when an expert is selected
   $('.expert-select').on('change', function() {
-    var availability = $(this).find('option:selected').data('availability');
-    $(this).siblings('.availability-text').text(availability);
+    const availability = $(this).find('option:selected').data('availability');
+    $(this).closest('.d-flex.flex-column').find('.availability-text').text(availability);
 
     const expertise = $(this).find('option:selected').data('expertise');
-    const expertiseText = $(this).siblings('.expertise-text');
-    expertiseText.text(expertise);
+    const expertiseText = $(this).closest('.d-flex').find('.expertise-text');
 
     // Update the colouring of the pill
     if (expertise === 'Expert') {
+      expertiseText.html('<i class="fas fa-check"></i> ' + expertise);
       expertiseText.removeClass('bg-danger');
       expertiseText.addClass('bg-success');
     } else {
+      expertiseText.html('<i class="fas fa-times"></i> ' + expertise);
       expertiseText.removeClass('bg-success');
       expertiseText.addClass('bg-danger');
     }
@@ -35,8 +36,24 @@ $(document).ready(function() {
       const data = await response.json();
       
       if (response.ok) {
-        // Remove row on success
-        row.remove();
+        // Show success message
+        alert('Expert assigned successfully');
+
+        // Remove the row with animation
+        row.fadeOut(300, function() {
+          $(this).remove();
+          
+          // Check if the table is now empty
+          if ($('#auth-requests-card table tbody tr').length === 0) {
+            // Replace the auth-card with empty state
+            $('#auth-requests-card').replaceWith(`
+              <div class="empty-state">
+                <i class="fas fa-clipboard-check"></i>
+                <p class="empty-state-text">No pending authentication requests at this time.</p>
+              </div>
+            `);
+          }
+        });
       } else {
         // Show error and do not remove the row
         alert(data.error || "Error assigning expert.");

@@ -114,11 +114,13 @@
             </a>
           </div>
           <!-- Create Auction Button -->
-          <div class="nav-item me-2">
-            <a class="btn btn-primary" href="{{ url_for('create_page.index') }}">
-              <i class="fas fa-plus-circle me-1"></i> CREATE AUCTION
-            </a>
-          </div> 
+          {% if current_user.is_authenticated and current_user.role == 1 %}
+            <div class="nav-item me-2">
+              <a class="btn btn-primary" href="{{ url_for('create_page.index') }}">
+                <i class="fas fa-plus-circle me-1"></i> CREATE AUCTION
+              </a>
+            </div>
+          {% endif %}
           <!-- User Dropdown -->
           <div class="nav-item dropdown">
             <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -239,7 +241,7 @@
     <div class="cookie-content">
       <div class="cookie-text">
         <h6>Cookie Consent</h6>
-        <p>We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.</p>
+        <p>We use cookies to enhance your browsing experience and analyse our traffic. By clicking "Accept All", you consent to our use of cookies.</p>
       </div>
       <div class="cookie-buttons">
         <button id="reject-cookies" class="btn btn-outline-light btn-sm">Reject</button>

@@ -57,7 +57,7 @@ h1, h2, h3, h4, h5 {
 /* Navigation */
 .navbar {
   padding: 1.5rem 0;
-  border-bottom: 2px solid var(--primary-color);
+  border-bottom: 1.5px solid var(--primary-color);
   background-color: var(--primary-color);
 }
 
@@ -205,7 +205,7 @@ h1, h2, h3, h4, h5 {
 .btn-update {
   background-color: var(--tertiary-color);
   color: var(--primary-color);
-  border: 2px solid var(--primary-color);
+  border: 1.5px solid var(--primary-color);
   opacity: 1;
   transition: all 0.3s ease;
 }
@@ -239,7 +239,7 @@ h1, h2, h3, h4, h5 {
 
 .dropdown-menu {
   border-radius: 0;
-  border: 2px solid var(--primary-color);
+  border: 1.5px solid var(--primary-color);
   box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
   padding: 0;
 }
@@ -261,9 +261,13 @@ h1, h2, h3, h4, h5 {
   background-color: var(--tertiary-color);
 }
 
+.auction-page-title {
+  word-wrap: break-word;
+}
+
 /* Flashes */
 .alert {
-  border: 2px solid var(--primary-color);
+  border: 1.5px solid var(--primary-color);
   border-radius: 0;
   font-family: var(--font-mono);
 }
@@ -303,7 +307,7 @@ h1, h2, h3, h4, h5 {
 /* Badges */
 .badges {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
@@ -313,6 +317,7 @@ h1, h2, h3, h4, h5 {
   font-weight: 500;
   letter-spacing: 0.5px;
   padding: 0.5em 0.7em;
+  width: fit-content;
 }
 
 /* Animations & Effects */
@@ -397,7 +402,7 @@ h1, h2, h3, h4, h5 {
 .search-container {
   background-color: white;
   padding: 2rem;
-  border: 2px solid var(--primary-color);
+  border: 1.5px solid var(--primary-color);
   margin-bottom: 2rem;
   position: relative;
 }
@@ -680,7 +685,7 @@ h1, h2, h3, h4, h5 {
   /* Search and filter section */
   .search-filter-wrapper {
     flex-wrap: wrap;
-    border: 2px solid var(--primary-color);
+    border: 1.5px solid var(--primary-color);
   }
   
   #search-bar, .filter-dropdown {
@@ -700,7 +705,7 @@ h1, h2, h3, h4, h5 {
   #type-filter,
   #category-filter {
     border: none !important;
-    border-top: 2px solid var(--primary-color) !important;
+    border-top: 1.5px solid var(--primary-color) !important;
   }
   
   .hero-title {

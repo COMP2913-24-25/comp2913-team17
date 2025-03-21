@@ -14,6 +14,10 @@ from ..models import db, Item, AuthenticationRequest, ManagerConfig, Image
 @login_required
 def index():
     """Render the auction creation page."""
+    if current_user.role != 1:
+        flash('Only general users can create auctions.', 'danger')
+        return redirect(url_for('home_page.index'))
+
     try:
         base_fee = float(
             ManagerConfig.query.filter_by(config_key='base_platform_fee').first().config_value

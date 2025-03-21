@@ -255,6 +255,13 @@ def oauth2_callback(provider):
     if user is None:
         flash('You must register before using Google login')
         return redirect(url_for('auth_page.register', email=email))
+    
+    # Check if account is locked
+    if user.is_account_locked():
+        form = LoginForm()
+        remaining_time = (user.locked_until - datetime.now()).total_seconds() / 60
+        flash(f'Account is temporarily locked. Try again in {int(remaining_time)} minutes.', 'danger')
+        return render_template('login.html', form=form)
 
     # Log the user in
     login_user(user)

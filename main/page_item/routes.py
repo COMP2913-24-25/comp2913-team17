@@ -66,16 +66,19 @@ def index(url):
 
     return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed,
                            suggested_bid=suggested_bid, bids=bids, show_payment=show_payment, 
-                           is_auction_over=is_auction_over, is_watching=is_watching)
+                           is_auction_over=is_auction_over, stripe_publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY'), is_watching=is_watching)
 
 # Update the watch/unwatch routes to use a more reliable method for checking the relationship
 @item_page.route('/<url>/watch', methods=['POST'])
 @login_required
 def watch_item(url):
+    if current_user.role != 1:
+        return jsonify({'error': 'Only general users can watch auctions'}), 403
+    
     try:
         item = Item.query.filter_by(url=url).first_or_404()
         
-        # Fix how we check if the item is being watched
+        # Check if the item is being watched
         if item in current_user.watched_items.all():
             return jsonify({'error': 'Already watching this auction'}), 400
         current_user.watched_items.append(item)
@@ -89,10 +92,13 @@ def watch_item(url):
 @item_page.route('/<url>/unwatch', methods=['POST'])
 @login_required
 def unwatch_item(url):
+    if current_user.role != 1:
+        return jsonify({'error': 'Only general users can watch auctions'}), 403
+    
     try:
         item = Item.query.filter_by(url=url).first_or_404()
         
-        # Fix how we check if the item is being watched
+        # Check if the item is being watched
         if item not in current_user.watched_items.all():
             return jsonify({'error': 'Not watching this auction'}), 400
         current_user.watched_items.remove(item)
@@ -163,7 +169,6 @@ def place_bid(url):
         db.session.rollback()
         print(f"Error placing bid: {str(e)}")
         return jsonify({'error': 'Error placing bid. Please try again.'}), 500
-
 
 def check_ended_auctions():
     """Check for auctions that have ended but don't have a winner yet."""
@@ -243,7 +248,6 @@ def check_ended_auctions():
         except Exception as e:
             logger.error(f"Error finalising auction {item.item_id}: {e}")
 
-
 @item_page.route('/api/notifications/mark-read', methods=['POST'])
 @login_required
 def mark_notifications_read():
@@ -263,17 +267,6 @@ def mark_notifications_read():
         logger.error(f"Error marking specific notifications as read: {str(e)}")
         return jsonify({'error': 'Failed to mark notifications as read'}), 500
 
-@item_page.route('/<url>/payment', methods=['GET'])
-@login_required
-def payment_page(url):
-    item = Item.query.filter_by(url=url).first_or_404()
-    is_auction_over = datetime.now() >= item.auction_end
-    is_winner = current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id
-    if not is_auction_over or not is_winner:
-        flash("You are not authorised to access the payment page.", "danger")
-        return redirect(url_for('item_page.index', url=url))
-    return render_template('payment.html', item=item, stripe_publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY'))
-
 @item_page.route('/<url>/create-payment-intent', methods=['POST'])
 @login_required
 def create_payment_intent(url):
@@ -281,6 +274,12 @@ def create_payment_intent(url):
     item = Item.query.filter_by(url=url).first_or_404()
     amount = int(((item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) * 100))
     
+    is_auction_over = datetime.now() >= item.auction_end
+    is_winner = current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id
+    if not is_auction_over or not is_winner:
+        flash("You are not authorised to access the payment page.", "danger")
+        return redirect(url_for('item_page.index', url=url))
+
     # Ensure the current user has an associated Stripe Customer
     if not current_user.stripe_customer_id:
         create_stripe_customer(current_user)
@@ -309,8 +308,6 @@ def create_payment_intent(url):
         return jsonify({'clientSecret': intent.client_secret})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
 
 @item_page.route('/<url>/mark-won', methods=['POST'])
 @login_required
@@ -362,12 +359,31 @@ def set_default_payment_method(url):
 def create_checkout_session(url):
     stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
     item = Item.query.filter_by(url=url).first_or_404()
+
+    is_auction_over = datetime.now() >= item.auction_end
+    is_winner = current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id
+    if not is_auction_over or not is_winner:
+        flash("You are not authorised to access the payment page.", "danger")
+        return redirect(url_for('item_page.index', url=url))
+
+    # Get return URL from request data if available
+    data = request.get_json() or {}
+    return_url = data.get('returnUrl')
     
     # Ensure the customer has an associated Stripe Customer
     if not current_user.stripe_customer_id:
         create_stripe_customer(current_user)
     
     try:
+        # Set default success and cancel URLs
+        success_url = url_for('item_page.redirect_after_payment', url=item.url, _external=True, _scheme='http')
+        cancel_url = url_for('item_page.index', url=item.url, _external=True, _scheme='http')
+        
+        # Override with return URL if provided
+        if return_url:
+            success_url = f"{return_url}{'&' if '?' in return_url else '?'}payment_status=success"
+            cancel_url = f"{return_url}{'&' if '?' in return_url else '?'}payment_status=canceled"
+
         session = stripe.checkout.Session.create(
             mode='payment',
             customer=current_user.stripe_customer_id,
@@ -382,15 +398,14 @@ def create_checkout_session(url):
                 },
                 'quantity': 1,
             }],
-            success_url=url_for('item_page.redirect_after_payment', url=item.url, _external=True, _scheme='http'),
-            cancel_url=url_for('item_page.index', url=item.url, _external=True, _scheme='http'),
+            success_url=success_url,
+            cancel_url=cancel_url,
             payment_intent_data={
                 'setup_future_usage': 'off_session'
             },
             saved_payment_method_options={
                 'payment_method_save': 'enabled'
             },
-            # *** Add metadata here ***
             metadata={'item_id': str(item.item_id)}
         )
 
