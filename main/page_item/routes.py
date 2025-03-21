@@ -66,7 +66,7 @@ def index(url):
 
     return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed,
                            suggested_bid=suggested_bid, bids=bids, show_payment=show_payment, 
-                           is_auction_over=is_auction_over, stripe_publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY'))
+                           is_auction_over=is_auction_over, stripe_publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY'), is_watching=is_watching)
 
 # Update the watch/unwatch routes to use a more reliable method for checking the relationship
 @item_page.route('/<url>/watch', methods=['POST'])
