@@ -3,7 +3,7 @@ from decimal import Decimal
 import random
 from .models import (
     AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability,
-    Item, ManagerConfig, Message, Notification, User, Category, Image,
+    Item, ManagerConfig, Message, MessageImage, Notification, User, Category, Image,
     db
 )
 
@@ -388,7 +388,7 @@ def populate_db(app):
                 current_bid = new_bid_amount
 
         # Authentication Requests for auctions (except certain titles)
-        excluded_titles = ['Ferrari', 'Moby Dick: A First Edition', 'Modern Sculpture', 'Electric Guitar', 'Designer Jacket', 'Vintage Vase', 'iPhone']
+        excluded_titles = ['Rare Comic Book', 'Ferrari', 'Moby Dick: A First Edition', 'Modern Sculpture', 'Electric Guitar', 'Designer Jacket', 'Vintage Vase', 'iPhone']
         for auction in items:
             if auction.title not in excluded_titles:
                 auth_req = AuthenticationRequest(
@@ -400,7 +400,6 @@ def populate_db(app):
                 )
                 db.session.add(auth_req)
         db.session.commit()
-
 
         # ---------------------------
         # Mark Specific Auctions as Authenticated and Create Expert Assignments
@@ -420,11 +419,38 @@ def populate_db(app):
             else:
                 expert_assignment_art = ExpertAssignment(
                     request_id=auth_req_art.request_id,
-                    expert_id=user6.id,  # Assign Charlie (for example)
+                    expert_id=user6.id,  # Assign Charlie for example
                     assigned_date=now,
                     status=2
                 )
                 db.session.add(expert_assignment_art)
+            db.session.commit()
+
+            # Add seller message with image for Art Painting
+            message_seller_art = Message(
+                authentication_request_id=auth_req_art.request_id,
+                sender_id=auction2.seller_id,
+                message_text="Here are more details about my artwork. Please see the attached image for reference.",
+                sent_at=now + timedelta(hours=1, minutes=30)
+            )
+            db.session.add(message_seller_art)
+            db.session.commit()
+
+            message_image_art = MessageImage(
+                message_id=message_seller_art.message_id,
+                image_key="message_attachments/20250321_130844_ARTJPG.jpg"  # S3 key for the Art image
+            )
+            db.session.add(message_image_art)
+            db.session.commit()
+
+            # Add expert response for Art Painting
+            message_expert_art = Message(
+                authentication_request_id=auth_req_art.request_id,
+                sender_id=user6.id,
+                message_text="Thank you for the information. Your artwork is now authenticated.",
+                sent_at=now + timedelta(hours=2, minutes=15)
+            )
+            db.session.add(message_expert_art)
             db.session.commit()
 
         # For Modern Sculpture:
@@ -439,14 +465,41 @@ def populate_db(app):
         db.session.commit()
         expert_assignment_sculpt = ExpertAssignment(
             request_id=auth_req_sculpt.request_id,
-            expert_id=user7.id,  # Assign Emma (for example)
+            expert_id=user7.id,   # Assign Emma for sculpture
             assigned_date=now,
             status=2
         )
         db.session.add(expert_assignment_sculpt)
         db.session.commit()
 
-        # For Moby Dick:
+        # Add seller message with image for Modern Sculpture
+        message_seller_sculpt = Message(
+            authentication_request_id=auth_req_sculpt.request_id,
+            sender_id=auction4.seller_id,
+            message_text="Please find attached a detailed view of my sculpture.",
+            sent_at=now + timedelta(hours=1, minutes=30)
+        )
+        db.session.add(message_seller_sculpt)
+        db.session.commit()
+
+        message_image_sculpt = MessageImage(
+            message_id=message_seller_sculpt.message_id,
+            image_key="message_attachments/20250321_130846_SCULPTURE.jpg"  # S3 key for the Sculpture image
+        )
+        db.session.add(message_image_sculpt)
+        db.session.commit()
+
+        # Add expert response for Modern Sculpture
+        message_expert_sculpt = Message(
+            authentication_request_id=auth_req_sculpt.request_id,
+            sender_id=user7.id,
+            message_text="Thank you for the details. Your sculpture is authenticated.",
+            sent_at=now + timedelta(hours=2, minutes=15)
+        )
+        db.session.add(message_expert_sculpt)
+        db.session.commit()
+
+        # For Moby Dick: A First Edition
         auth_req_moby = AuthenticationRequest(
             item_id=auction9.item_id,
             requester_id=auction9.seller_id,
@@ -458,11 +511,38 @@ def populate_db(app):
         db.session.commit()
         expert_assignment_moby = ExpertAssignment(
             request_id=auth_req_moby.request_id,
-            expert_id=user8.id,  # Assign Oliver (for example)
+            expert_id=user8.id,   # Assign Oliver for Moby Dick
             assigned_date=now,
             status=2
         )
         db.session.add(expert_assignment_moby)
+        db.session.commit()
+
+        # Add seller message with image for Moby Dick
+        message_seller_moby = Message(
+            authentication_request_id=auth_req_moby.request_id,
+            sender_id=auction9.seller_id,
+            message_text="Please see the attached close-up of my rare first edition.",
+            sent_at=now + timedelta(hours=1, minutes=30)
+        )
+        db.session.add(message_seller_moby)
+        db.session.commit()
+
+        message_image_moby = MessageImage(
+            message_id=message_seller_moby.message_id,
+            image_key="message_attachments/20250321_130846_MOBYDICK.jpg"  # S3 key for the Moby Dick image
+        )
+        db.session.add(message_image_moby)
+        db.session.commit()
+
+        # Add expert response for Moby Dick
+        message_expert_moby = Message(
+            authentication_request_id=auth_req_moby.request_id,
+            sender_id=user8.id,
+            message_text="Thank you for providing the image and details. Your item is authenticated.",
+            sent_at=now + timedelta(hours=2, minutes=15)
+        )
+        db.session.add(message_expert_moby)
         db.session.commit()
 
         # For Ferrari:
@@ -477,12 +557,59 @@ def populate_db(app):
         db.session.commit()
         expert_assignment_ferrari = ExpertAssignment(
             request_id=auth_req_ferrari.request_id,
-            expert_id=user6.id,  # Assign Charlie (for example)
+            expert_id=user6.id,   # Assign Charlie for Ferrari
             assigned_date=now,
             status=2
         )
         db.session.add(expert_assignment_ferrari)
         db.session.commit()
+
+        # Add seller message with image for Ferrari
+        message_seller_ferrari = Message(
+            authentication_request_id=auth_req_ferrari.request_id,
+            sender_id=auction11.seller_id,
+            message_text="Attached is a detailed image of my car's interior and exterior.",
+            sent_at=now + timedelta(hours=1, minutes=30)
+        )
+        db.session.add(message_seller_ferrari)
+        db.session.commit()
+
+        message_image_ferrari = MessageImage(
+            message_id=message_seller_ferrari.message_id,
+            image_key="message_attachments/20250321_130845_FERARIJPG.jpg"  # S3 key for the Ferrari image
+        )
+        db.session.add(message_image_ferrari)
+        db.session.commit()
+
+        # Add expert response for Ferrari
+        message_expert_ferrari = Message(
+            authentication_request_id=auth_req_ferrari.request_id,
+            sender_id=user6.id,
+            message_text="Thank you for the information. Your Ferrari has been authenticated.",
+            sent_at=now + timedelta(hours=2, minutes=15)
+        )
+        db.session.add(message_expert_ferrari)
+        db.session.commit()
+
+        # For Comic Book:
+        auth_req_book = AuthenticationRequest(
+            item_id=auction8.item_id,
+            requester_id=auction8.seller_id,
+            request_date=now,
+            fee_percent=5.00,
+            status=1  # in progress
+        )
+        db.session.add(auth_req_book)
+        db.session.commit()
+        expert_assignment_book = ExpertAssignment(
+            request_id=auth_req_book.request_id,
+            expert_id=user6.id,   # Assign Charlie for Ferrari
+            assigned_date=now,
+            status=2
+        )
+        db.session.add(expert_assignment_book)
+        db.session.commit()
+
 
     
         # For Charlie (user6) – next 14 days:
