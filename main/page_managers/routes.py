@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
-from flask import render_template, redirect, url_for, flash
+from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import current_user, login_required
-from ..models import User, ExpertAvailability
+from ..models import User, ExpertAvailability, Category
 from . import manager_page 
 
 @manager_page.route('/expert_availability')
@@ -45,6 +45,8 @@ def expert_availability():
             rec = ExpertAvailability.query.filter_by(expert_id=expert.id, day=d).first()
             weekly_availability[expert.id][d] = rec.status if rec else False
     
+    categories = Category.query.all()
+
     return render_template(
         'manager_expert_availability.html',
         today=today,
@@ -55,5 +57,33 @@ def expert_availability():
         weekly_availability=weekly_availability,
         current_time=current_time,
         current_slot=current_slot,
-        timedelta=timedelta
+        timedelta=timedelta,
+        categories=categories
     )
+
+@manager_page.route('/filter-experts', methods=['GET'])
+def filter_experts():
+    """Filter experts based on category or expertise"""
+    from ..models import ExpertCategory
+
+    category_id = request.args.get('category_id', type=int)
+
+    if category_id is None:
+        return jsonify({"error": "Invalid category ID."}), 400
+
+    try:
+        query = User.query.filter_by(role=2)
+
+        if category_id:
+            query = query.join(ExpertCategory, User.id == ExpertCategory.expert_id) \
+                         .filter(ExpertCategory.category_id == category_id)
+
+        experts = query.all()
+
+        if not experts:
+            return jsonify({"error": "No experts found for this category"}), 404
+
+        return jsonify([{'id': e.id, 'username': e.username, 'email': e.email} for e in experts])
+
+    except Exception as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
