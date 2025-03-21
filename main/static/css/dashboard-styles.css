@@ -153,31 +153,6 @@
   font-size: 0.85rem;
 }
 
-.status-badge {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  padding: 0.4em 0.7em;
-  text-transform: uppercase;
-  border-radius: 0;
-  white-space: nowrap;
-  display: inline-block;
-}
-
-.status-pending {
-  background-color: var(--warning-color);
-  color: var(--primary-color);
-}
-
-.status-approved {
-  background-color: var(--success-color);
-  color: var(--secondary-color);
-}
-
-.status-declined {
-  background-color: var(--danger-color);
-  color: var(--secondary-color);
-}
-
 .date-info {
   font-family: var(--font-mono);
   font-size: 0.8rem;

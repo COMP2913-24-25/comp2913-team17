@@ -155,6 +155,13 @@ class Item(db.Model):
             return None
         return max(self.bids, key=lambda bid: bid.bid_amount)
     
+    def user_highest_bid(self, user_id):
+        """Get the highest bid for a specific user on this item."""
+        user_bids = [bid for bid in self.bids if bid.bidder_id == user_id]
+        if not user_bids:
+            return None
+        return max(user_bids, key=lambda bid: bid.bid_amount)
+    
     # Send notification to the outbid user
     def notify_outbid(self, user):
         notification = Notification(

@@ -87,7 +87,7 @@ def populate_db(app):
             description='A classic camera from the 1960s!',
             upload_date=now - timedelta(days=3),
             auction_start=now - timedelta(days=3),
-            auction_end=now + timedelta(minutes=2),
+            auction_end=now + timedelta(days=1),
             minimum_price=150.00,
             category_id=cat3.id  # Assign to "Electronics"
         )

@@ -76,10 +76,13 @@ $(document).ready(function() {
             
             // If no more watched items, show the empty message
             if ($('.unwatch-btn').length === 0) {
-              $('.table-responsive').replaceWith(`
-                <div class="alert alert-info">
-                  <p>You are not watching any auctions. Browse active auctions to find items to watch!</p>
-                  <a href="${window.location.origin}/" class="btn btn-primary">Browse Auctions</a>
+              $('#watchlist-card').replaceWith(`
+                <div class="empty-state">
+                  <i class="fas fa-bookmark"></i>
+                  <p class="empty-state-text">You are not watching any auctions.</p>
+                  <a href="${window.location.origin}/" class="btn btn-accent fw-bold">
+                    BROWSE AUCTIONS
+                  </a>
                 </div>
               `);
             }

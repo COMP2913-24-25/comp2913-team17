@@ -3,287 +3,441 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h1>User Dashboard</h1>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-styles.css') }}">
 
-  <div class="container mt-5">
-    <h2>Your Auctions</h2>
-    {% if user['auctions'] %}
-    <ul>
-      {% for item in user['auctions'] %}
-      <li>
-        <a href="{{ url_for('item_page.index', url=item.url) }}" title="See item details">{{ item.title }}</a>
-        {% if item.authentication_requests %}
-          <a href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}" title="View authentication request" class="badge mx-2 {% if item.authentication_requests[0].status == 1 %}bg-warning{% elif item.authentication_requests[0].status == 2 %}bg-success{% elif item.authentication_requests[0].status == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
-            {% if item.authentication_requests[0].status == 1 %}
-              Authentication Pending
-            {% elif item.authentication_requests[0].status == 2 %}
-              Authenticated
-            {% elif item.authentication_requests[0].status == 3 %}
-              Authentication Declined
-            {% else %}
-              Not Authenticated
-            {% endif %}
-          </a>
-        {% endif %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+  <div class="container">
+    <h1 class="dashboard-title mb-0">DASHBOARD</h1>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Dashboard Navigation Tabs -->
+  <div class="dashboard-tabs-container">
+    <ul class="nav nav-tabs dashboard-tabs" id="userDashboardTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="selling-tab" data-bs-toggle="tab" href="#selling" role="tab" aria-controls="selling" aria-selected="true">
+          <i class="fas fa-store"></i> Selling
+        </a>
       </li>
-      {% endfor %}
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="bidding-tab" data-bs-toggle="tab" href="#bidding" role="tab" aria-controls="bidding" aria-selected="false">
+          <i class="fas fa-shopping-bag"></i> Bidding
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="watchlist-tab" data-bs-toggle="tab" href="#watchlist" role="tab" aria-controls="watchlist" aria-selected="false">
+          <i class="fas fa-bookmark"></i> Watchlist
+        </a>
+      </li>
     </ul>
-    {% else %}
-    <p>No auctions available.</p>
-    {% endif %}
+    <div class="dashboard-tabs-divider"></div>
   </div>
 
-  <!-- Participated Auctions Section -->
-  {% if current_user.role == 1 %}
-  <div class="container mt-5">
-    <h2>My Participated Auctions</h2>
-    <!-- Tabs to switch between Bidding, Won, and Paid -->
-    <ul class="nav nav-tabs" id="participatedTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <a class="nav-link active" id="bidding-tab" data-bs-toggle="tab" href="#bidding" role="tab" aria-controls="bidding" aria-selected="true">Bidding</a>
-      </li>
-      <li class="nav-item" role="presentation">
-        <a class="nav-link" id="won-tab" data-bs-toggle="tab" href="#won" role="tab" aria-controls="won" aria-selected="false">Won</a>
-      </li>
-      <li class="nav-item" role="presentation">
-        <a class="nav-link" id="paid-tab" data-bs-toggle="tab" href="#paid" role="tab" aria-controls="paid" aria-selected="false">Paid</a>
-      </li>
-    </ul>
-
-    <div class="tab-content mt-3" id="participatedTabsContent">
-      <!-- Bidding Tab -->
-      <div class="tab-pane fade show active" id="bidding" role="tabpanel" aria-labelledby="bidding-tab">
-        {% if user.participated_auctions.bidding %}
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Status</th>
-                <th>Current Price</th>
-                <th>Time Remaining</th>
-                <th>Watchers</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in user.participated_auctions.bidding %}
-              <tr>
-                <td><a href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a></td>
-                <td>
-                  {% if item.status == 1 %}
-                    <span class="badge bg-success">Open</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% set highest_bid = item.highest_bid() %}
-                  {% if highest_bid %}
-                    £{{ "%.2f"|format(highest_bid.bid_amount) }}
-                  {% else %}
-                    £{{ "%.2f"|format(item.minimum_price) }}
-                  {% endif %}
-                </td>
-                <td>
-                  {% if now < item.auction_end %}
-                    <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">
-                      {{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}
-                    </span>
-                  {% else %}
-                    Ended
-                  {% endif %}
-                </td>
-                <td>
-                  <span class="badge bg-secondary">
-                    <i class="fas fa-user-friends"></i> {{ item.watcher_count() }}
-                  </span>
-                </td>
-                <td>
-                  <a href="{{ url_for('item_page.index', url=item.url) }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-eye"></i> View
-                  </a>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+  <div class="tab-content" id="userDashboardTabsContent">
+    <!-- Selling Tab -->
+    <div class="tab-pane fade show active" id="selling" role="tabpanel" aria-labelledby="selling-tab">
+      {% if user['auctions'] %}
+        <div class="auth-card">
+          <div class="card-header">
+            <i class="fas fa-store me-2"></i> Your Auctions
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="auth-table">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Authentication</th>
+                    <th>Current Price</th>
+                    <th>Bids</th>
+                    <th>Time Remaining</th>
+                    <th>Watchers</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in user['auctions'] %}
+                    <tr class="clickable-row" onclick="window.location='{{ url_for('item_page.index', url=item.url) }}';" title="View item details">
+                      <td class="item-title" data-label="Item">
+                        {{ item.title }}
+                      </td>
+                      <td data-label="Authentication">
+                        {% if item.authentication_requests %}
+                          <a href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}" title="View authentication request">
+                          {% if item.authentication_requests[0].status == 1 %}
+                            <div class="badge bg-warning authentication-status">
+                              <i class="fas fa-clock me-1"></i> PENDING
+                            </div>
+                          {% elif item.authentication_requests[0].status == 2 %}
+                            <div class="badge bg-success authentication-status">
+                              <i class="fas fa-check-circle me-1"></i> AUTHENTICATED
+                            </div>
+                          {% elif item.authentication_requests[0].status == 3 %}
+                            <div class="badge bg-danger authentication-status">
+                              <i class="fas fa-times-circle me-1"></i> DECLINED
+                            </div>
+                          {% endif %}
+                          </a>
+                        {% else %}
+                          <div class="badge bg-secondary authentication-status">
+                            NOT REQUESTED
+                          </div>
+                        {% endif %}
+                      </td>
+                      <td data-label="Current Price">
+                        {% set highest_bid = item.highest_bid() %}
+                        {% if highest_bid %}
+                          £{{ "%.2f"|format(highest_bid.bid_amount) }}
+                        {% else %}
+                          £{{ "%.2f"|format(item.minimum_price) }}
+                        {% endif %}
+                      </td>
+                      <td data-label="Bids">
+                        <span class="badge bg-info">
+                          <i class="fas fa-gavel me-1"></i> {{ item.bids|length }}
+                        </span>
+                      </td>
+                      <td data-label="Time Remaining">
+                        <div class="date-info">
+                          {% if now < item.auction_end %}
+                            <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">
+                              {{ item.auction_end.strftime('%d/%m/%Y %H:%M') }}
+                            </span>
+                          {% else %}
+                            <span class="badge bg-secondary">Ended</span>
+                          {% endif %}
+                        </div>
+                      </td>
+                      <td data-label="Watchers">
+                        <span class="badge bg-secondary">
+                          <i class="fas fa-user-friends me-1"></i> {{ item.watcher_count() }}
+                        </span>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        {% else %}
-        <div class="alert alert-info">You are not currently bidding on any auctions.</div>
-        {% endif %}
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-store"></i>
+          <p class="empty-state-text">You don't have any auctions listed yet.</p>
+          <a href="{{ url_for('create_page.index') }}" class="btn btn-accent fw-bold">
+            CREATE AN AUCTION 
+          </a>
+        </div>
+      {% endif %}
+    </div>
+    
+    <!-- Bidding Tab -->
+    <div class="tab-pane fade" id="bidding" role="tabpanel" aria-labelledby="bidding-tab">
+      <div class="dashboard-tabs-container">
+        <ul class="nav nav-tabs dashboard-tabs justify-content-end" id="biddingSubTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="live-auctions-tab" data-bs-toggle="tab" href="#live-bidding" role="tab" aria-controls="live-bidding" aria-selected="true">
+              <i class="fas fa-gavel me-1"></i> Live Auctions
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="won-tab" data-bs-toggle="tab" href="#won" role="tab" aria-controls="won" aria-selected="false">
+              <i class="fas fa-trophy me-1"></i> Won Auctions
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="paid-tab" data-bs-toggle="tab" href="#paid" role="tab" aria-controls="paid" aria-selected="false">
+              <i class="fas fa-receipt me-1"></i> Paid Auctions
+            </a>
+          </li>
+        </ul>
+        <div class="dashboard-tabs-divider"></div>
       </div>
 
-      <!-- Won Tab -->
-      <div class="tab-pane fade" id="won" role="tabpanel" aria-labelledby="won-tab">
-        {% if user.participated_auctions.won %}
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Status</th>
-                <th>Winning Bid</th>
-                <th>Time Ended</th>
-                <th>Watchers</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in user.participated_auctions.won %}
-              <tr>
-                <td><a href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a></td>
-                <td><span class="badge bg-warning">Won</span></td>
-                <td>
-                  {% set highest_bid = item.highest_bid() %}
-                  £{{ "%.2f"|format(highest_bid.bid_amount) }}
-                </td>
-                <td>
-                  {{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}
-                </td>
-                <td>
-                  <span class="badge bg-secondary">
-                    <i class="fas fa-user-friends"></i> {{ item.watcher_count() }}
-                  </span>
-                </td>
-                <td>
-                  <a href="{{ url_for('item_page.index', url=item.url) }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-eye"></i> View
-                  </a>
-                  <button class="checkout-button btn btn-sm btn-success" data-item-url="{{ item.url }}">
-                    <i class="fas fa-credit-card"></i> Pay
-                  </button>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+      <div class="tab-content" id="biddingSubTabsContent">
+        <!-- Active Bidding Tab -->
+        <div class="tab-pane fade show active" id="live-bidding" role="tabpanel" aria-labelledby="live-bidding-tab">
+          {% if user.participated_auctions.bidding %}
+            <div class="auth-card">
+              <div class="card-header">
+                <i class="fas fa-gavel me-2"></i> Active Bids
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="auth-table">
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Watchers</th>
+                        <th>Current Price</th>
+                        <th>Your Bid</th>
+                        <th>Status</th>
+                        <th>Time Remaining</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for item in user.participated_auctions.bidding %}
+                        <tr class="clickable-row" onclick="window.location='{{ url_for('item_page.index', url=item.url) }}';" title="View item details">
+                          <td class="item-title" data-label="Item">
+                            {{ item.title }}
+                          </td>
+                          <td data-label="Watchers">
+                            <span class="badge bg-secondary">
+                              <i class="fas fa-user-friends me-1"></i> {{ item.watcher_count() }}
+                            </span>
+                          </td>
+                          <td data-label="Current Price">
+                            {% set highest_bid = item.highest_bid() %}
+                            {% if highest_bid %}
+                              £{{ "%.2f"|format(highest_bid.bid_amount) }}
+                            {% else %}
+                              £{{ "%.2f"|format(item.minimum_price) }}
+                            {% endif %}
+                          </td>
+                          <td data-label="Your Bid">
+                            {% set user_highest_bid = item.user_highest_bid(current_user.id) %}
+                            £{{ "%.2f"|format(user_highest_bid.bid_amount) }}
+                          </td>
+                          <td data-label="Status">
+                            {% if item.highest_bid() and item.highest_bid().bidder.id == current_user.id %}
+                              <div class="badge bg-success authentication-status">
+                                <i class="fas fa-gavel me-1"></i> Winning
+                              </div>
+                            {% else %}
+                              <div class="badge bg-danger authentication-status">
+                                <i class="fas fa-gavel me-1"></i> Losing
+                              </div>
+                            {% endif %}
+                          </td>
+                          <td data-label="Time Remaining">
+                            <div class="date-info">
+                              {% if now < item.auction_end %}
+                                <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">
+                                  {{ item.auction_end.strftime('%d/%m/%Y %H:%M') }}
+                                </span>
+                              {% else %}
+                                Ended
+                              {% endif %}
+                            </div>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <i class="fas fa-gavel"></i>
+              <p class="empty-state-text">You are not currently bidding on any auctions.</p>
+              <a href="{{ url_for('home_page.index') }}" class="btn btn-accent fw-bold">
+                BROWSE AUCTIONS
+              </a>
+            </div>
+          {% endif %}
         </div>
-        {% else %}
-        <div class="alert alert-info">You haven't won any auctions.</div>
-        {% endif %}
-      </div>
 
-      <!-- Paid Tab -->
-      <div class="tab-pane fade" id="paid" role="tabpanel" aria-labelledby="paid-tab">
-        {% if user.participated_auctions.paid %}
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Status</th>
-                <th>Winning Bid</th>
-                <th>Time Ended</th>
-                <th>Watchers</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in user.participated_auctions.paid %}
-              <tr>
-                <td><a href="{{ url_for('item_page.index', url=item.url) }}">{{ item.title }}</a></td>
-                <td><span class="badge bg-info">Paid</span></td>
-                <td>
-                  {% set highest_bid = item.highest_bid() %}
-                  £{{ "%.2f"|format(highest_bid.bid_amount) }}
-                </td>
-                <td>
-                  {{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}
-                </td>
-                <td>
-                  <span class="badge bg-secondary">
-                    <i class="fas fa-user-friends"></i> {{ item.watcher_count() }}
-                  </span>
-                </td>
-                <td>
-                  <a href="{{ url_for('item_page.index', url=item.url) }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-eye"></i> View
-                  </a>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <!-- Won Tab -->
+        <div class="tab-pane fade" id="won" role="tabpanel" aria-labelledby="won-tab">
+          {% if user.participated_auctions.won %}
+            <div class="auth-card">
+              <div class="card-header">
+                <i class="fas fa-trophy me-2"></i> Unpaid Items
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="auth-table">
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Winning Bid</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for item in user.participated_auctions.won %}
+                        <tr class="clickable-row" onclick="window.location='{{ url_for('item_page.index', url=item.url) }}';" title="View item details">
+                          <td class="item-title" data-label="Item">
+                            {{ item.title }}
+                          </td>
+                          <td data-label="Winning Bid">
+                            {% set highest_bid = item.highest_bid() %}
+                            £{{ "%.2f"|format(highest_bid.bid_amount) }}
+                          </td>
+                          <td data-label="End Date">
+                            <div class="date-info">
+                              {{ item.auction_end.strftime('%d/%m/%Y %H:%M') }}
+                            </div>
+                          </td>
+                          <td data-label="Status">
+                            <div class="badge bg-warning authentication-status">
+                              <i class="fas fa-exclamation-circle me-1"></i> UNPAID
+                            </div>
+                          <td data-label="Action">
+                            <button class="checkout-button btn btn-accent btn-sm" data-item-url="{{ item.url }}" onclick="event.stopPropagation();" title="Pay for item">
+                              <i class="fas fa-credit-card me-1"></i> Pay
+                            </button>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <i class="fas fa-trophy"></i>
+              <p class="empty-state-text">You haven't won any auctions yet.</p>
+              <a href="{{ url_for('home_page.index') }}" class="btn btn-accent fw-bold">
+                START BIDDING
+              </a>
+            </div>
+          {% endif %}
         </div>
-        {% else %}
-        <div class="alert alert-info">You haven't paid for any auctions yet.</div>
-        {% endif %}
+
+        <!-- Paid Tab -->
+        <div class="tab-pane fade" id="paid" role="tabpanel" aria-labelledby="paid-tab">
+          {% if user.participated_auctions.paid %}
+            <div class="auth-card">
+              <div class="card-header">
+                <i class="fas fa-receipt me-2"></i> Paid Items
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="auth-table">
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Paid Amount</th>
+                        <th>Purchase Date</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for item in user.participated_auctions.paid %}
+                        <tr class="clickable-row" onclick="window.location='{{ url_for('item_page.index', url=item.url) }}';" title="View item details">
+                          <td class="item-title" data-label="Item">
+                            {{ item.title }}
+                          </td>
+                          <td data-label="Paid Amount">
+                            {% set highest_bid = item.highest_bid() %}
+                            £{{ "%.2f"|format(highest_bid.bid_amount) }}
+                          </td>
+                          <td data-label="Purchase Date">
+                            <div class="date-info">
+                              {{ item.auction_end.strftime('%d/%m/%Y %H:%M') }}
+                            </div>
+                          </td>
+                          <td data-label="Status">
+                            <div class="badge bg-info authentication-status">
+                              <i class="fas fa-check-circle me-1"></i> PAID
+                            </div>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <i class="fas fa-receipt"></i>
+              <p class="empty-state-text">You haven't paid for any items yet.</p>
+            </div>
+          {% endif %}
+        </div>
       </div>
     </div>
-  </div>
-  {% endif %}
-
-
-  <!-- Watched Auction Table -->
-  <div class="container mt-5">
-    <h2>My Watched Auctions</h2>
-    {% if user['watched_items'] %}
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Status</th>
-              <th>Current Price</th>
-              <th>Time Remaining</th>
-              <th>Watchers</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in user['watched_items'] %}
-            <tr>
-              <td>{{ item.title }}</td>
-              <td>
-                {% if now < item.auction_end %}
-                  <span class="badge bg-success">Active</span>
-                {% else %}
-                  <span class="badge bg-secondary">Ended</span>
-                {% endif %}
-              </td>
-              <td>
-                {% set highest_bid = item.highest_bid() %}
-                {% if highest_bid %}
-                  £{{ "%.2f"|format(highest_bid.bid_amount) }}
-                {% else %}
-                  £{{ "%.2f"|format(item.minimum_price) }}
-                {% endif %}
-              </td>
-              <td>
-                {% if now < item.auction_end %}
-                  <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">
-                    {{ item.auction_end.strftime('%Y-%m-%d %H:%M') }}
-                  </span>
-                {% else %}
-                  Ended
-                {% endif %}
-              </td>
-              <td>
-                <span class="badge bg-secondary">
-                  <i class="fas fa-user-friends"></i> {{ item.watcher_count() }}
-                </span>
-              </td>
-              <td>
-                <div class="btn-group d-flex gap-1">
-                  <a href="{{ url_for('item_page.index', url=item.url) }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-eye"></i> View
-                  </a>
-                  <button class="btn btn-sm btn-outline-danger unwatch-btn" data-item-url="{{ item.url }}">
-                    <i class="fas fa-times"></i> Unwatch
-                  </button>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <div class="alert alert-info">
-        <p>You are not watching any auctions. Browse active auctions to find items to watch!</p>
-        <a href="{{ url_for('home_page.index') }}" class="btn btn-primary">Browse Auctions</a>
-      </div>
-    {% endif %}
+    
+    <!-- Watchlist Tab -->
+    <div class="tab-pane fade" id="watchlist" role="tabpanel" aria-labelledby="watchlist-tab">
+      {% if user['watched_items'] %}
+        <div class="auth-card" id="watchlist-card">
+          <div class="card-header">
+            <i class="fas fa-bookmark me-2"></i> Your Watched Auctions
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="auth-table">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Status</th>
+                    <th>Current Price</th>
+                    <th>Time Remaining</th>
+                    <th>Watchers</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in user['watched_items'] %}
+                    <tr class="clickable-row" onclick="window.location='{{ url_for('item_page.index', url=item.url) }}';" title="View item details">
+                      <td class="item-title" data-label="Item">
+                        {{ item.title }}
+                      </td>
+                      <td data-label="Status">
+                        {% if now < item.auction_end %}
+                          <div class="badge bg-success authentication-status">
+                            <i class="fas fa-check-circle me-1"></i> ACTIVE
+                          </div>
+                        {% else %}
+                          <div class="badge bg-secondary authentication-status">
+                            <i class="fas fa-times-circle me-1"></i> ENDED
+                          </div>
+                        {% endif %}
+                      </td>
+                      <td data-label="Current Price">
+                        {% set highest_bid = item.highest_bid() %}
+                        {% if highest_bid %}
+                          £{{ "%.2f"|format(highest_bid.bid_amount) }}
+                        {% else %}
+                          £{{ "%.2f"|format(item.minimum_price) }}
+                        {% endif %}
+                      </td>
+                      <td data-label="Time Remaining">
+                        <div class="date-info">
+                          {% if now < item.auction_end %}
+                            <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">
+                              {{ item.auction_end.strftime('%d/%m/%Y %H:%M') }}
+                            </span>
+                          {% else %}
+                            Ended
+                          {% endif %}
+                        </div>
+                      </td>
+                      <td data-label="Watchers">
+                        <span class="badge bg-secondary">
+                          <i class="fas fa-user-friends me-1"></i> {{ item.watcher_count() }}
+                        </span>
+                      </td>
+                      <td data-label="Action">
+                        <button class="unwatch-btn btn btn-outline-danger btn-sm" data-item-url="{{ item.url }}" onclick="event.stopPropagation();" title="Unwatch item">
+                          <i class="fas fa-times me-1"></i> Unwatch
+                        </button>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-bookmark"></i>
+          <p class="empty-state-text">You are not watching any auctions.</p>
+          <a href="{{ url_for('home_page.index') }}" class="btn btn-accent fw-bold">
+            BROWSE AUCTIONS
+          </a>
+        </div>
+      {% endif %}
+    </div>
   </div>
 </div>
 

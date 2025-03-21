@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Expert Dashboard | Vintage Vault{% endblock %}
+{% block title %}Expert Dashboard{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-styles.css') }}">
@@ -145,9 +145,9 @@
                         </div>
                       </td>
                       <td data-label="Status">
-                        <span class="status-badge status-pending">
-                          <i class="fas fa-clock me-1"></i> Pending
-                        </span>
+                        <div class="badge bg-warning authentication-status">
+                          <i class="fas fa-clock me-1"></i> PENDING
+                        </div>
                       </td>
                       <td data-label="Action">
                         <a href="{{ url_for('authenticate_item_page.index', url=request.authentication_request.url) }}" 
@@ -218,13 +218,13 @@
                     </td>
                     <td data-label="Status">
                       {% if request.authentication_request.status == 2 %}
-                        <span class="status-badge status-approved">
-                          <i class="fas fa-check-circle me-1"></i> Authenticated
-                        </span>
+                      <div class="badge bg-success authentication-status">
+                        <i class="fas fa-clock me-1"></i> AUTHENTICATED
+                      </div>
                       {% else %}
-                        <span class="status-badge status-declined">
-                          <i class="fas fa-times-circle me-1"></i> Declined
-                        </span>
+                      <div class="badge bg-danger authentication-status">
+                        <i class="fas fa-times-circle me-1"></i> DECLINED
+                      </div>
                       {% endif %}
                     </td>
                     <td data-label="Action">
