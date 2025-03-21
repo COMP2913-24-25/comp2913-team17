@@ -25,9 +25,23 @@ $(document).ready(function() {
       if (newRole === '3') {
         row.remove(); 
       } else if (data && data.new_role) {
-        const roleText = data.new_role === 2 ? 'Expert' : 'User';
-        row.find('.role-cell').text(roleText);
-        row.find('.updated-cell').text(data.updated_at);
+        if (data.new_role === 2) {
+          row.find('.role-cell').html(`
+            <div class="badge bg-success authentication-status">
+              <i class="fas fa-user-graduate me-1"></i> EXPERT
+            </div>
+          `);
+        } else {
+          row.find('.role-cell').html(`
+            <div class="badge bg-primary authentication-status">
+              <i class="fas fa-user me-1"></i> USER
+            </div>
+          `);
+        }
+        row.find('.updated-cell').html(`
+          <p>${data.updated_date}</p>
+          <p>${data.updated_time}</p>
+        `);
       }
     } catch (error) {
       console.log('Error:', error);

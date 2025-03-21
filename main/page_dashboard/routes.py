@@ -309,7 +309,8 @@ def update_user_role(user_id):
         'message': 'Role updated successfully',
         'user_id': user.id,
         'new_role': user.role,
-        'updated_at': time
+        'updated_date': time.strftime('%d/%m/%Y'),
+        'updated_time': time.strftime('%H:%M:%S')
     }), 200
 
 

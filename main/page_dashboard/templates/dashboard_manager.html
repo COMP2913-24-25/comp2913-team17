@@ -3,205 +3,318 @@
 {% block title %}Management Dashboard{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h1>Management Dashboard</h1>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-styles.css') }}">
 
-  <!-- Statistics Section -->
-  <div class="card mt-4">
-    <div class="card-header">
-      <h2 class="mb-0">Management: Statistics</h2>
-    </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-3">
-          <div class="card text-center">
-            <div class="card-body">
-              <h5 class="card-title">Total Revenue</h5>
-              <p class="card-text">£{{ "%.2f" | format(manager['total_revenue']) }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card text-center">
-            <div class="card-body">
-              <h5 class="card-title">Commission Income ({{ "%.2f" | format(manager['commission_percentage']) }}%)</h5>
-              <p class="card-text">£{{ "%.2f" | format(manager['commission_income']) }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card text-center">
-            <div class="card-body">
-              <h5 class="card-title">Active Auctions</h5>
-              <p class="card-text">{{ manager['active_auctions'] }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card text-center">
-            <div class="card-body">
-              <h5 class="card-title">Total Users</h5>
-              <p class="card-text">{{ manager['user_count'] }}</p>
-            </div>
-          </div>
-        </div>
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+  <div class="container">
+    <h1 class="dashboard-title mb-0">Management Dashboard</h1>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Dashboard Navigation Tabs -->
+  <div class="dashboard-tabs-container">
+    <ul class="nav nav-tabs dashboard-tabs" id="managerDashboardTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="users-tab" data-bs-toggle="tab" href="#users" role="tab" aria-controls="users" aria-selected="true">
+          <i class="fas fa-users"></i> Users
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="requests-tab" data-bs-toggle="tab" href="#requests" role="tab" aria-controls="requests" aria-selected="false">
+          <i class="fas fa-clipboard-check"></i> Authentication Requests
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="statistics-tab" data-bs-toggle="tab" href="#statistics" role="tab" aria-controls="statistics" aria-selected="false">
+          <i class="fas fa-chart-bar"></i> Statistics
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="config-tab" data-bs-toggle="tab" href="#config" role="tab" aria-controls="config" aria-selected="false">
+          <i class="fas fa-cog"></i> 
+          <span class="text-long">Configuration</span>
+          <span class="text-short">Config</span>
+        </a>
+      </li>
+    </ul>
+    <div class="dashboard-tabs-divider"></div>
+  </div>
+
+  <div class="tab-content" id="managerDashboardTabsContent">
+    <!-- Users Tab -->
+    <div class="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
+      <!-- View Rota Button for managers -->
+      <div class="mb-4">
+        <a href="{{ url_for('manager_page.expert_availability') }}" class="btn btn-card">
+          <i class="fas fa-user-clock me-2"></i> Expert Availability Overview
+        </a>
       </div>
-      <div class="mt-4">
-        <h5>Revenue Over Time (Last 6 Months)</h5>
-        <canvas id="revenueChart" width="400" height="200"
-          data-labels='{{ manager["revenue_labels"]|tojson|safe }}'
-          data-values='{{ manager["revenue_data"]|tojson|safe }}'
-        ></canvas>
-      </div>
-    </div>
-  </div>
 
-  <!-- View Rota Button for managers -->
-  <div class="my-3">
-    <a href="{{ url_for('manager_page.expert_availability') }}" class="btn btn-primary">
-      Availability Overview
-    </a>
-  </div>
-
-  <!-- Manager User Role Interface -->
-  {% if manager['users'] %}
-  <div class="card mt-4">
-    <div class="card-header">
-      <h2 class="mb-0">Management: User Roles</h2>
-    </div>
-    <div class="card-body">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Joined</th>
-            <th>Last Updated</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for user in manager['users'] %}
-          <tr data-user-id="{{ user.id }}">
-            <td>{{ user.username }}</td>
-            <td>{{ user.email }}</td>
-            <td class="role-cell">{{ 'Expert' if user.role == 2 else 'User' }}</td>
-            <td>{{ user.created_at.strftime('%a, %d %b %Y %H:%M:%S GMT') }}</td>
-            <td class="updated-cell">{{ user.updated_at.strftime('%a, %d %b %Y %H:%M:%S GMT') }}</td>
-            <td>
-              <select class="form-select form-select-sm role-select" style="width: auto; display: inline-block;">
-                <option value="1" {{ 'selected' if user.role == 1 else '' }}>User</option>
-                <option value="2" {{ 'selected' if user.role == 2 else '' }}>Expert</option>
-                <option value="3">Manager</option>
-              </select>
-              <button class="btn btn-sm btn-update update-role-btn my-sm-1">Update</button>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- Management Configuration Section -->
-  <div class="card mt-4">
-    <div class="card-header">
-      <h2 class="mb-0">Management: Configuration</h2>
-    </div>
-    <div class="card-body">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Option</th>
-            <th>Current Value</th>
-            <th>Update Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Base Platform Fee (%)</td>
-            <td class="base-cell">{{ manager['base_fee'] }}</td>
-            <td>
-              <input type="number" class="form-control form-control-sm base-input" step="0.01" min="0.00" max="100.00" value="{{ manager['base_fee'] }}" style="width: auto; display: inline-block;">
-              <button class="btn btn-sm btn-outline-primary update-base-btn my-sm-1">Update</button>
-            </td>
-          </tr>
-          <tr>
-            <td>Authenticated Item Fee (%)</td>
-            <td class="auth-cell">{{ manager['authenticated_fee'] }}</td>
-            <td>
-              <input type="number" class="form-control form-control-sm auth-input" step="0.01" min="0.00" max="100.00" value="{{ manager['authenticated_fee'] }}" style="width: auto; display: inline-block;">
-              <button class="btn btn-sm btn-outline-primary update-auth-btn my-sm-1">Update</button>
-            </td>
-          </tr>
-          <tr>
-            <td>Maximum Auction Duration (Days)</td>
-            <td class="dur-cell">{{ manager['max_duration'] }}</td>
-            <td>
-              <input type="number" class="form-control form-control-sm dur-input" step="1" min="1" max="365" value="{{ manager['max_duration'] }}" style="width: auto; display: inline-block;">
-              <button class="btn btn-sm btn-outline-primary update-dur-btn my-sm-1">Update</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Management: Pending Authentication Requests Section -->
-  {% if manager['requests'] %}
-  <div class="card mt-4">
-    <div class="card-header">
-      <h2 class="mb-0">Management: Pending Authentication Requests</h2>
-    </div>
-    <div class="card-body">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Requester</th>
-            <th>Item</th>
-            <th>Category</th>
-            <th>Assign Expert</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for request, eligible_experts in manager['requests'] %}
-          <tr data-request-id="{{ request.request_id }}">
-            <td>{{ request.requester.username }}</td>
-            <td><a href="/item/{{ request.item.url }}">{{ request.item.title }}</a></td>
-            <td>
-              <span class="badge bg-info p-2" {% if request.item.category.description %}title="{{ request.item.category.description }}"{% endif %}>
-                <i class="fas fa-tag"></i> {{ request.item.category.name }}
-              </span>
-            </td>
-            <td>
-              {% if not eligible_experts %}
-                <p>No available experts</p>
-              {% else %}
-                <select class="form-select form-select-sm expert-select" style="width: auto; display: inline-block;">
-                  {% for expert in eligible_experts %}
-                  <option value="{{ expert.id }}" data-availability="{{ get_expert_availability(expert) }}" data-expertise="{{ get_expertise(expert, request.item) }}">
-                    {{ expert.username }}
-                  </option>
+      <!-- Manager User Role Interface -->
+      {% if manager['users'] %}
+        <div class="auth-card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-users me-2"></i> User Roles Management</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="auth-table">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    <th>Last Updated</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in manager['users'] %}
+                  <tr data-user-id="{{ user.id }}">
+                    <td data-label="Username" class="item-title">{{ user.username }}</td>
+                    <td data-label="Email">{{ user.email }}</td>
+                    <td data-label="Role" class="role-cell">
+                      {% if user.role == 2 %}
+                      <div class="badge bg-success authentication-status">
+                        <i class="fas fa-user-graduate me-1"></i> EXPERT
+                      </div>
+                      {% else %}
+                      <div class="badge bg-primary authentication-status">
+                        <i class="fas fa-user me-1"></i> USER
+                      </div>
+                      {% endif %}
+                    </td>
+                    <td data-label="Joined" class="date-info">
+                      <p>{{ user.created_at.strftime('%d/%m/%Y') }}</p>
+                      <p>{{ user.created_at.strftime('%H:%M:%S') }}</p>
+                    </td>
+                    <td data-label="Last Updated" class="date-info updated-cell">
+                      <p>{{ user.updated_at.strftime('%d/%m/%Y') }}</p>
+                      <p>{{ user.updated_at.strftime('%H:%M:%S') }}</p>
+                    </td>
+                    <td data-label="Actions">
+                      <select class="form-select form-select-sm role-select mb-2" style="width: 100%;">
+                        <option value="1" {{ 'selected' if user.role == 1 else '' }}>User</option>
+                        <option value="2" {{ 'selected' if user.role == 2 else '' }}>Expert</option>
+                        <option value="3">Manager</option>
+                      </select>
+                      <button class="btn btn-card btn-sm w-100 update-role-btn">
+                        <i class="fas fa-save me-1"></i> Update
+                      </button>
+                    </td>
+                  </tr>
                   {% endfor %}
-                </select>
-                <span class="availability-text ms-2"></span>
-                <span class="badge bg-success p-2 expertise-text">
-                  <i class="fas fa-tag"></i>
-                </span>
-                <button class="btn btn-sm btn-outline-primary assign-expert-btn my-sm-1">
-                  Assign
-                </button>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-users"></i>
+          <p class="empty-state-text">No users found in the system.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Requests Tab -->
+    <div class="tab-pane fade" id="requests" role="tabpanel" aria-labelledby="requests-tab">
+      <!-- Management: Pending Authentication Requests Section -->
+      {% if manager['requests'] %}
+        <div class="auth-card" id="auth-requests-card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-clipboard-check me-2"></i> Pending Authentication Requests</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="auth-table">
+                <thead>
+                  <tr>
+                    <th>Requester</th>
+                    <th>Item</th>
+                    <th>Category</th>
+                    <th>Assign Expert</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for request, eligible_experts in manager['requests'] %}
+                  <tr data-request-id="{{ request.request_id }}">
+                    <td data-label="Requester" class="seller-name">
+                      <i class="fas fa-user me-1"></i> {{ request.requester.username }}
+                    </td>
+                    <td data-label="Item" class="item-title">
+                      <a href="/item/{{ request.item.url }}">
+                        {{ request.item.title }}
+                      </a>  
+                    </td>
+                    <td data-label="Category">
+                      <span class="badge bg-info p-2" {% if request.item.category.description %}title="{{ request.item.category.description }}"{% endif %}>
+                        <i class="fas fa-tag"></i> {{ request.item.category.name }}
+                      </span>
+                    </td>
+                    <td data-label="Assign Expert">
+                      {% if not eligible_experts %}
+                        <div class="empty-state-text">
+                          <i class="fas fa-user-slash"></i> No available experts
+                        </div>
+                      {% else %}
+                        <div class="d-flex flex-column">
+                          <div class="d-flex align-items-center mb-2 expert-select-container">
+                            <select class="form-select expert-select me-2">
+                              {% for expert in eligible_experts %}
+                              <option value="{{ expert.id }}" 
+                                data-availability="{{ get_expert_availability(expert) }}" 
+                                data-expertise="{{ get_expertise(expert, request.item) }}"
+                              >
+                                {{ expert.username }}
+                              </option>
+                              {% endfor %}
+                            </select>
+                            <span class="expertise-text badge p-3" title="Expertise">
+                            </span>
+                          </div>
+                          <div class="d-flex align-items-center justify-content-between gap-4 expert-assign-container">
+                            <span class="availability-text seller-name"></span>
+                            <button class="btn btn-card assign-expert-btn">
+                              <i class="fas fa-user-check me-1"></i> Assign
+                            </button>
+                          </div>
+                        </div>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-clipboard-check"></i>
+          <p class="empty-state-text">No pending authentication requests at this time.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Statistics Tab -->
+    <div class="tab-pane fade" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
+      <!-- Statistics Section -->
+      <div class="expertise-card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-chart-simple me-2"></i> Platform Statistics</span>
+      </div>
+        <div class="card-body p-4">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title">Total Revenue</h5>
+                  <p class="card-text">£{{ "%.2f" | format(manager['total_revenue']) }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title">Commission Income ({{ "%.2f" | format(manager['commission_percentage']) }}%)</h5>
+                  <p class="card-text">£{{ "%.2f" | format(manager['commission_income']) }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title">Active Auctions</h5>
+                  <p class="card-text">{{ manager['active_auctions'] }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title">Total Users</h5>
+                  <p class="card-text">{{ manager['user_count'] }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <h5>Revenue Over Time (Last 6 Months)</h5>
+            <canvas id="revenueChart" width="400" height="200"
+              data-labels='{{ manager["revenue_labels"]|tojson|safe }}'
+              data-values='{{ manager["revenue_data"]|tojson|safe }}'
+            ></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Config Tab -->
+    <div class="tab-pane fade" id="config" role="tabpanel" aria-labelledby="config-tab">
+      <!-- Management Configuration Section -->
+      <div class="auth-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="fas fa-cog me-2"></i> Platform Configuration</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="auth-table">
+              <thead>
+                <tr>
+                  <th>Option</th>
+                  <th>Current Value</th>
+                  <th>Update Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="Option" class="item-title">Base Platform Fee (%)</td>
+                  <td data-label="Current Value" class="base-cell">{{ manager['base_fee'] }}</td>
+                  <td data-label="Update Value">
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                      <input type="number" class="form-control form-control-sm base-input" step="0.01" min="0.00" max="100.00" value="{{ manager['base_fee'] }}">
+                      <button class="btn btn-card btn-sm update-base-btn">
+                        <i class="fas fa-save me-1"></i> Update
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td data-label="Option" class="item-title">Authenticated Item Fee (%)</td>
+                  <td data-label="Current Value" class="auth-cell">{{ manager['authenticated_fee'] }}</td>
+                  <td data-label="Update Value">
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                      <input type="number" class="form-control form-control-sm auth-input" step="0.01" min="0.00" max="100.00" value="{{ manager['authenticated_fee'] }}">
+                      <button class="btn btn-card btn-sm update-auth-btn">
+                        <i class="fas fa-save me-1"></i> Update
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td data-label="Option" class="item-title">Maximum Auction Duration (Days)</td>
+                  <td data-label="Current Value" class="dur-cell">{{ manager['max_duration'] }}</td>
+                  <td data-label="Update Value">
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                      <input type="number" class="form-control form-control-sm dur-input" step="1" min="1" max="365" value="{{ manager['max_duration'] }}">
+                      <button class="btn btn-card btn-sm update-dur-btn">
+                        <i class="fas fa-save me-1"></i> Update
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  {% endif %}
+</div>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -210,4 +323,5 @@
 <script src="{{ url_for('static', filename='js/updateConfig.js') }}"></script>
 <script src="{{ url_for('static', filename='js/assignExpert.js') }}"></script>
 <script src="{{ url_for('static', filename='js/managementCharts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboardTabs.js') }}"></script>
 {% endblock %}

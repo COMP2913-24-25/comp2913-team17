@@ -36,6 +36,27 @@ $(document).ready(function() {
     }
   }
 
+  // Manager dashboard tabs
+  const managerTabs = document.querySelectorAll('#managerDashboardTabs .nav-link');
+  
+  // Click handler to each tab
+  managerTabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      sessionStorage.setItem('managerDashboardActiveTab', this.id);
+    });
+  });
+  
+  const activeManagerTabId = sessionStorage.getItem('managerDashboardActiveTab');
+
+  if (activeManagerTabId) {
+    const activeManagerTab = document.getElementById(activeManagerTabId);
+
+    if (activeManagerTab) {
+      const managerTab = new bootstrap.Tab(activeManagerTab);
+      managerTab.show();
+    }
+  }
+
   // User dashboard tabs
   const userTabs = document.querySelectorAll('#userDashboardTabs .nav-link');
   
