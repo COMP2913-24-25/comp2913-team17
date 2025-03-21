@@ -3,8 +3,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const cookieConsent = localStorage.getItem('cookieConsent');
     const cookiePopup = document.getElementById('cookie-consent-popup');
     
-    if (!cookieConsent && cookiePopup) {
-        // If no choice has been made yet, show the popup after a short delay
+    // Remove the popup element completely if user has already made a choice
+    if (cookieConsent && cookiePopup) {
+        cookiePopup.parentNode.removeChild(cookiePopup);
+    } else if (!cookieConsent && cookiePopup) {
+        // Show the popup after a short delay if no choice has been made yet
         setTimeout(() => {
             cookiePopup.classList.add('show');
         }, 1000);
@@ -26,14 +29,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Hide the popup with animation
         cookiePopup.classList.remove('show');
-        setTimeout(() => {
-            cookiePopup.style.display = 'none';
-        }, 300);
         
-        // If cookies are accepted, you could initialize additional tracking here
-        if (accepted) {
-            console.log("Cookies accepted - additional tracking can be initialized here");
-            // For example: initGoogleAnalytics();
-        }
+        // Remove element completely from the DOM after animation completes
+        setTimeout(() => {
+            if (cookiePopup && cookiePopup.parentNode) {
+                cookiePopup.parentNode.removeChild(cookiePopup);
+            }
+        }, 300);
     }
 });
