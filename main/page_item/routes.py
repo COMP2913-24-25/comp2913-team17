@@ -42,12 +42,17 @@ def index(url):
 
     if not current_user.is_authenticated:
         is_allowed = False
+        is_watching = False
     else:
         is_allowed = authentication and (
             current_user.role == 3
             or (expert and expert.expert_id == current_user.id and expert.status != 3)
             or authentication.requester_id == current_user.id
         )
+        
+        # Fix is_watching check by using the relationship directly
+        is_watching = item in current_user.watched_items.all()
+    
     bids = item.bids[::-1]
     suggested_bid = (item.highest_bid().bid_amount + decimal.Decimal('0.01')
                      if item.highest_bid() else item.minimum_price + decimal.Decimal('0.01'))
@@ -61,7 +66,42 @@ def index(url):
 
     return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed,
                            suggested_bid=suggested_bid, bids=bids, show_payment=show_payment, 
-                           is_auction_over=is_auction_over)
+                           is_auction_over=is_auction_over, is_watching=is_watching)
+
+# Update the watch/unwatch routes to use a more reliable method for checking the relationship
+@item_page.route('/<url>/watch', methods=['POST'])
+@login_required
+def watch_item(url):
+    try:
+        item = Item.query.filter_by(url=url).first_or_404()
+        
+        # Fix how we check if the item is being watched
+        if item in current_user.watched_items.all():
+            return jsonify({'error': 'Already watching this auction'}), 400
+        current_user.watched_items.append(item)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error watching item: {str(e)}")
+        return jsonify({'error': 'Could not add to watched items'}), 500
+
+@item_page.route('/<url>/unwatch', methods=['POST'])
+@login_required
+def unwatch_item(url):
+    try:
+        item = Item.query.filter_by(url=url).first_or_404()
+        
+        # Fix how we check if the item is being watched
+        if item not in current_user.watched_items.all():
+            return jsonify({'error': 'Not watching this auction'}), 400
+        current_user.watched_items.remove(item)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error unwatching item: {str(e)}")
+        return jsonify({'error': 'Could not remove from watched items'}), 500
 
 @item_page.route('/<url>/bid', methods=['POST'])
 @login_required
@@ -222,36 +262,6 @@ def mark_notifications_read():
     except Exception as e:
         logger.error(f"Error marking specific notifications as read: {str(e)}")
         return jsonify({'error': 'Failed to mark notifications as read'}), 500
-
-@item_page.route('/<url>/watch', methods=['POST'])
-@login_required
-def watch_item(url):
-    try:
-        item = Item.query.filter_by(url=url).first_or_404()
-        if item in current_user.watched_items:
-            return jsonify({'error': 'Already watching this auction'}), 400
-        current_user.watched_items.append(item)
-        db.session.commit()
-        return jsonify({'status': 'success'})
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error watching item: {str(e)}")
-        return jsonify({'error': 'Could not add to watched items'}), 500
-
-@item_page.route('/<url>/unwatch', methods=['POST'])
-@login_required
-def unwatch_item(url):
-    try:
-        item = Item.query.filter_by(url=url).first_or_404()
-        if item not in current_user.watched_items:
-            return jsonify({'error': 'Not watching this auction'}), 400
-        current_user.watched_items.remove(item)
-        db.session.commit()
-        return jsonify({'status': 'success'})
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error unwatching item: {str(e)}")
-        return jsonify({'error': 'Could not remove from watched items'}), 500
 
 @item_page.route('/<url>/payment', methods=['GET'])
 @login_required
