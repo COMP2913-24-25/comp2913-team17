@@ -12,6 +12,14 @@
 
   <div class="login-form-background">
     <div class="login-container">
+      <!-- Error Messages -->
+      {% for error in form.email.errors %} 
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+
+      {% for error in form.password.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
       <!-- Heading -->
       <h2 class="mt-5 mb-4 text-left login-heading">Log in to your account</h2>
       <div class="text-left login-msg" style="margin: auto;">Welcome back! Choose a log in method:</div>
@@ -34,18 +42,13 @@
           {{  form.csrf_token }}
           <!-- Email -->
           <div class="form-group login-form">
-            <!--<label for="enter-email" class="form-label">Email</label>-->
             <div class="user-container">
               <i class="fas fa-envelope"></i>
               {{ form.email(class_="form-control required-field", placeholder="Email", id_="enter-email", maxlength_="100", autocomplete_="email") }}
-              {% for error in form.email.errors %} 
-              <div class="alert alert-danger" role="alert">{{ error }}</div>
-              {% endfor %}
             </div>
           </div>
           <!-- Password -->
           <div class="form-group login-form">
-            <!--<label for="enter-password" class="form-label">Password</label>-->
             <div class="pass-container">
               <i class="fas fa-lock"></i>
               {{ form.password(class_="form-control required-field", 
@@ -54,9 +57,6 @@
                 maxlength_="24",
                 autocomplete_="current-password") }}
             </div>
-            {% for error in form.password.errors %}
-            <div class="alert alert-danger" role="alert">{{ error }}</div>
-            {% endfor %}
           </div>
           <!-- Submit Button -->
           <div class="d-flex gap-2 mt-3 login-button-container">
