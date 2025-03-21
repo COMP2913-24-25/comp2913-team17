@@ -69,8 +69,11 @@ def populate_db(app):
         db.session.add_all([cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, cat10, cat11, cat12, cat13])
         db.session.commit()
 
-        # Items
-        item1 = Item(
+        # Auctions
+        items = []
+        images = []
+
+        auction1 = Item(
             seller_id=user1.id,
             title='Vintage Clock',
             description='An antique clock from 1900',
@@ -83,10 +86,13 @@ def populate_db(app):
 
         image1 = Image(
             url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014410_clock.jpg',
-            item=item1
+            item=auction1
         )
 
-        item2 = Item(
+        items.append(auction1)
+        images.append(image1)
+
+        auction2 = Item(
             seller_id=user2.id,
             title='Art Painting',
             description='A modern art painting with vibrant colours',
@@ -99,21 +105,244 @@ def populate_db(app):
 
         image2 = Image(
             url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014233_art.jpg',
-            item=item2
+            item=auction2
         )
 
-        db.session.add_all([item1, item2, image1, image2])
+        items.append(auction2)
+        images.append(image2)
+
+        # Auction 3: Vintage Vase
+        auction3 = Item(
+            seller_id=user3.id,
+            title='Vintage Vase',
+            description='A beautiful vintage vase from the early 1900s.',
+            upload_date=now - timedelta(days=2),
+            auction_start=now - timedelta(days=2),
+            auction_end=now + timedelta(days=2),
+            minimum_price=150.00,
+            category_id=cat1.id
+        )
+        image3 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024256_Vase1.jpg',
+            item=auction3
+        )
+        image4 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024256_Vase2.jpg',
+            item=auction3
+        )
+        image5 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024257_Vase3.jpg',
+            item=auction3
+        )
+        items.append(auction3)
+        images.extend([image3, image4, image5])
+
+        # Auction 4: Modern Sculpture (ended)
+        auction4 = Item(
+            seller_id=user4.id,
+            title='Modern Sculpture',
+            description='A unique modern sculpture.',
+            upload_date=now - timedelta(days=3),
+            auction_start=now - timedelta(days=3),
+            auction_end=now - timedelta(hours=1),
+            minimum_price=3000.00,
+            category_id=cat2.id
+        )
+        image6 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024250_Sculpture1.jpg',
+            item=auction4
+        )
+        image7 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024252_Sculpture2.jpg',
+            item=auction4
+        )
+        image8 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024252_Sculpture2.jpg',
+            item=auction4
+        )
+        items.append(auction4)
+        images.extend([image6, image7, image8])
+
+        # Auction 5: Smartphone
+        auction5 = Item(
+            seller_id=user5.id,
+            title='iPhone',
+            description='A classic smartphone model with advanced features (for the time of it\'s release).',
+            upload_date=now - timedelta(days=1),
+            auction_start=now - timedelta(days=1),
+            auction_end=now + timedelta(days=1),
+            minimum_price=500.00,
+            category_id=cat3.id
+        )
+        image9 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024242_iPhone1.jpg',
+            item=auction5
+        )
+        image10 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024244_iPhone2.jpg',
+            item=auction5
+        )
+        items.append(auction5)
+        images.extend([image9, image10])
+
+        # Auction 6: Designer Jacket
+        auction6 = Item(
+            seller_id=user1.id,
+            title='Designer Jacket',
+            description='A stylish designer jacket in excellent condition.',
+            upload_date=now - timedelta(days=4),
+            auction_start=now - timedelta(days=4),
+            auction_end=now + timedelta(hours=6),
+            minimum_price=250.00,
+            category_id=cat4.id
+        )
+        image11 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024246_Jacket1.jpg',
+            item=auction6
+        )
+        image12 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024247_Jacket2.jpg',
+            item=auction6
+        )
+        items.append(auction6)
+        images.extend([image11, image12])
+
+        # Auction 7: Antique Desk
+        auction7 = Item(
+            seller_id=user2.id,
+            title='Antique Desk',
+            description='A well-crafted antique desk perfect for any study.',
+            upload_date=now - timedelta(days=5),
+            auction_start=now - timedelta(days=5),
+            auction_end=now + timedelta(days=3),
+            minimum_price=800.00,
+            category_id=cat5.id
+        )
+        image13 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024236_Desk1.jpg',
+            item=auction7
+        )
+        image14 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024236_Desk2.jpg',
+            item=auction7
+        )
+        items.append(auction7)
+        images.extend([image13, image14])
+
+        # Auction 8: Rare Comic Book
+        auction8 = Item(
+            seller_id=user3.id,
+            title='Rare Comic Book',
+            description='A rare comic book from the golden age.',
+            upload_date=now - timedelta(days=6),
+            auction_start=now - timedelta(days=6),
+            auction_end=now + timedelta(hours=12),
+            minimum_price=75.00,
+            category_id=cat6.id
+        )
+        image15 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024233_Comic1.jpg',
+            item=auction8
+        )
+        image16 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024235_Comic2.jpg',
+            item=auction8
+        )
+        items.append(auction8)
+        images.extend([image15, image16])
+
+        # Auction 9: First Edition Book (ended)
+        auction9 = Item(
+            seller_id=user4.id,
+            title='Moby Dick: A First Edition',
+            description="A rare first edition book, a collector's dream.",
+            upload_date=now - timedelta(days=7),
+            auction_start=now - timedelta(days=7),
+            auction_end=now - timedelta(hours=2),
+            minimum_price=120.00,
+            category_id=cat7.id
+        )
+        image17 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024232_Book1.jpeg',
+            item=auction9
+        )
+        items.append(auction9)
+        images.append(image17)
+
+        # Auction 10: Luxury Watch
+        auction10 = Item(
+            seller_id=user5.id,
+            title='Luxury Rolex',
+            description='A high-end luxury watch with impeccable design.',
+            upload_date=now - timedelta(days=1),
+            auction_start=now - timedelta(days=1),
+            auction_end=now + timedelta(days=2),
+            minimum_price=1500.00,
+            category_id=cat8.id
+        )
+        image18 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024248_Rolex.jpg',
+            item=auction10
+        )
+        items.append(auction10)
+        images.append(image18)
+
+        # Auction 11: Sports Car (ended)
+        auction11 = Item(
+            seller_id=user1.id,
+            title='Ferarri',
+            description='A vintage sports car in pristine condition.',
+            upload_date=now - timedelta(days=10),
+            auction_start=now - timedelta(days=10),
+            auction_end=now - timedelta(days=1),
+            minimum_price=51700000.00,
+            category_id=cat9.id
+        )
+        image19 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024238_Ferrari2.jpg',
+            item=auction11
+        )
+        image20 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024237_Ferrari1.jpg',
+            item=auction11
+        )
+        items.append(auction11)
+        images.extend([image19, image20])
+
+        # Auction 12: Electric Guitar
+        auction12 = Item(
+            seller_id=user2.id,
+            title='Electric Guitar',
+            description='A quality electric guitar for music enthusiasts.',
+            upload_date=now - timedelta(days=3),
+            auction_start=now - timedelta(days=3),
+            auction_end=now + timedelta(hours=5),
+            minimum_price=600.00,
+            category_id=cat10.id
+        )
+        image21 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024239_Guitar1.jpg',
+            item=auction12
+        )
+        image22 = Image(
+            url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250321_024240_Guitar2.jpg',
+            item=auction12
+        )
+        items.append(auction12)
+        images.extend([image21, image22])
+
+        db.session.add_all(items + images)
         db.session.commit()
 
         # Bids - Managers and experts cannot bid
         bid1 = Bid(
-            item_id=item1.item_id,
+            item_id=auction1.item_id,
             bidder_id=user2.id,
             bid_amount=120.00,
             bid_time=now
         )
         bid2 = Bid(
-            item_id=item2.item_id,
+            item_id=auction2.item_id,
             bidder_id=user1.id,
             bid_amount=210.00,
             bid_time=now
@@ -123,7 +352,7 @@ def populate_db(app):
 
         # Authentication Request (for item2)
         auth_req = AuthenticationRequest(
-            item_id=item2.item_id,
+            item_id=auction2.item_id,
             requester_id=user2.id,
             request_date=now,
             fee_percent=5.00,
