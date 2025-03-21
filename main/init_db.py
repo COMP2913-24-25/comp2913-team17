@@ -387,6 +387,26 @@ def populate_db(app):
                 db.session.commit()
                 current_bid = new_bid_amount
 
+        # Authentication Requests for auctions (except certain titles)
+        excluded_titles = ['Electric Guitar', 'Designer Jacket', 'Rare Comic Book', 'iPhone']
+        regular_users = [user1, user2, user3, user4, user5]
+        for auction in items:
+            if auction.title not in excluded_titles:
+                # Choose a requester (a regular user) who is not the seller
+                possible_requesters = [u for u in regular_users if u.id != auction.seller_id]
+                if possible_requesters:
+                    requester = random.choice(possible_requesters)
+                    auth_req = AuthenticationRequest(
+                        item_id=auction.item_id,
+                        requester_id=requester.id,
+                        request_date=now,
+                        fee_percent=5.00,
+                        status=1  # Pending
+                    )
+                    db.session.add(auth_req)
+        db.session.commit()
+
+
         # Authentication Request (for item2)
         auth_req = AuthenticationRequest(
             item_id=auction2.item_id,
@@ -514,5 +534,40 @@ def populate_db(app):
         ]
         db.session.add_all(configs)
         db.session.commit()
+
+        # For every auction, generate fake notifications for the bids
+        for auction in items:
+            # Only proceed if there are any bids
+            if auction.bids:
+                highest = auction.highest_bid()
+                # Notify the highest bidder that their bid is accepted
+                winner = User.query.get(highest.bidder_id)
+                winner_notification = Notification(
+                    user_id=winner.id,
+                    message=f"Congratulations! Your bid on '{auction.title}' has been accepted.",
+                    is_read=False,
+                    created_at=now,
+                    item_url=auction.url,
+                    item_title=auction.title,
+                    notification_type=0  # standard notification
+                )
+                db.session.add(winner_notification)
+                
+                # Notify all other bidders that they have been outbid
+                for bid in auction.bids:
+                    if bid.bidder_id != highest.bidder_id:
+                        other_user = User.query.get(bid.bidder_id)
+                        outbid_notification = Notification(
+                            user_id=other_user.id,
+                            message=f"You have been outbid on '{auction.title}'.",
+                            is_read=False,
+                            created_at=now,
+                            item_url=auction.url,
+                            item_title=auction.title,
+                            notification_type=1  # outbid notification
+                        )
+                        db.session.add(outbid_notification)
+                db.session.commit()
+
 
         print('Database populated with dummy data!')
