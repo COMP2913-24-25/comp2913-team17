@@ -42,7 +42,6 @@
           {{  form.csrf_token }}
           <!-- Email -->
           <div class="form-group login-form">
-            <!--<label for="enter-email" class="form-label">Email</label>-->
             <div class="user-container">
               <i class="fas fa-envelope"></i>
               {{ form.email(class_="form-control required-field", placeholder="Email", id_="enter-email", maxlength_="100", autocomplete_="email") }}
@@ -50,7 +49,6 @@
           </div>
           <!-- Password -->
           <div class="form-group login-form">
-            <!--<label for="enter-password" class="form-label">Password</label>-->
             <div class="pass-container">
               <i class="fas fa-lock"></i>
               {{ form.password(class_="form-control required-field", 

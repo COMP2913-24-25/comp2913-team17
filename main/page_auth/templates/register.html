@@ -4,107 +4,79 @@
 
 {% block content %}
 
-<!--LOGIN COPYPASTA ---------------------------------------------------------------------------------------------------------------------------->
 <div class="login-wrapper">
-
-  <div class="login-graphic">
-    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Vintage Vault Logo" class="login-logo">
-  </div>
 
   <div class="login-form-background">
     <div class="login-container">
+      <!-- Error Messages -->
+      {% for error in form.username.errors %} 
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+
+      {% for error in form.email.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+
+      {% for error in form.password.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+
+      {% for error in form.confirm_password.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+
       <!-- Heading -->
       <h2 class="mt-5 mb-4 text-left login-heading">Register</h2>
-      <!--REGISTER FORM------------------------------------------------------------------------------------------------------------------------------------>
       <div id="user-form">
         <form action="#" method="POST" name="Register" id="register-form">
           {{ form.csrf_token }}
           <!-- Username -->
-          <div class="form-group">
+          <div class="form-group login-form">
             <label for="enter-username" class="form-label">Username</label>
-            {{ form.username(class_="form-control required-field", placeholder="Enter a username", id_="enter-username", maxlength_="50", autocomplete="username") }}
-            <p id="username-warning" class="text-danger" style="visibility: hidden">Invalid username</p>
-            {% for error in form.username.errors %} 
-            <div class="alert alert-danger" role="alert">{{ error }}</div>
-            {% endfor %}
+            <div class="user-container">
+              <i class="fa-solid fa-user"></i>
+              {{ form.username(class_="form-control required-field", placeholder="Enter a username", id_="enter-username", maxlength_="50", autocomplete="username") }}
+            </div>
           </div>
           <!-- Email -->
-          <div class="form-group">
+          <div class="form-group login-form">
             <label for="enter-email" class="form-label">Email</label>
-            {{ form.email(class_="form-control required-field", placeholder="Enter your email", id_="enter-email",minlength_="5", maxlength_="100", autcomplete="email") }}
-            <p id="email-warning" class="text-danger" style="visibility: hidden">Invalid email</p>
-            {% for error in form.email.errors %}
-            <div class="alert alert-danger" role="alert">{{ error }}</div>
-            {% endfor %}
+            <div class="user-container">
+              <i class="fas fa-envelope"></i>
+              {{ form.email(class_="form-control required-field", placeholder="Enter your email", id_="enter-email",minlength_="5", maxlength_="100", autcomplete="email") }}
+            </div>
           </div>
           <!-- Password -->
-          <div class="form-group">
+          <div class="form-group login-form">
             <label for="enter-password" class="form-label">Password</label>
-            {{ form.password(class_="form-control required-field", placeholder="Enter a password", id_="enter-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
-            <p id="password-warning" class="text-danger" style="visibility: hidden">Invalid password</p>
-            {% for error in form.password.errors %}
-            <div class="alert alert-danger" role="alert">{{ error }}</div>
-            {% endfor %}
+            <div class="pass-container">
+              <i class="fas fa-lock"></i>
+              {{ form.password(class_="form-control required-field", placeholder="Enter a password", id_="enter-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
+            </div>
           </div>
           <!-- Confirm Password -->
-          <div class="form-group">
+          <div class="form-group login-form">
             <label for="enter-confirm" class="form-label">Confirm Password</label>
-            {{ form.confirm_password(class_="form-control required-field", placeholder="Confirm your password", id_="enter-confirm", minlength_="8", maxlength_="24", autocomplete="new-password") }}
-            <p id="confirm-warning" class="text-danger" style="visibility: hidden">Passwords do not match</p>
-            {% for error in form.confirm_password.errors %}
-            <div class="alert alert-danger" role="alert">{{ error }}</div>
-            {% endfor %}
+            <div class="pass-container">
+              <i class="fas fa-lock"></i>
+              {{ form.confirm_password(class_="form-control required-field", placeholder="Confirm your password", id_="enter-confirm", minlength_="8", maxlength_="24", autocomplete="new-password") }}
+            </div>
           </div>
           <!-- Submit -->
-          <div class="form-group">
+          <div class="form-group login-form">
             {{ form.submit(class_="form-control required-field btn btn-primary", placeholder="Register", id_="submit-register") }}
           </div>
           <p class="text-end option-text">Already have an account?&nbsp; <a href="{{ url_for('auth_page.login') }}">Login</a></p>
       </div>
-      <!--REGISTER FORM------------------------------------------------------------------------------------------------------------------------------------>
       <!-- Form -->
     </div>
   </div>
+
+  <div class="login-graphic">
+    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Vintage Vault Logo" class="login-logo">
+  </div>
+  
 </div>
-
-<!--LOGIN COPYPASTA ---------------------------------------------------------------------------------------------------------------------------->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 <!-- Scripts -->
 
