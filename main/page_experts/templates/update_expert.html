@@ -10,11 +10,11 @@
   {% set next_week = week_start + timedelta(days=7) %}
   <div class="d-flex justify-content-center mb-3">
     {% if week_start > current_week_start %}
-      <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ prev_week.strftime('%Y-%m-%d') }}" class="btn btn-outline-primary me-2">Previous Week</a>
+      <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ prev_week.strftime('%Y-%m-%d') }}" class="btn btn-primary me-2">Previous Week</a>
     {% else %}
       <button type="button" class="btn btn-outline-secondary me-2" disabled>Previous Week</button>
     {% endif %}
-    <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ next_week.strftime('%Y-%m-%d') }}" class="btn btn-outline-primary">Next Week</a>
+    <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ next_week.strftime('%Y-%m-%d') }}" class="btn btn-primary">Next Week</a>
   </div>
   
   <form action="{{ url_for('expert_page.update_availability') }}" method="POST" name="ExpertAvailability">
