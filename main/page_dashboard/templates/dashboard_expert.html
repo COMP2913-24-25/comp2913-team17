@@ -219,11 +219,15 @@
                     <td data-label="Status">
                       {% if request.authentication_request.status == 2 %}
                       <div class="badge bg-success authentication-status">
-                        <i class="fas fa-clock me-1"></i> AUTHENTICATED
+                        <i class="fas fa-check me-1"></i> AUTHENTICATED
                       </div>
-                      {% else %}
+                      {% elif request.authentication_request.status == 3 %}
                       <div class="badge bg-danger authentication-status">
                         <i class="fas fa-times-circle me-1"></i> DECLINED
+                      </div>
+                      {% else %}
+                      <div class="badge bg-warning authentication-status">
+                        <i class="fas fa-clock me-1"></i> PENDING
                       </div>
                       {% endif %}
                     </td>
