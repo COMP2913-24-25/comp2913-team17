@@ -429,7 +429,7 @@ def populate_db(app):
                 current_bid = new_bid_amount
 
         # Authentication Requests for auctions (except certain titles)
-        excluded_titles = ['Rare Comic Book', 'Ferrari', 'Moby Dick: A First Edition', 'Modern Sculpture', 'Electric Guitar', 'Designer Jacket', 'Vintage Vase', 'iPhone']
+        excluded_titles = ['Luxury Rolex', 'Rare Comic Book', 'Ferrari', 'Moby Dick: A First Edition', 'Modern Sculpture', 'Electric Guitar', 'Designer Jacket', 'Vintage Vase', 'iPhone']
         for auction in items:
             if auction.title not in excluded_titles:
                 auth_req = AuthenticationRequest(
@@ -656,20 +656,22 @@ def populate_db(app):
         db.session.add(message_expert_ferrari)
         db.session.commit()
 
-        # For Comic Book:
+        # For Comic Book: mark authentication as denied
         auth_req_book = AuthenticationRequest(
             item_id=auction8.item_id,
             requester_id=auction8.seller_id,
             request_date=now,
-            fee_percent=5.00
+            fee_percent=5.00,
+            status=3  # 3 = Declined/Denied
         )
         db.session.add(auth_req_book)
         db.session.commit()
+
         expert_assignment_book = ExpertAssignment(
             request_id=auth_req_book.request_id,
-            expert_id=user6.id,   # Assign Charlie for Ferrari
+            expert_id=user6.id,   # Assign Charlie
             assigned_date=now,
-            status=1
+            status=2  # Mark assignment as completed/responded
         )
         db.session.add(expert_assignment_book)
         db.session.commit()
@@ -682,6 +684,64 @@ def populate_db(app):
         )
 
         db.session.add(message_expert_comic)
+        db.session.commit()
+
+        # Add seller message with image for Comic Book
+        message_seller_comic = Message(
+            authentication_request_id=auth_req_book.request_id,
+            sender_id=auction8.seller_id,
+            message_text="Please see the attached image of my comic book.",
+            sent_at=now - timedelta(hours=2)
+        )
+        db.session.add(message_seller_comic)
+        db.session.commit()
+
+        message_image_comic = MessageImage(
+            message_id=message_seller_comic.message_id,
+            image_key="message_attachments/20250322_132008_Dover.jpg"  # Replace with your S3 key for the comic image
+        )
+        db.session.add(message_image_comic)
+        db.session.commit()
+
+        # Add expert response for Comic Book
+        message_expert_comic = Message(
+            authentication_request_id=auth_req_book.request_id,
+            sender_id=user6.id,
+            message_text="The image you provided looks lovely. "
+            "However, it is not the expected comic book. Authentication denied.",
+            sent_at=now - timedelta(hours=1, minutes=30)
+        )
+        db.session.add(message_expert_comic)
+        db.session.commit()
+
+        # For Comic Book: mark authentication as denied
+        auth_req_rolex = AuthenticationRequest(
+            item_id=auction10.item_id,
+            requester_id=auction10.seller_id,
+            request_date=now,
+            fee_percent=5.00,
+            status=1 
+        )
+        db.session.add(auth_req_rolex)
+        db.session.commit()
+
+        expert_assignment_rolex = ExpertAssignment(
+            request_id=auth_req_rolex.request_id,
+            expert_id=user6.id,   # Assign Charlie
+            assigned_date=now,
+            status=1 
+        )
+        db.session.add(expert_assignment_rolex)
+        db.session.commit()
+
+        message_expert_rolex = Message(
+                authentication_request_id=auth_req_rolex.request_id,
+                sender_id=user6.id,
+                message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
+                sent_at=now - timedelta(hours=2, minutes=30)
+        )
+
+        db.session.add(message_expert_rolex)
         db.session.commit()
     
         # For Charlie (user6) – next 14 days:
