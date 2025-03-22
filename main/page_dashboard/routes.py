@@ -134,7 +134,12 @@ def handle_manager(now):
                 ~AuthenticationRequest.expert_assignments.any(ExpertAssignment.status != 3)
             )
         )).all()
-    requests = []
+            requests = []
+    # Pre-fetch all current assignments for workload calculation
+    all_experts_assignments = dict(db.session.query(
+        ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
+    ).filter(ExpertAssignment.status.in_([1, 2])).group_by(ExpertAssignment.expert_id).all())
+    
     for req in pending_requests:
         eligible_experts = User.query\
             .filter(and_(
@@ -144,7 +149,15 @@ def handle_manager(now):
                     ExpertAssignment.request_id == req.request_id
                 )
             )).all()
-        requests.append((req, eligible_experts))
+        if eligible_experts:
+            scores = [(expert, calculate_expert_suitability(expert, req, all_experts_assignments, now)) 
+                     for expert in eligible_experts]
+            max_score = max(score for _, score in scores) if scores else 0
+            best_experts = [expert for expert, score in scores if score == max_score]
+            recommended_expert = choice(best_experts) if best_experts else None
+        else:
+            recommended_expert = None
+        requests.append((req, eligible_experts, recommended_expert))
     manager['requests'] = requests
 
     # Statistics Calculations
