@@ -2,7 +2,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 import random
 from .models import (
-    AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability,
+    AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability, ExpertCategory,
     Item, ManagerConfig, Message, MessageImage, Notification, User, Category, Image,
     MessageImage, db
 )
@@ -52,6 +52,36 @@ def populate_db(app):
 
         db.session.add_all([user1, user2, user3, user4, user5,
                             user6, user7, user8, user9, user10])
+        db.session.commit()
+
+        # Additional Regular Users
+        user11 = User(username='linda', email='linda@example.com', role=1)
+        user11.set_password('Linda@123')
+
+        user12 = User(username='peter', email='peter@example.com', role=1)
+        user12.set_password('Peter@123')
+
+        user13 = User(username='kevin', email='kevin@example.com', role=1)
+        user13.set_password('Kevin@123')
+
+        user14 = User(username='susan', email='susan@example.com', role=1)
+        user14.set_password('Susan@123')
+
+        # Additional Experts (role=2)
+        user15 = User(username='cristiano', email='cristiano@example.com', role=2)
+        user15.set_password('Cristiano@123')
+
+        user16 = User(username='sandeep', email='sandeep@example.com', role=2)
+        user16.set_password('sandeep@123')
+
+        user17 = User(username='jamal', email='jamal@example.com', role=2)
+        user17.set_password('jamal@123')
+
+        user18 = User(username='yusuf', email='cheeseman@example.com', role=2)
+        user18.set_password('Cheeseman@123')
+
+        # Add them to the session along with the previous users:
+        db.session.add_all([user11, user12, user13, user14, user15, user16, user17, user18])
         db.session.commit()
 
         # Categories
@@ -643,6 +673,16 @@ def populate_db(app):
         )
         db.session.add(expert_assignment_book)
         db.session.commit()
+
+        message_expert_comic = Message(
+                authentication_request_id=auth_req_book.request_id,
+                sender_id=user6.id,
+                message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
+                sent_at=now - timedelta(hours=2, minutes=30)
+        )
+
+        db.session.add(message_expert_comic)
+        db.session.commit()
     
         # For Charlie (user6) – next 14 days:
         for i in range(14):
@@ -688,6 +728,21 @@ def populate_db(app):
                     status=True
                 )
             db.session.add(availability)
+
+        # Create availability for the new experts
+        new_experts = [user15, user16, user17, user18]
+        for expert in new_experts:
+            for i in range(7):  # For the next 7 days
+                day = date.today() + timedelta(days=i)
+                availability = ExpertAvailability(
+                    expert_id=expert.id,
+                    day=day,
+                    start_time=time(8, 0),
+                    end_time=time(20, 0),
+                    status=True
+                )
+                db.session.add(availability)
+        db.session.commit()
 
         # For Oliver (user8) – completely unavailable for the next 7 days:
         for i in range(7):
@@ -758,6 +813,22 @@ def populate_db(app):
                         )
                         db.session.add(outbid_notification)
                 db.session.commit()
+
+        # Assign 5 random expertise categories to each expert
+        all_categories = Category.query.all()
+        experts = User.query.filter(User.role == 2).all()
+
+        for expert in experts:
+            # Get 5 unique categories randomly (if there are at least 5)
+            if len(all_categories) >= 5:
+                random_expertise = random.sample(all_categories, 5)
+            else:
+                random_expertise = all_categories
+            for category in random_expertise:
+                expert_category = ExpertCategory(expert_id=expert.id, category_id=category.id)
+                db.session.add(expert_category)
+
+        db.session.commit()
 
 
         print('Database populated with dummy data!')
