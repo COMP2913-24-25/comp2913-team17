@@ -5,6 +5,7 @@ from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
 from datetime import date, datetime, timedelta
 from sqlalchemy import and_, or_, func
+from random import choice
 from . import dashboard_page
 from ..models import ExpertAvailability, db, User, AuthenticationRequest, ExpertAssignment, Item, ManagerConfig, Bid, Notification, Message, Category, ExpertCategory
 from ..email_utils import send_notification_email
@@ -42,6 +43,38 @@ def get_expertise(expert, item):
                 return 'Expert'
     return 'Not Expert'
 
+
+def calculate_expert_suitability(expert, request, all_experts_assignments, now):
+    """Calculate an expert's suitability score for a request."""
+    # Availability Score (40%)
+    today = date.today()
+    auction_end = request.item.auction_end.date()
+    avail_score = 0
+    for avail in expert.expert_availability:
+        if avail.day >= today and avail.day <= auction_end and avail.status:
+            if avail.day == today:
+                current_time = now.time()
+                if avail.start_time <= current_time < avail.end_time:
+                    avail_score = 1.0  # Currently available
+                    break
+                elif current_time < avail.start_time:
+                    avail_score = max(avail_score, 0.7)  # Available later today
+            else:
+                avail_score = max(avail_score, 0.5)  # Available in future
+
+    # Workload Score (30%)
+    current_assignments = all_experts_assignments.get(expert.id, 0)
+    workload_score = max(0, 1 - (current_assignments / 5))  # Max 5 assignments
+
+    # Expertise Score (30%)
+    expertise_score = 0
+    for cat in expert.expert_categories:
+        if cat.category_id == request.item.category_id:
+            expertise_score = 1.0
+            break
+
+    total_score = (0.4 * avail_score) + (0.3 * workload_score) + (0.3 * expertise_score)
+    return total_score
 
 @dashboard_page.route('/')
 @login_required
