@@ -50,7 +50,7 @@ def calculate_expert_suitability(expert, request, all_experts_assignments, now):
     today = date.today()
     auction_end = request.item.auction_end.date()
     avail_score = 0
-    for avail in expert.expert_availability:
+    for avail in expert.expert_availabilities:  # Fixed typo: was expert_availability
         if avail.day >= today and avail.day <= auction_end and avail.status:
             if avail.day == today:
                 current_time = now.time()
@@ -75,6 +75,7 @@ def calculate_expert_suitability(expert, request, all_experts_assignments, now):
 
     total_score = (0.4 * avail_score) + (0.3 * workload_score) + (0.3 * expertise_score)
     return total_score
+
 
 @dashboard_page.route('/')
 @login_required
@@ -134,7 +135,7 @@ def handle_manager(now):
                 ~AuthenticationRequest.expert_assignments.any(ExpertAssignment.status != 3)
             )
         )).all()
-            requests = []
+    requests = []  # Fixed indentation: aligned with rest of function body
     # Pre-fetch all current assignments for workload calculation
     all_experts_assignments = dict(db.session.query(
         ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
@@ -240,7 +241,7 @@ def handle_expert(now):
     expert['complete'] = ExpertAssignment.query\
         .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 2)).all()
     
-    # Get a list of expert's experise as well as all categories
+    # Get a list of expert's expertise as well as all categories
     expert['categories'] = Category.query.order_by(Category.name).all()
     expert['expertise'] = Category.query.join(
         ExpertCategory, 
@@ -439,7 +440,6 @@ def assign_expert(request_id):
     if not valid:
         return jsonify({'error': 'Expert is not available at any time before the last 3 hours of the auction'}), 400
 
-
     # All checks passed—create the assignment.
     assignment = ExpertAssignment(
         request_id=request_id,
@@ -504,6 +504,7 @@ def assign_expert(request_id):
         'request_id': request_id,
         'expert_id': expert
     }), 200
+
 
 @dashboard_page.route('/api/auto-assign-expert/<request_id>', methods=['POST'])
 @login_required
@@ -601,6 +602,7 @@ def auto_assign_expert(request_id):
         'request_id': request_id,
         'expert_id': recommended_expert.id
     }), 200
+
 
 @dashboard_page.route('/api/bulk-auto-assign-experts', methods=['POST'])
 @login_required
@@ -707,6 +709,7 @@ def bulk_auto_assign_experts():
         'message': 'Bulk auto-assignment successful',
         'assignments': assignments_made
     }), 200
+
 
 @dashboard_page.route('/api/update-base', methods=['PUT'])
 @login_required
