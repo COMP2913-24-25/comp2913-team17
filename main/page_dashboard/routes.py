@@ -492,6 +492,208 @@ def assign_expert(request_id):
         'expert_id': expert
     }), 200
 
+@dashboard_page.route('/api/auto-assign-expert/<request_id>', methods=['POST'])
+@login_required
+def auto_assign_expert(request_id):
+    """Auto-assign the recommended expert to an authentication request."""
+    if current_user.role != 3:
+        return jsonify({'error': 'Unauthorised'}), 403
+
+    auth_request = db.session.query(AuthenticationRequest).filter_by(request_id=request_id).first()
+    if not auth_request:
+        return jsonify({'error': 'Request not found'}), 404
+    if auth_request.status != 1:
+        return jsonify({'error': 'Request not pending'}), 400
+
+    # Check for existing valid assignment
+    if ExpertAssignment.query.filter(
+            and_(ExpertAssignment.request_id == request_id, ExpertAssignment.status != 3)).first():
+        return jsonify({'error': 'Request already assigned'}), 400
+
+    # Get eligible experts
+    eligible_experts = User.query\
+        .filter(and_(
+            User.role == 2,
+            User.id != auth_request.requester_id,
+            ~User.expert_assignments.any(ExpertAssignment.request_id == request_id)
+        )).all()
+    if not eligible_experts:
+        return jsonify({'error': 'No available experts'}), 400
+
+    # Calculate suitability scores
+    now = datetime.now()
+    all_experts_assignments = dict(db.session.query(
+        ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
+    ).filter(ExpertAssignment.status.in_([1, 2])).group_by(ExpertAssignment.expert_id).all())
+    
+    scores = [(expert, calculate_expert_suitability(expert, auth_request, all_experts_assignments, now)) 
+             for expert in eligible_experts]
+    max_score = max(score for _, score in scores)
+    best_experts = [expert for expert, score in scores if score == max_score]
+    recommended_expert = choice(best_experts)
+
+    # Assign the expert
+    assignment = ExpertAssignment(request_id=request_id, expert_id=recommended_expert.id)
+    db.session.add(assignment)
+
+    # Create message
+    message = Message(
+        authentication_request_id=request_id,
+        sender_id=recommended_expert.id,
+        message_text='Hi, I have been assigned to authenticate this item. Please provide any relevant info.',
+        sent_at=now
+    )
+    db.session.add(message)
+
+    # Send notifications
+    notification_expert = Notification(
+        user_id=recommended_expert.id,
+        message=f'You have been assigned to authenticate {auth_request.item.title}',
+        item_url=auth_request.item.url,
+        item_title=auth_request.item.title,
+        notification_type=4
+    )
+    notification_requester = Notification(
+        user_id=auth_request.requester_id,
+        message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}',
+        item_url=auth_request.item.url,
+        item_title=auth_request.item.title,
+        notification_type=4
+    )
+    db.session.add_all([notification_expert, notification_requester])
+    db.session.commit()
+
+    # Send real-time notifications and emails
+    try:
+        socketio.emit('new_notification', {
+            'message': notification_expert.message,
+            'item_url': notification_expert.item_url,
+            'created_at': notification_expert.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{recommended_expert.secret_key}')
+    except Exception as e:
+        print(f'SocketIO Error: {e}')
+    try:
+        socketio.emit('new_notification', {
+            'message': notification_requester.message,
+            'item_url': notification_requester.item_url,
+            'created_at': notification_requester.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{auth_request.requester.secret_key}')
+    except Exception as e:
+        print(f'SocketIO Error: {e}')
+    send_notification_email(recommended_expert, notification_expert)
+    send_notification_email(auth_request.requester, notification_requester)
+
+    return jsonify({
+        'message': 'Expert auto-assigned successfully',
+        'request_id': request_id,
+        'expert_id': recommended_expert.id
+    }), 200
+
+@dashboard_page.route('/api/bulk-auto-assign-experts', methods=['POST'])
+@login_required
+def bulk_auto_assign_experts():
+    """Auto-assign experts to multiple authentication requests."""
+    if current_user.role != 3:
+        return jsonify({'error': 'Unauthorised'}), 403
+
+    if not request.is_json or 'request_ids' not in request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+
+    request_ids = request.json['request_ids']
+    if not isinstance(request_ids, list):
+        return jsonify({'error': 'Request IDs must be a list'}), 400
+
+    now = datetime.now()
+    all_experts_assignments = dict(db.session.query(
+        ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
+    ).filter(ExpertAssignment.status.in_([1, 2])).group_by(ExpertAssignment.expert_id).all())
+    
+    assignments_made = []
+    for request_id in request_ids:
+        auth_request = db.session.query(AuthenticationRequest).filter_by(request_id=request_id).first()
+        if not auth_request or auth_request.status != 1 or ExpertAssignment.query.filter(
+                and_(ExpertAssignment.request_id == request_id, ExpertAssignment.status != 3)).first():
+            continue
+
+        eligible_experts = User.query\
+            .filter(and_(
+                User.role == 2,
+                User.id != auth_request.requester_id,
+                ~User.expert_assignments.any(ExpertAssignment.request_id == request_id)
+            )).all()
+        if not eligible_experts:
+            continue
+
+        scores = [(expert, calculate_expert_suitability(expert, auth_request, all_experts_assignments, now)) 
+                 for expert in eligible_experts]
+        max_score = max(score for _, score in scores)
+        best_experts = [expert for expert, score in scores if score == max_score]
+        recommended_expert = choice(best_experts)
+
+        assignment = ExpertAssignment(request_id=request_id, expert_id=recommended_expert.id)
+        db.session.add(assignment)
+
+        message = Message(
+            authentication_request_id=request_id,
+            sender_id=recommended_expert.id,
+            message_text='Hi, I have been assigned to authenticate this item. Please provide any relevant info.',
+            sent_at=now
+        )
+        db.session.add(message)
+
+        notification_expert = Notification(
+            user_id=recommended_expert.id,
+            message=f'You have been assigned to authenticate {auth_request.item.title}',
+            item_url=auth_request.item.url,
+            item_title=auth_request.item.title,
+            notification_type=4
+        )
+        notification_requester = Notification(
+            user_id=auth_request.requester_id,
+            message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}',
+            item_url=auth_request.item.url,
+            item_title=auth_request.item.title,
+            notification_type=4
+        )
+        db.session.add_all([notification_expert, notification_requester])
+
+        # Update workload
+        all_experts_assignments[recommended_expert.id] = all_experts_assignments.get(recommended_expert.id, 0) + 1
+        assignments_made.append({'request_id': request_id, 'expert_id': recommended_expert.id})
+
+    db.session.commit()
+
+    # Send notifications
+    for assignment in assignments_made:
+        expert = User.query.get(assignment['expert_id'])
+        auth_request = AuthenticationRequest.query.get(assignment['request_id'])
+        try:
+            socketio.emit('new_notification', {
+                'message': f'You have been assigned to authenticate {auth_request.item.title}',
+                'item_url': auth_request.item.url,
+                'created_at': now.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{expert.secret_key}')
+        except Exception as e:
+            print(f'SocketIO Error: {e}')
+        try:
+            socketio.emit('new_notification', {
+                'message': f'An expert has been assigned to authenticate your item: {auth_request.item.title}',
+                'item_url': auth_request.item.url,
+                'created_at': now.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{auth_request.requester.secret_key}')
+        except Exception as e:
+            print(f'SocketIO Error: {e}')
+        send_notification_email(expert, Notification(
+            user_id=expert.id, message=f'You have been assigned to authenticate {auth_request.item.title}',
+            item_url=auth_request.item.url, item_title=auth_request.item.title, notification_type=4))
+        send_notification_email(auth_request.requester, Notification(
+            user_id=auth_request.requester_id, message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}',
+            item_url=auth_request.item.url, item_title=auth_request.item.title, notification_type=4))
+
+    return jsonify({
+        'message': 'Bulk auto-assignment successful',
+        'assignments': assignments_made
+    }), 200
 
 @dashboard_page.route('/api/update-base', methods=['PUT'])
 @login_required
