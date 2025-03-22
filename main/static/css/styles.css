@@ -1094,3 +1094,19 @@ h1, h2, h3, h4, h5 {
 #auction-form {
   background-color: #f7f7f7;
 }
+
+#register-form input::placeholder,
+#register-form textarea::placeholder {
+  font-size: 1rem;
+}
+
+.register-container {
+  padding: 0;
+}
+
+.register-container .form-label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
