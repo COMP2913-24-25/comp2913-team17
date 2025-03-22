@@ -4,7 +4,7 @@ import random
 from .models import (
     AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability,
     Item, ManagerConfig, Message, MessageImage, Notification, User, Category, Image,
-    db
+    MessageImage, db
 )
 
 def populate_db(app):
@@ -79,14 +79,14 @@ def populate_db(app):
             seller_id=user1.id,
             title='Vintage Clock',
             description='An antique clock from 1900',
-            upload_date=now,
-            auction_start=now,
-            auction_end=now + timedelta(days=4),
+            upload_date=now - timedelta(days=1),
+            auction_start=now - timedelta(days=1),
+            auction_end=now + timedelta(days=3),
             minimum_price=100.00,
             category_id=cat1.id  # Assign to "Antiques"
         )
 
-        image1 = Image(
+        image1_1 = Image(
             url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014410_clock.jpg',
             item=auction1
         )
@@ -98,14 +98,14 @@ def populate_db(app):
             seller_id=user2.id,
             title='Art Painting',
             description='A modern art painting with vibrant colours',
-            upload_date=now,
-            auction_start=now,
+            upload_date=now - timedelta(days=2),
+            auction_start=now - timedelta(days=2),
             auction_end=now + timedelta(minutes=1),
             minimum_price=200.00,
             category_id=cat2.id  # Assign to "Art"
         )
 
-        image2 = Image(
+        image2_1 = Image(
             url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014233_art.jpg',
             item=auction2
         )
@@ -677,15 +677,46 @@ def populate_db(app):
             authentication_request_id=auth_req.request_id,
             sender_id=user6.id,
             message_text='Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
-            sent_at=now + timedelta(hours=1)
+            sent_at=now - timedelta(days=1)
         )
         message2 = Message(
-            authentication_request_id=auth_req.request_id,
+            authentication_request_id=auth_req1.request_id,
             sender_id=user2.id,
             message_text='I\'ll provide the necessary information shortly.',
-            sent_at=now + timedelta(hours=2)
+            sent_at=now - timedelta(minutes=1)
         )
-        db.session.add_all([message1, message2])
+        message3 = Message(
+            authentication_request_id=auth_req2.request_id,
+            sender_id=user3.id,
+            message_text='Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
+            sent_at=now - timedelta(days=2)
+        )
+        message4 = Message(
+            authentication_request_id=auth_req2.request_id,
+            sender_id=user2.id,
+            message_text='Hi, here are some additional images.',
+            sent_at=now - timedelta(days=1)
+        )
+        db.session.add_all([message1, message2, message3, message4])
+        db.session.commit()
+
+        message4_image1 = MessageImage(
+            image_key='message_attachments/20250320_002304_auth1.jpg',
+            message_id=message4.message_id
+        )
+        message4_image2 = MessageImage(
+            image_key='message_attachments/20250320_002304_auth2.jpg',
+            message_id=message4.message_id
+        )
+        message4_image3 = MessageImage(
+            image_key='message_attachments/20250320_002305_auth3.jpg',
+            message_id=message4.message_id
+        )
+        message4_image4 = MessageImage(
+            image_key='message_attachments/20250320_002306_auth4.jpg',
+            message_id=message4.message_id
+        )
+        db.session.add_all([message4_image1, message4_image2, message4_image3, message4_image4])
         db.session.commit()
 
         # Manager Config
