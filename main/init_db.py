@@ -86,7 +86,7 @@ def populate_db(app):
             category_id=cat1.id  # Assign to "Antiques"
         )
 
-        image1_1 = Image(
+        image1 = Image(
             url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014410_clock.jpg',
             item=auction1
         )
@@ -105,7 +105,7 @@ def populate_db(app):
             category_id=cat2.id  # Assign to "Art"
         )
 
-        image2_1 = Image(
+        image2 = Image(
             url='https://sc23jk3-auctionbucket.s3.amazonaws.com/auction_items/20250307_014233_art.jpg',
             item=auction2
         )
@@ -236,8 +236,8 @@ def populate_db(app):
             seller_id=user3.id,
             title='Rare Comic Book',
             description='A rare comic book from the golden age.',
-            upload_date=now - timedelta(days=6),
-            auction_start=now - timedelta(days=6),
+            upload_date=now - timedelta(days=3),
+            auction_start=now - timedelta(days=3),
             auction_end=now + timedelta(hours=12),
             minimum_price=75.00,
             category_id=cat6.id
@@ -371,20 +371,31 @@ def populate_db(app):
             # Set the starting bid amount: highest bid if exists; otherwise, the minimum price.
             current_bid = auction.highest_bid().bid_amount if auction.highest_bid() else auction.minimum_price
 
+            # Set the initial bid time to 5 hours ago.
+            last_bid_time = now - timedelta(hours=5)
+
             for _ in range(additional_bids):
                 possible_bidders = [u for u in regular_users if u.id != auction.seller_id]
                 bidder = random.choice(possible_bidders)
                 # Increase the current bid by a random 5% to 15%
                 increment = current_bid * Decimal(str(random.uniform(0.05, 0.15)))
                 new_bid_amount = current_bid + increment
+                # Add a random number of minutes (between 1 and 60) to the last bid time,
+                # ensuring that each bid has a later timestamp than the previous one.
+                delta_minutes = random.randint(1, 60)
+                new_bid_time = last_bid_time + timedelta(minutes=delta_minutes)
+                
                 new_bid = Bid(
                     item_id=auction.item_id,
                     bidder_id=bidder.id,
                     bid_amount=new_bid_amount,
-                    bid_time=now + timedelta(minutes=random.randint(1, 60))
+                    bid_time=new_bid_time
                 )
                 db.session.add(new_bid)
                 db.session.commit()
+    
+                # Update the last_bid_time and current_bid for the next iteration.
+                last_bid_time = new_bid_time
                 current_bid = new_bid_amount
 
         # Authentication Requests for auctions (except certain titles)
@@ -395,8 +406,7 @@ def populate_db(app):
                     item_id=auction.item_id,
                     requester_id=auction.seller_id,
                     request_date=now,
-                    fee_percent=5.00,
-                    status=1  # Pending status
+                    fee_percent=5.00
                 )
                 db.session.add(auth_req)
         db.session.commit()
@@ -427,13 +437,19 @@ def populate_db(app):
             db.session.commit()
 
             # Add seller message with image for Art Painting
+            message_expert_art1 = Message(
+                authentication_request_id=auth_req_art.request_id,
+                sender_id=user6.id,
+                message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
+                sent_at=now - timedelta(hours=1, minutes=30)
+            )
             message_seller_art = Message(
                 authentication_request_id=auth_req_art.request_id,
                 sender_id=auction2.seller_id,
                 message_text="Here are more details about my artwork. Please see the attached image for reference.",
-                sent_at=now + timedelta(hours=1, minutes=30)
+                sent_at=now - timedelta(hours=1)
             )
-            db.session.add(message_seller_art)
+            db.session.add_all([message_expert_art1, message_seller_art])
             db.session.commit()
 
             message_image_art = MessageImage(
@@ -448,7 +464,7 @@ def populate_db(app):
                 authentication_request_id=auth_req_art.request_id,
                 sender_id=user6.id,
                 message_text="Thank you for the information. Your artwork is now authenticated.",
-                sent_at=now + timedelta(hours=2, minutes=15)
+                sent_at=now - timedelta(minutes=15)
             )
             db.session.add(message_expert_art)
             db.session.commit()
@@ -473,13 +489,20 @@ def populate_db(app):
         db.session.commit()
 
         # Add seller message with image for Modern Sculpture
+        message_expert_sculpt1 = Message(
+                authentication_request_id=auth_req_sculpt.request_id,
+                sender_id=user7.id,
+                message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
+                sent_at=now - timedelta(hours=1, minutes=30)
+        )
         message_seller_sculpt = Message(
             authentication_request_id=auth_req_sculpt.request_id,
             sender_id=auction4.seller_id,
             message_text="Please find attached a detailed view of my sculpture.",
-            sent_at=now + timedelta(hours=1, minutes=30)
+            sent_at=now - timedelta(hours=1)
         )
-        db.session.add(message_seller_sculpt)
+        db.session.add_all([message_expert_sculpt1, message_seller_sculpt])
+
         db.session.commit()
 
         message_image_sculpt = MessageImage(
@@ -494,7 +517,7 @@ def populate_db(app):
             authentication_request_id=auth_req_sculpt.request_id,
             sender_id=user7.id,
             message_text="Thank you for the details. Your sculpture is authenticated.",
-            sent_at=now + timedelta(hours=2, minutes=15)
+            sent_at=now - timedelta(minutes=15)
         )
         db.session.add(message_expert_sculpt)
         db.session.commit()
@@ -518,14 +541,20 @@ def populate_db(app):
         db.session.add(expert_assignment_moby)
         db.session.commit()
 
+        message_expert_moby1 = Message(
+                authentication_request_id=auth_req_moby.request_id,
+                sender_id=user8.id,
+                message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
+                sent_at=now - timedelta(hours=1, minutes=30)
+        )
         # Add seller message with image for Moby Dick
         message_seller_moby = Message(
             authentication_request_id=auth_req_moby.request_id,
             sender_id=auction9.seller_id,
             message_text="Please see the attached close-up of my rare first edition.",
-            sent_at=now + timedelta(hours=1, minutes=30)
+            sent_at=now - timedelta(hours=1)
         )
-        db.session.add(message_seller_moby)
+        db.session.add_all([message_expert_moby1, message_seller_moby])
         db.session.commit()
 
         message_image_moby = MessageImage(
@@ -540,7 +569,7 @@ def populate_db(app):
             authentication_request_id=auth_req_moby.request_id,
             sender_id=user8.id,
             message_text="Thank you for providing the image and details. Your item is authenticated.",
-            sent_at=now + timedelta(hours=2, minutes=15)
+            sent_at=now - timedelta(minutes=15)
         )
         db.session.add(message_expert_moby)
         db.session.commit()
@@ -564,14 +593,20 @@ def populate_db(app):
         db.session.add(expert_assignment_ferrari)
         db.session.commit()
 
+        message_expert_ferrari1 = Message(
+                authentication_request_id=auth_req_ferrari.request_id,
+                sender_id=user6.id,
+                message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
+                sent_at=now - timedelta(hours=1, minutes=30)
+        )
         # Add seller message with image for Ferrari
         message_seller_ferrari = Message(
             authentication_request_id=auth_req_ferrari.request_id,
             sender_id=auction11.seller_id,
             message_text="Attached is a detailed image of my car's interior and exterior.",
-            sent_at=now + timedelta(hours=1, minutes=30)
+            sent_at=now - timedelta(hours=1)
         )
-        db.session.add(message_seller_ferrari)
+        db.session.add_all([message_expert_ferrari1, message_seller_ferrari])
         db.session.commit()
 
         message_image_ferrari = MessageImage(
@@ -586,7 +621,7 @@ def populate_db(app):
             authentication_request_id=auth_req_ferrari.request_id,
             sender_id=user6.id,
             message_text="Thank you for the information. Your Ferrari has been authenticated.",
-            sent_at=now + timedelta(hours=2, minutes=15)
+            sent_at=now - timedelta(minutes=15)
         )
         db.session.add(message_expert_ferrari)
         db.session.commit()
@@ -596,8 +631,7 @@ def populate_db(app):
             item_id=auction8.item_id,
             requester_id=auction8.seller_id,
             request_date=now,
-            fee_percent=5.00,
-            status=1  # in progress
+            fee_percent=5.00
         )
         db.session.add(auth_req_book)
         db.session.commit()
@@ -605,12 +639,10 @@ def populate_db(app):
             request_id=auth_req_book.request_id,
             expert_id=user6.id,   # Assign Charlie for Ferrari
             assigned_date=now,
-            status=2
+            status=1
         )
         db.session.add(expert_assignment_book)
         db.session.commit()
-
-
     
         # For Charlie (user6) – next 14 days:
         for i in range(14):
@@ -671,54 +703,7 @@ def populate_db(app):
             db.session.add(availability)
 
         db.session.commit()
-
-        # Messages (for the expert assignment)
-        message1 = Message(
-            authentication_request_id=auth_req.request_id,
-            sender_id=user6.id,
-            message_text='Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
-            sent_at=now - timedelta(days=1)
-        )
-        message2 = Message(
-            authentication_request_id=auth_req1.request_id,
-            sender_id=user2.id,
-            message_text='I\'ll provide the necessary information shortly.',
-            sent_at=now - timedelta(minutes=1)
-        )
-        message3 = Message(
-            authentication_request_id=auth_req2.request_id,
-            sender_id=user3.id,
-            message_text='Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
-            sent_at=now - timedelta(days=2)
-        )
-        message4 = Message(
-            authentication_request_id=auth_req2.request_id,
-            sender_id=user2.id,
-            message_text='Hi, here are some additional images.',
-            sent_at=now - timedelta(days=1)
-        )
-        db.session.add_all([message1, message2, message3, message4])
-        db.session.commit()
-
-        message4_image1 = MessageImage(
-            image_key='message_attachments/20250320_002304_auth1.jpg',
-            message_id=message4.message_id
-        )
-        message4_image2 = MessageImage(
-            image_key='message_attachments/20250320_002304_auth2.jpg',
-            message_id=message4.message_id
-        )
-        message4_image3 = MessageImage(
-            image_key='message_attachments/20250320_002305_auth3.jpg',
-            message_id=message4.message_id
-        )
-        message4_image4 = MessageImage(
-            image_key='message_attachments/20250320_002306_auth4.jpg',
-            message_id=message4.message_id
-        )
-        db.session.add_all([message4_image1, message4_image2, message4_image3, message4_image4])
-        db.session.commit()
-
+        
         # Manager Config
         configs = [
             ManagerConfig(
