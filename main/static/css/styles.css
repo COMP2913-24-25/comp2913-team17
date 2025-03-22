@@ -789,7 +789,7 @@ h1, h2, h3, h4, h5 {
 }
 
 /* Login Page Styling */
-@media (max-width: 1024px) {
+@media (max-width: 769px) {
 
   .login-graphic {
     display: none !important;
@@ -814,6 +814,20 @@ h1, h2, h3, h4, h5 {
 
   .login-form-background {
     width: 80%;
+  }
+}
+
+@media (max-width: 1024px) {
+
+  .login-form-background {
+    flex: 4 !important;
+  }
+}
+
+@media (max-width: 1024px) {
+
+  .login-form-background {
+    flex: 4 !important;
   }
 }
 
@@ -925,7 +939,6 @@ h1, h2, h3, h4, h5 {
 }
 
 .google-btn:hover{
-  /*background-color: #ccc;*/
   border: 2px solid #ff9d00;
 }
 
