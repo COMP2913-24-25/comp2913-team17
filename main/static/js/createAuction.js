@@ -29,8 +29,8 @@ $(document).ready(function() {
       // Render a list of the filenames with each name in its own div
       // Each div is given its own index id for targetting
       let imageNames = Array.from(images).map((image, index) => 
-        `<div class="image-${index}">
-          <button class="delete-btn" data-index="${index}">X</button>
+        `<div class="image-${index} image-item">
+          <i class="delete-btn fa-solid fa-square-minus" data-index="${index}"></i>
           <span class="image-name">${image.name}</span>
          </div>`).join('\n');
       imageList.append(imageNames);
@@ -65,7 +65,7 @@ $(document).ready(function() {
       // Remove the old image-index class
       $(element).removeClass();
       // Add the new image-index class
-      $(element).addClass(`image-${newIndex}`);
+      $(element).addClass(`image-${newIndex} image-item`);
       // Update the data index of each delete button
       $(element).find('.delete-btn').data('index', newIndex);
     })

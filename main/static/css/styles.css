@@ -882,7 +882,8 @@ h1, h2, h3, h4, h5 {
 }
 
 .pass-container .form-control:focus,
-.user-container .form-control:focus {
+.user-container .form-control:focus,
+.input-container:focus {
   border-bottom: 2px solid #ff9d00;
 }
 
@@ -1038,4 +1039,43 @@ h1, h2, h3, h4, h5 {
   text-overflow: ellipsis;
   max-width: 200px;
   white-space: nowrap;
+}
+
+.delete-btn {
+  color: var(--danger-color);
+  cursor: pointer;
+  padding: 10px;
+}
+
+.delete-btn:hover{
+  filter: brightness(120%);
+}
+
+.image-item {
+  display: flex;
+  align-items: center;
+}
+
+.input-container {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  border: none;
+  border-bottom: 2px solid #ccc;
+  transition: border-color 0.3s ease;
+  border-radius: 0;
+}
+
+#auction-form .form-control {
+  margin-bottom: 10px;
+}
+
+#auction-form .form-label {
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+#auction-form {
+  background-color: #f7f7f7;
 }
