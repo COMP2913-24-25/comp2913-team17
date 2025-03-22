@@ -1031,3 +1031,11 @@ h1, h2, h3, h4, h5 {
     flex-direction: column;
   }
 }
+
+.image-name {
+  overflow: hidden;
+  display: inline-block;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  white-space: nowrap;
+}

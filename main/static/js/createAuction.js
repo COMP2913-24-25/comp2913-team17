@@ -27,8 +27,47 @@ $(document).ready(function() {
       this.value = "";
     } else if (images.length > 0) {
       // Render a list of the filenames with each name in its own div
-      let imageNames = Array.from(images).map(image => `<div>${image.name}</div>`).join('\n');
+      // Each div is given its own index id for targetting
+      let imageNames = Array.from(images).map((image, index) => 
+        `<div class="image-${index}">
+          <button class="delete-btn" data-index="${index}">X</button>
+          <span class="image-name">${image.name}</span>
+         </div>`).join('\n');
       imageList.append(imageNames);
     }
   });
 });
+
+$(document).ready(function() {
+  /*
+   * Delete buttons are not rendered until user selects images
+   * attach event to parent window and target delete buttons
+   * to attach the click events 
+   */
+  $(document).on('click', '.delete-btn', function() {
+    // Target the image element using its index
+    let index = $(this).data('index');
+    // Removes the list element corresponding to the image
+    $(`.image-${index}`).remove();
+
+    let input = $('#upload-images')[0];
+    let newList = new DataTransfer();
+
+    Array.from(input.files).forEach((image, i) => {
+      if (i !== index) {
+        newList.items.add(image);
+      }
+    });
+    input.files = newList.files;
+
+    // Update the index of each image with the newList index values
+    $('#image-list').children().each(function(newIndex, element) {
+      // Remove the old image-index class
+      $(element).removeClass();
+      // Add the new image-index class
+      $(element).addClass(`image-${newIndex}`);
+      // Update the data index of each delete button
+      $(element).find('.delete-btn').data('index', newIndex);
+    })
+  })
+})
