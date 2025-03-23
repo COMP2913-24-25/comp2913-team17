@@ -1111,18 +1111,6 @@ h1, h2, h3, h4, h5 {
   text-transform: uppercase;
 }
 
-.btn-group .btn[data-revenue-type="all"].active {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-
-.btn-group .btn[data-revenue-type="paid"].active {
-  background-color: #ff7f0e;
-  color: white;
-  border-color: #ff7f0e;
-}
-
 /* Update details styling */
 
 .update-details-wrapper {
