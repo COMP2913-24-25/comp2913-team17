@@ -198,7 +198,6 @@ def handle_manager(now):
     return render_template('dashboard_manager.html', manager=manager, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
 
-
 def handle_expert(now):
     """Handle the dashboard for an expert."""
     expert = {}
@@ -834,6 +833,7 @@ def update_expertise(user_id):
         'message': 'Expertise updated successfully',
         'expertise': new_expertise
     }), 200
+
 
 @dashboard_page.route('/api/revenue', methods=['GET'])
 @login_required

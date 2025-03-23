@@ -9,16 +9,17 @@ document.addEventListener('DOMContentLoaded', function () {
         labels: [],
         datasets: [{
           label: 'Revenue (£)',
-          backgroundColor: 'rgba(234, 217, 184, 0.2)', // Beige fill
-          borderColor: '#EAD9B8', // Beige line
-          borderWidth: 1,
-          data: []
+          backgroundColor: 'rgba(0, 123, 255, 0.2)', // Default to blue fill (All Revenue)
+          borderColor: '#007bff', // Default to blue line
+          borderWidth: 2,
+          data: [],
+          fill: true
         }]
       },
       options: {
         animation: {
-          duration: 1000, // Animation duration in milliseconds (1 second)
-          easing: 'easeInOutQuad' // Smooth easing function for a natural feel
+          duration: 1000,
+          easing: 'easeInOutQuad'
         },
         scales: {
           y: {
@@ -28,32 +29,41 @@ document.addEventListener('DOMContentLoaded', function () {
           x: {
             title: { display: true, text: 'Time' },
             ticks: {
-              autoSkip: true, // Automatically skip labels to prevent overlap
-              maxTicksLimit: 5, // Limit the number of ticks to 5
+              autoSkip: true,
+              maxTicksLimit: 5,
               callback: function(value, index, ticks) {
                 const label = this.getLabelForValue(value);
                 const period = $('.btn-group [data-period].active').data('period');
                 if (period === '1w') {
-                  // For "1 Week", show only the day
-                  return label.split('-')[2]; // Extracts the day from "YYYY-MM-DD"
+                  return label.split('-')[2]; // Day
                 } else if (period === '1m') {
-                  // For "1 Month", show only the week number
-                  return label.split('-')[1]; // Extracts the week from "YYYY-WW"
+                  return label.split('-')[1]; // Week
                 }
-                // For "6 Months", show the month
-                return label.split('-')[1]; // Extracts the month from "YYYY-MM"
+                return label.split('-')[1]; // Month
               }
             }
           }
         },
         responsive: true,
-        maintainAspectRatio: false // Allow the chart to fill the container
+        maintainAspectRatio: false
       }
     });
 
     function updateChart() {
       const revenueType = $('.btn-group [data-revenue-type].active').data('revenue-type');
       const period = $('.btn-group [data-period].active').data('period');
+
+      // Update chart colors based on revenue type
+      if (revenueType === 'all') {
+        revenueChart.data.datasets[0].label = 'All Revenue (£)';
+        revenueChart.data.datasets[0].backgroundColor = 'rgba(0, 123, 255, 0.2)'; // Blue fill
+        revenueChart.data.datasets[0].borderColor = '#007bff'; // Blue line
+      } else if (revenueType === 'paid') {
+        revenueChart.data.datasets[0].label = 'Paid Revenue (£)';
+        revenueChart.data.datasets[0].backgroundColor = 'rgba(255, 127, 14, 0.2)'; // Orange fill
+        revenueChart.data.datasets[0].borderColor = '#ff7f0e'; // Orange line
+      }
+
       fetch(`/dashboard/api/revenue?type=${revenueType}&period=${period}`)
         .then(response => response.json())
         .then(data => {
@@ -79,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
       updateChart();
     });
 
+    // Initial chart load
     updateChart();
   }
 });
