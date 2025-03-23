@@ -266,6 +266,19 @@ def mark_notifications_read():
     except Exception as e:
         logger.error(f"Error marking specific notifications as read: {str(e)}")
         return jsonify({'error': 'Failed to mark notifications as read'}), 500
+    
+@item_page.route('/api/notifications/clear-all', methods=['POST'])
+@login_required
+def clear_all_notifications():
+    try:
+        notifications = Notification.query.filter_by(user_id=current_user.id).all()
+        for notification in notifications:
+            db.session.delete(notification)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        logger.error(f"Error clearing all notifications: {str(e)}")
+        return jsonify({'error': 'Failed to clear notifications'}), 500
 
 @item_page.route('/<url>/create-payment-intent', methods=['POST'])
 @login_required

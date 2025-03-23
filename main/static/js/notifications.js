@@ -1,13 +1,9 @@
 $(document).ready(function() {
-  // Only proceed if the user is authenticated (has a secret key)
   const userKey = $('meta[name="user-key"]').attr('content');
   if (!userKey) return;
 
-  // Join user's personal notification room
   window.globalSocket = window.globalSocket || io();
   window.globalSocket.emit('join_user', { user_key: userKey });
-
-  // Listen for new notifications
   window.globalSocket.on('new_notification', function(data) {
     // If we are on the authentication page and receive a notification, then don't show and mark as read
     const itemUrl = $('#item-link').attr('href');
@@ -78,7 +74,6 @@ $(document).ready(function() {
   $(document).on('click', '.notification-item', function(event) {
     // For notification items with an href (links to items)
     if ($(this).attr('href')) {
-      // Prevent immediate navigation
       event.preventDefault();
       
       // Store the URL we'll navigate to after marking read
@@ -89,14 +84,11 @@ $(document).ready(function() {
         // Mark as read, then navigate
         markNotificationsAsRead([notificationId])
           .then(() => {
-            // Remove bold styling to indicate "read" status
             $(this).removeClass('fw-bold');
-            // Navigate to the item page after marking as read
             window.location.href = destinationUrl;
           })
           .catch(error => {
             console.error('Error marking notification as read:', error);
-            // Navigate anyway even if there was an error
             window.location.href = destinationUrl;
           });
       } else {
@@ -104,11 +96,9 @@ $(document).ready(function() {
         window.location.href = destinationUrl;
       }
     } else {
-      // For notification items without href (not clickable to navigate)
       const notificationId = $(this).data('notification-id');
       if (notificationId) {
         markNotificationsAsRead([notificationId]);
-        // Remove bold styling to indicate "read" status
         $(this).removeClass('fw-bold');
       }
     }
@@ -128,13 +118,27 @@ $(document).ready(function() {
 
     if (notificationIds.length > 0) {
       markNotificationsAsRead(notificationIds);
-      // Reset the badge count
       $('.btn:contains("Notifications") .badge').text('');
-      $('..btn:contains("Notifications") .badge').addClass('d-none');
+      $('.btn:contains("Notifications") .badge').addClass('d-none'); // Fixed selector
     }
   });
 
-  // Function to mark notifications as read via API - modified to return the Promise
+  // Clear all notifications when clear all button is clicked
+  $(document).on('click', '#clear-all-notifications', function(event) {
+    event.preventDefault();
+    
+    clearAllNotifications()
+      .then(() => {
+        $('.notification-item').parent().remove();
+        $('.btn:contains("Notifications") .badge').text('');
+        $('.btn:contains("Notifications") .badge').addClass('d-none');
+
+        const notificationList = $('.btn:contains("Notifications")').next('.dropdown-menu');
+        notificationList.html('<li><div class="dropdown-item">No new notifications</div></li>');
+      })
+      .catch(error => console.error('Error clearing notifications:', error));
+  });
+
   async function markNotificationsAsRead(ids) {
     try {
       return await csrfFetch('/item/api/notifications/mark-read', {
@@ -143,6 +147,18 @@ $(document).ready(function() {
       });
     } catch (error) {
       console.error('Error marking notifications as read:', error);
+      throw error;
+    }
+  }
+
+  // Function to clear all notifications via API
+  async function clearAllNotifications() {
+    try {
+      return await csrfFetch('/item/api/notifications/clear-all', {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('Error clearing all notifications:', error);
       throw error;
     }
   }

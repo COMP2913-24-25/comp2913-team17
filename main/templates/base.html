@@ -84,6 +84,8 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end" style="width: 300px; max-height: 400px; overflow-y: auto;">
               {% if current_user.notifications %}
+                <li><button id="clear-all-notifications" class="dropdown-item text-danger">Clear All</button></li>
+                <li><hr class="dropdown-divider"></li>
                 {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true) %}
                 <li>
                   {% if notification.item_url %}

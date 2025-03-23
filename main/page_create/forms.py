@@ -77,12 +77,10 @@ class CreateAuctionForm(FlaskForm):
         except:
             maximum_duration = timedelta(days=5)
 
-        minimum_duration = timedelta(hours=1)
+        minimum_duration = timedelta(minutes=1)
         req_duration = self.auction_end.data - datetime.now()
 
         if self.auction_end.data <= datetime.now():
             raise ValidationError("Auction end must occur after auction start time.")
         elif req_duration > maximum_duration:
             raise ValidationError(f"Auction duration cannot be longer than {maximum_duration.days} days.")
-        elif req_duration < minimum_duration:
-            raise ValidationError("Auctions must last for at least 1 hour.")
