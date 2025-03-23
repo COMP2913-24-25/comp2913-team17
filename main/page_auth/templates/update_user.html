@@ -7,51 +7,110 @@
 <!-- Heading -->
 <h1 class="mt-5 mb-4 text-center">Update User Details</h1>
 
-<div id="user-form">
-  <form action="#" method="POST" name="Update" id="update-form">
-    {{ form.csrf_token }}
-    <!-- Username -->
-    <div class="form-group">
-      <label for="enter-username" class="form-label">New Username</label>
-      {{ form.username(class_="form-control required-field", placeholder="Enter a username", id_="enter-username", maxlength_="50", autocomplete="username") }}
-      <p id="username-warning" class="text-danger" style="visibility: hidden">Invalid username</p>
-      {% for error in form.username.errors %} 
-      <div class="alert alert-danger" role="alert">{{ error }}</div>
-      {% endfor %}
-    </div>
-    <!-- Email -->
-    <div class="form-group">
-      <label for="enter-email" class="form-label">New Email</label>
-      {{ form.email(class_="form-control required-field", placeholder="Enter your email", id_="enter-email",minlength_="5", maxlength_="100", autcomplete="email") }}
-      <p id="email-warning" class="text-danger" style="visibility: hidden">Invalid email</p>
-      {% for error in form.email.errors %}
-      <div class="alert alert-danger" role="alert">{{ error }}</div>
-      {% endfor %}
-    </div>
-    <!-- Password -->
-    <div class="form-group">
-      <label for="enter-password" class="form-label">New Password (Optional)</label>
-      {{ form.password(class_="form-control required-field", placeholder="Enter a password", id_="enter-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
-      <p id="password-warning" class="text-danger" style="visibility: hidden">Invalid password</p>
-      {% for error in form.password.errors %}
-      <div class="alert alert-danger" role="alert">{{ error }}</div>
-      {% endfor %}
-    </div>
-    <!-- Confirm Password -->
-    <div class="form-group">
-      <label for="enter-confirm" class="form-label">Confirm New Password (Optional)</label>
-      {{ form.confirm_password(class_="form-control required-field", placeholder="Confirm your password", id_="enter-confirm", minlength_="8", maxlength_="24", autocomplete="new-password") }}
-      <p id="confirm-warning" class="text-danger" style="visibility: hidden">Passwords do not match</p>
-      {% for error in form.confirm_password.errors %}
-      <div class="alert alert-danger" role="alert">{{ error }}</div>
-      {% endfor %}
-    </div>
-    <!-- Submit -->
-    <div class="form-group">
-      {{ form.submit(class_="form-control required-field btn btn-primary", placeholder="Update", id_="submit-register") }}
-    </div>
-</div>
 
+<div class="update-form-wrapper">
+
+  <!--Update Username-->
+  <form action="#" method="POST" name="UpdateUsername" id="update-username-form" action="{{ url_for('auth_page.update_user') }}">
+    {{ update_username_form.csrf_token }}
+    <div class="form-group">
+      <label for="current-password" class="form-label">
+        Current Password
+      </label>
+      {{ update_username_form.current_password(class_="form-control required-field", placeholder="Enter your current password", id_="current-password", autocomplete="current-password") }}
+      {% for error in update_username_form.current_password.errors %}
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      <label for="new-username" class="form-label">
+        New Username
+      </label>
+      {{ update_username_form.new_username(class_="form-control required-field", placeholder="Enter a new username", id_="new-username", maxlength_="16", autocomplete="username") }}
+      {% for error in update_username_form.new_username.errors %}
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      {{ update_username_form.submit(class_="btn btn-primary", placeholder="Update Username") }}
+    </div>
+  </form>
+
+  <!--Update Email-->
+  <form action="#" method="POST" name="UpdateEmail" id="update-email-form" action="{{ url_for('auth_page.update_user') }}">
+    {{ update_email_form.csrf_token }}
+    <div class="form-group">
+      <label for="current-password-email" class="form-label">
+        Current Password
+      </label>
+      {{ update_email_form.current_password(class_="form-control required-field", placeholder="Enter your current password", id_="current-password-email", autocomplete="current-password") }}
+      {% for error in update_email_form.current_password.errors %} 
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      <label for="new-email" class="form-label">
+        New Email
+      </label>
+      {{ update_email_form.new_email(class_="form-control required-field", placeholder="Enter your new email", id_="new-email", maxlength_="50", autocomplete="email") }}
+      {% for error in update_email_form.new_email.errors %} 
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      {{ update_email_form.submit(class_="btn btn-primary", placeholder="Update Email") }}
+    </div>
+  </form>
+
+  <!--Update Password-->
+  <form action="#" method="POST" name="UpdatePassword" id="update-password-form" action="{{ url_for('auth_page.update_user') }}">
+    {{ update_password_form.csrf_token }}
+    <div class="form-group">
+      <label for="current-password-password" class="form-label">
+        Current Password
+      </label>
+      {{ update_password_form.current_password(class_="form-control required-field", placeholder="Enter your current password", id_="current-password-password", autocomplete="current-password") }}
+      {% for error in update_password_form.current_password.errors %} 
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      <label for="new-password" class="form-label">
+        New Password
+      </label>
+      {{ update_password_form.new_password(class_="form-control required-field", placeholder="Enter a new password", id_="new-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
+      {% for error in update_password_form.new_password.errors %} 
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      <label for="confirm-password" class="form-label">
+        Confirm New Password
+      </label>
+      {{ update_password_form.confirm_password(class_="form-control required-field", placeholder="Confirm your new password", id_="confirm-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
+      {% for error in update_password_form.confirm_password.errors %} 
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      {{ update_password_form.submit(class_="btn btn-primary", placeholder="Update Password") }}
+    </div>
+  </form>
+</div>
 <!-- Scripts -->
 
 {% endblock %}
