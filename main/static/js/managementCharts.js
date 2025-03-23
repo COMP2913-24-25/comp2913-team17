@@ -16,14 +16,34 @@ document.addEventListener('DOMContentLoaded', function () {
         }]
       },
       options: {
-        animation: false, // Disable animations for better performance
+        animation: {
+          duration: 1000, // Animation duration in milliseconds (1 second)
+          easing: 'easeInOutQuad' // Smooth easing function for a natural feel
+        },
         scales: {
           y: {
             beginAtZero: true,
             title: { display: true, text: 'Revenue (£)' }
           },
           x: {
-            title: { display: true, text: 'Time' }
+            title: { display: true, text: 'Time' },
+            ticks: {
+              autoSkip: true, // Automatically skip labels to prevent overlap
+              maxTicksLimit: 5, // Limit the number of ticks to 5
+              callback: function(value, index, ticks) {
+                const label = this.getLabelForValue(value);
+                const period = $('.btn-group [data-period].active').data('period');
+                if (period === '1w') {
+                  // For "1 Week", show only the day
+                  return label.split('-')[2]; // Extracts the day from "YYYY-MM-DD"
+                } else if (period === '1m') {
+                  // For "1 Month", show only the week number
+                  return label.split('-')[1]; // Extracts the week from "YYYY-WW"
+                }
+                // For "6 Months", show the month
+                return label.split('-')[1]; // Extracts the month from "YYYY-MM"
+              }
+            }
           }
         },
         responsive: true,
