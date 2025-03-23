@@ -10,13 +10,21 @@
   <!-- Week Navigation -->
   {% set prev_week = week_start - timedelta(days=7) %}
   {% set next_week = week_start + timedelta(days=7) %}
-  <div class="d-flex justify-content-center mb-3">
+  <div class="d-flex justify-content-center mb-4">
     {% if week_start > current_week_start %}
-      <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ prev_week.strftime('%Y-%m-%d') }}" class="btn btn-primary me-2">Previous Week</a>
+      <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ prev_week.strftime('%Y-%m-%d') }}"
+         class="btn btn-primary me-2">
+         Previous Week
+      </a>
     {% else %}
-      <button type="button" class="btn btn-outline-secondary me-2" disabled>Previous Week</button>
+      <button type="button" class="btn btn-outline-secondary me-2" disabled>
+         Previous Week
+      </button>
     {% endif %}
-    <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ next_week.strftime('%Y-%m-%d') }}" class="btn btn-primary">Next Week</a>
+    <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ next_week.strftime('%Y-%m-%d') }}"
+       class="btn btn-primary">
+       Next Week
+    </a>
   </div>
   
   <!-- Availability Form -->
@@ -26,8 +34,8 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="week_start" value="{{ week_start.strftime('%Y-%m-%d') }}">
     
-    <div class="table-responsive"></div>
-      <table class="table table-hover table-bordered align-middle">
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered align-middle" role="table" aria-describedby="availability-table">
         <thead class="table-light">
           <tr>
             <th scope="col">Day</th>
