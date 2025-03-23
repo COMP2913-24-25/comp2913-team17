@@ -172,6 +172,15 @@ def update_user():
     update_email_form = UpdateEmailForm()
     update_password_form = UpdatePasswordForm()
 
+
+    # Mask current email before rendering the template
+    email = current_user.email
+    mask_start, domain = email.split('@')
+    if len(mask_start) > 2:
+      masked_email = mask_start[0] + '*' * (len(mask_start) - 2) + mask_start[-1] + '@' + domain
+    else:
+      masked_email = '*' * (len(mask_start)) + '@' + domain  
+
     ### Username Change ###
     # Check 1: Username isn't already taken
     # Check 2: User knows current password
@@ -245,13 +254,14 @@ def update_user():
 
             logout_user()
             flash('Please log in again with your updated password.', 'info')
-            
-            return redirect(url_for('auth_page.update_user'))
+
+            return redirect(url_for('auth_page.login'))
 
     return render_template('update_user.html', 
                            update_username_form=update_username_form,
                            update_email_form=update_email_form,
-                           update_password_form=update_password_form)
+                           update_password_form=update_password_form,
+                           masked_email=masked_email)
 
 @auth_page.route('/logout')
 def logout():

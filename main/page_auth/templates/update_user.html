@@ -13,16 +13,8 @@
   <!--Update Username-->
   <form action="#" method="POST" name="UpdateUsername" id="update-username-form" action="{{ url_for('auth_page.update_user') }}">
     {{ update_username_form.csrf_token }}
-    <div class="form-group">
-      <label for="current-password" class="form-label">
-        Current Password
-      </label>
-      {{ update_username_form.current_password(class_="form-control required-field", placeholder="Enter your current password", id_="current-password", autocomplete="current-password") }}
-      {% for error in update_username_form.current_password.errors %}
-        <div class="alert alert-danger" role="alert">
-          {{ error }}
-        </div>
-      {% endfor %}
+    <div>
+      Current username: {{ current_user.username }}
     </div>
     <div class="form-group">
       <label for="new-username" class="form-label">
@@ -36,23 +28,27 @@
       {% endfor %}
     </div>
     <div class="form-group">
-      {{ update_username_form.submit(class_="btn btn-primary", placeholder="Update Username") }}
-    </div>
-  </form>
-
-  <!--Update Email-->
-  <form action="#" method="POST" name="UpdateEmail" id="update-email-form" action="{{ url_for('auth_page.update_user') }}">
-    {{ update_email_form.csrf_token }}
-    <div class="form-group">
-      <label for="current-password-email" class="form-label">
-        Current Password
+      <label for="current-password" class="form-label">
+        Please enter your current password to confirm changes:
       </label>
-      {{ update_email_form.current_password(class_="form-control required-field", placeholder="Enter your current password", id_="current-password-email", autocomplete="current-password") }}
-      {% for error in update_email_form.current_password.errors %} 
+      {{ update_username_form.current_password(class_="form-control required-field", placeholder="Enter your current password", id_="current-password", autocomplete="current-password") }}
+      {% for error in update_username_form.current_password.errors %}
         <div class="alert alert-danger" role="alert">
           {{ error }}
         </div>
       {% endfor %}
+    </div>
+    <div class="form-group">
+      {{ update_username_form.submit(class_="btn btn-primary") }}
+    </div>
+  </form>
+  <br>
+  <br>
+  <!--Update Email-->
+  <form action="#" method="POST" name="UpdateEmail" id="update-email-form" action="{{ url_for('auth_page.update_user') }}">
+    {{ update_email_form.csrf_token }}
+    <div>
+      Current email: {{ masked_email }}
     </div>
     <div class="form-group">
       <label for="new-email" class="form-label">
@@ -66,10 +62,22 @@
       {% endfor %}
     </div>
     <div class="form-group">
-      {{ update_email_form.submit(class_="btn btn-primary", placeholder="Update Email") }}
+      <label for="current-password-email" class="form-label">
+        Please enter your current password to confirm changes:
+      </label>
+      {{ update_email_form.current_password(class_="form-control required-field", placeholder="Enter your current password", id_="current-password-email", autocomplete="current-password") }}
+      {% for error in update_email_form.current_password.errors %} 
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      {{ update_email_form.submit(class_="btn btn-primary") }}
     </div>
   </form>
-
+  <br>
+  <br>
   <!--Update Password-->
   <form action="#" method="POST" name="UpdatePassword" id="update-password-form" action="{{ url_for('auth_page.update_user') }}">
     {{ update_password_form.csrf_token }}
@@ -107,7 +115,7 @@
       {% endfor %}
     </div>
     <div class="form-group">
-      {{ update_password_form.submit(class_="btn btn-primary", placeholder="Update Password") }}
+      {{ update_password_form.submit(class_="btn btn-primary") }}
     </div>
   </form>
 </div>
