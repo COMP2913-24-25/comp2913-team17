@@ -72,9 +72,6 @@ $(document).ready(function() {
     
     // Add new notification at the top
     notificationList.prepend(notificationElement);
-
-    // Show a toast notification
-    showToast(data.message, data.item_url);
   });
 
   // Mark notifications as read when clicked
@@ -133,7 +130,7 @@ $(document).ready(function() {
       markNotificationsAsRead(notificationIds);
       // Reset the badge count
       $('.btn:contains("Notifications") .badge').text('');
-      $('.btn:contains("Notifications") .badge').addClass('d-none');
+      $('..btn:contains("Notifications") .badge').addClass('d-none');
     }
   });
 
@@ -148,46 +145,5 @@ $(document).ready(function() {
       console.error('Error marking notifications as read:', error);
       throw error;
     }
-  }
-
-  // Function to show toast notification
-  function showToast(message, itemUrl) {
-    // Create toast container if it doesn't exist
-    if ($('#toast-container').length === 0) {
-      $('body').append('<div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050"></div>');
-    }
-
-    // Create unique ID for the toast
-    const toastId = 'toast-' + Date.now();
-    
-    // Create toast HTML
-    let toastHtml = `
-      <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-          <strong class="me-auto">Auction Notification</strong>
-          <small>${new Date().toLocaleTimeString()}</small>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          ${message}
-          ${itemUrl ? `<div class="mt-2"><a href="/item/${itemUrl}" class="btn btn-sm btn-primary">View Item</a></div>` : ''}
-        </div>
-      </div>
-    `;
-    
-    // Add toast to container
-    $('#toast-container').append(toastHtml);
-    
-    // Initialize and show toast
-    const toastElement = new bootstrap.Toast(document.getElementById(toastId), {
-      autohide: true,
-      delay: 5000
-    });
-    toastElement.show();
-    
-    // Clean up toast after it's hidden
-    $(`#${toastId}`).on('hidden.bs.toast', function() {
-      $(this).remove();
-    });
   }
 });
