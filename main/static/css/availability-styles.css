@@ -1,0 +1,39 @@
+/* availability-styles.css */
+
+/* Availability Heading */
+.availability-heading {
+    font-family: var(--font-display);
+    color: var(--accent-color);
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Availability Input & Select Styles (Table Elements) */
+  .availability-input,
+  .availability-select {
+    width: 100%; /* Stretch to fill the cell */
+    border: 2px solid #222;
+    border-radius: 0;
+    background-color: #f7f7f7;
+    color: #222;
+    font-family: var(--font-mono);
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+    padding: 0.5rem;
+  }
+  
+  .availability-input:focus,
+  .availability-select:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: var(--accent-color);
+    background-color: #fff;
+  }
+  
+  /* Disabled state for table inputs/selects */
+  .disabled-input {
+    background-color: #707070 !important;
+    color: #FFF !important;
+    cursor: not-allowed;
+    opacity: 1;
+  }
+  
