@@ -28,19 +28,12 @@ $(document).ready(function() {
     subscribeBtn.prop('disabled', true).text('Subscribing...');
     
     setTimeout(function() {
-      // Success - update UI
-      emailInput.prop('disabled', true)
-                .css({
-                  'background-color': '#e9ecef',
-                  'color': '#6c757d',
-                  'border-color': '#ced4da'
-                })
-                .val('Subscribed: ' + email);
+      // Success - show success message but keep form active
+      emailInput.val(''); // Clear the input field for new email
       
-      subscribeBtn.prop('disabled', true)
-                  .removeClass('btn-accent')
-                  .addClass('btn-secondary')
-                  .text('Subscribed');
+      // Re-enable the button
+      subscribeBtn.prop('disabled', false)
+                 .text('Subscribe');
       
       feedbackContainer.addClass('text-success')
                        .text('Thank you for subscribing to our newsletter!');
