@@ -1126,13 +1126,13 @@ h1, h2, h3, h4, h5 {
 /* Update details styling */
 
 .update-details-wrapper {
-  width: 80%;
+  width: 75%;
   margin: auto;
   background-color: #f7f7f7;
   padding: 1rem;
 }
 
-.update-form-container h5{
+.update-form-container h5 {
   color: var(--accent-color);
 }
 
@@ -1157,6 +1157,7 @@ h1, h2, h3, h4, h5 {
 .update-list-group .list-group-item.active {
   background-color: var(--accent-color);
   color: white;
+  border: 1px solid var(--accent-color);
 }
 
 .update-list-group {
@@ -1202,6 +1203,10 @@ h1, h2, h3, h4, h5 {
   .update-form-container h5{
     font-size: 1rem;
   }
+
+  .update-details-wrapper {
+    width: 80%;
+  }
 }
 
 @media (max-width: 300px) {
@@ -1221,6 +1226,10 @@ h1, h2, h3, h4, h5 {
 
   .update-backdrop h3 {
     font-size: 1.5rem;
+  }
+
+  .update-details-wrapper {
+    width: 100%;
   }
 
 }
