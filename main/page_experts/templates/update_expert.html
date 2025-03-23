@@ -5,7 +5,7 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/availability-styles.css') }}">
 
-<h1 class="mt-5 mb-4 text-center">Update Weekly Availability</h1>
+<h1 class="mt-5 mb-4 text-center availability-heading">Update Weekly Availability</h1>
 <div id="availability-form" class="container">
   <!-- Week Navigation -->
   {% set prev_week = week_start - timedelta(days=7) %}
@@ -41,29 +41,32 @@
             {% set current_day = week_start + timedelta(days=i) %}
             {% set availability = week_availabilities[current_day] %}
             <tr data-day="{{ current_day.strftime('%Y-%m-%d') }}">
-              <td>{{ current_day.strftime('%A, %b %d') }}</td>
+              <th scope="row">{{ current_day.strftime('%A, %b %d') }}</th>
               <td>
-                <input type="time" 
-                      class="form-control start-input {% if current_day < today or (availability and not availability.status) %}bg-secondary text-white{% endif %}"
-                      name="day_{{ i }}_start"
-                      min="08:00" max="20:00"
-                      value="{{ availability.start_time.strftime('%H:%M') if availability and availability.start_time else '' }}"
-                      {% if current_day < today or (availability and not availability.status) %}disabled{% endif %}>
+                <input type="time"
+                       aria-label="Start time for {{ current_day.strftime('%A, %b %d') }}"
+                       class="availability-input start-input {% if current_day < today or (availability and not availability.status) %}disabled-input{% endif %}"
+                       name="day_{{ i }}_start"
+                       min="08:00" max="20:00"
+                       value="{{ availability.start_time.strftime('%H:%M') if availability and availability.start_time else '' }}"
+                       {% if current_day < today or (availability and not availability.status) %}disabled{% endif %}>
               </td>
               <td>
-                <input type="time" 
-                      class="form-control end-input {% if current_day < today or (availability and not availability.status) %}bg-secondary text-white{% endif %}"
-                      name="day_{{ i }}_end"
-                      min="08:00" max="20:00"
-                      value="{{ availability.end_time.strftime('%H:%M') if availability and availability.end_time else '' }}"
-                      {% if current_day < today or (availability and not availability.status) %}disabled{% endif %}>
+                <input type="time"
+                       aria-label="End time for {{ current_day.strftime('%A, %b %d') }}"
+                       class="availability-input end-input {% if current_day < today or (availability and not availability.status) %}disabled-input{% endif %}"
+                       name="day_{{ i }}_end"
+                       min="08:00" max="20:00"
+                       value="{{ availability.end_time.strftime('%H:%M') if availability and availability.end_time else '' }}"
+                       {% if current_day < today or (availability and not availability.status) %}disabled{% endif %}>
               </td>
               <td>
-                <select name="day_{{ i }}_status" 
-                        class="form-control status-select"
-                        {% if current_day < today %}disabled class="bg-secondary text-white"{% endif %}>
-                  <option value="available" {% if availability and availability.status %}selected{% endif %}>Available</option>
-                  <option value="unavailable" {% if availability and not availability.status %}selected{% endif %}>Unavailable</option>
+                <select name="day_{{ i }}_status"
+                        aria-label="Status for {{ current_day.strftime('%A, %b %d') }}"
+                        class="availability-select status-select {% if current_day < today %}disabled-input{% endif %}"
+                        {% if current_day < today %}disabled{% endif %}>
+                  <option value="available" {% if availability and availability.status %}selected{% endif %}>AVAILABLE</option>
+                  <option value="unavailable" {% if availability and not availability.status %}selected{% endif %}>UNAVAILABLE</option>
                 </select>
               </td>
             </tr>
@@ -79,9 +82,10 @@
       </button>
     </div>
 
-    <!-- Save Availability Button -->
     <div class="d-flex justify-content-center mt-3">
-      <button type="submit" class="btn btn-primary">Save Availability</button>
+      <button type="submit" class="btn btn-primary">
+        Save Availability
+      </button>
     </div>
   </form>
 </div>
