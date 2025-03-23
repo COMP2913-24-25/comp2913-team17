@@ -1,14 +1,16 @@
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 import random
-from .models import (
-    AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability, ExpertCategory,
-    Item, ManagerConfig, Message, MessageImage, Notification, User, Category, Image,
-    MessageImage, db
-)
 
 def populate_db(app):
     with app.app_context():
+        # Import models here to avoid circular imports
+        from .models import (
+            AuthenticationRequest, Bid, ExpertAssignment, ExpertAvailability, ExpertCategory,
+            Item, ManagerConfig, Message, MessageImage, Notification, User, Category, Image,
+            db
+        )
+
         # Check if user exists
         # If user exists, then dummy data has been loaded
         if User.query.first():
@@ -327,7 +329,7 @@ def populate_db(app):
             upload_date=now - timedelta(days=10),
             auction_start=now - timedelta(days=10),
             auction_end=now - timedelta(days=1),
-            minimum_price=50000000.00,
+            minimum_price=5000.00,
             category_id=cat9.id
         )
         image19 = Image(
@@ -366,28 +368,68 @@ def populate_db(app):
         db.session.add_all(items + images)
         db.session.commit()
 
-        # Bids - Managers and experts cannot bid
+        # Bids for Ended Auctions
+        # Ferrari (auction11) - Already has bids, set status to 2 (won)
         bid1 = Bid(
             item_id=auction11.item_id,
             bidder_id=user2.id,
-            bid_amount=51000000.00,
-            bid_time=now
+            bid_amount=51000.00,
+            bid_time=now - timedelta(hours=2)
         )
         bid2 = Bid(
             item_id=auction11.item_id,
             bidder_id=user1.id,
-            bid_amount=51700000.00,
-            bid_time=now
+            bid_amount=51700.00,
+            bid_time=now - timedelta(hours=1)
         )
         db.session.add_all([bid1, bid2])
         db.session.commit()
+        auction11.winning_bid_id = bid2.bid_id  # Set the highest bid as the winning bid
+        auction11.status = 2  # Won
+        db.session.commit()
 
-         # -------------------------
-        # Add Additional Fake Bids for Auctions (except Antique Desk and Electric Guitar)
-        # -------------------------
+        # Modern Sculpture (auction4) - Add bids, set status to 3 (paid)
+        bid3 = Bid(
+            item_id=auction4.item_id,
+            bidder_id=user1.id,
+            bid_amount=3100.00,
+            bid_time=now - timedelta(hours=3)
+        )
+        bid4 = Bid(
+            item_id=auction4.item_id,
+            bidder_id=user2.id,
+            bid_amount=3200.00,
+            bid_time=now - timedelta(hours=2)
+        )
+        db.session.add_all([bid3, bid4])
+        db.session.commit()
+        auction4.winning_bid_id = bid4.bid_id  # Set the highest bid as the winning bid
+        auction4.status = 3  # Paid
+        db.session.commit()
+
+        # Moby Dick: A First Edition (auction9) - Add bids, set status to 3 (paid)
+        bid5 = Bid(
+            item_id=auction9.item_id,
+            bidder_id=user3.id,
+            bid_amount=130.00,
+            bid_time=now - timedelta(hours=4)
+        )
+        bid6 = Bid(
+            item_id=auction9.item_id,
+            bidder_id=user5.id,
+            bid_amount=150.00,
+            bid_time=now - timedelta(hours=3)
+        )
+        db.session.add_all([bid5, bid6])
+        db.session.commit()
+        auction9.winning_bid_id = bid6.bid_id  # Set the highest bid as the winning bid
+        auction9.status = 3  # Paid
+        db.session.commit()
+
+        # Add Additional Fake Bids for Active Auctions (except Antique Desk and Electric Guitar)
         regular_users = [user1, user2, user3, user4, user5]
         for auction in items:
-            if auction.title in ['Antique Desk', 'Electric Guitar', 'Ferrari']:
+            if auction.title in ['Antique Desk', 'Electric Guitar', 'Ferrari', 'Modern Sculpture', 'Moby Dick: A First Edition']:
                 continue
 
             # Determine total number of bids desired (between 1 and 3)
@@ -441,14 +483,12 @@ def populate_db(app):
                 db.session.add(auth_req)
         db.session.commit()
 
-        # ---------------------------
         # Mark Specific Auctions as Authenticated and Create Expert Assignments
         # We want to mark the following auctions as authenticated:
         # - Art Painting (auction2)
         # - Modern Sculpture (auction4)
         # - Moby Dick: A First Edition (auction9)
         # - Ferrari (auction11)
-        # ---------------------------
         # For Art Painting:
         auth_req_art = AuthenticationRequest.query.filter_by(item_id=auction2.item_id).first()
         if auth_req_art:
@@ -889,6 +929,5 @@ def populate_db(app):
                 db.session.add(expert_category)
 
         db.session.commit()
-
 
         print('Database populated with dummy data!')

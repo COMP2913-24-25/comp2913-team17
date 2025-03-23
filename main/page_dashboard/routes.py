@@ -135,7 +135,7 @@ def handle_manager(now):
                 ~AuthenticationRequest.expert_assignments.any(ExpertAssignment.status != 3)
             )
         )).all()
-    requests = []  # Fixed indentation: aligned with rest of function body
+    requests = []
     # Pre-fetch all current assignments for workload calculation
     all_experts_assignments = dict(db.session.query(
         ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
@@ -162,23 +162,26 @@ def handle_manager(now):
     manager['requests'] = requests
 
     # Statistics Calculations
-    # Total Revenue (sum of highest bids for completed auctions)
-    completed_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
-        .join(Bid, Item.item_id == Bid.item_id)\
-        .filter(Item.auction_end < now)\
-        .group_by(Item.item_id)\
-        .subquery()
-    total_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid)).scalar() or 0.0
-    manager['total_revenue'] = total_revenue
+    # Total Revenue (sum of winning bids for won or paid auctions, status >= 2)
+    manager['total_revenue'] = db.session.query(func.sum(Bid.bid_amount))\
+        .join(Item, Bid.bid_id == Item.winning_bid_id)\
+        .filter(Item.status >= 2)\
+        .scalar() or 0.0
+
+    # Paid Revenue (sum of winning bids for paid auctions, status == 3)
+    manager['paid_revenue'] = db.session.query(func.sum(Bid.bid_amount))\
+        .join(Item, Bid.bid_id == Item.winning_bid_id)\
+        .filter(Item.status == 3)\
+        .scalar() or 0.0
 
     # Commission Income (based on base_fee and authenticated_fee)
-    authenticated_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid))\
-        .join(Item, Item.item_id == completed_auctions.c.item_id)\
+    authenticated_revenue = db.session.query(func.sum(Bid.bid_amount))\
+        .join(Item, Bid.bid_id == Item.winning_bid_id)\
         .join(AuthenticationRequest, AuthenticationRequest.item_id == Item.item_id)\
-        .filter(AuthenticationRequest.status == 2)\
+        .filter(AuthenticationRequest.status == 2, Item.status >= 2)\
         .scalar() or 0.0
     
-    total_revenue = float(total_revenue)
+    total_revenue = float(manager['total_revenue'])
     authenticated_revenue = float(authenticated_revenue)
     
     standard_revenue = total_revenue - authenticated_revenue
@@ -191,38 +194,6 @@ def handle_manager(now):
 
     # Total Users
     manager['user_count'] = User.query.count()
-
-    # Revenue Data for Chart (monthly revenue for last 6 months)
-    manager['revenue_data'] = []
-    manager['revenue_labels'] = []
-
-    for i in range(5, -1, -1):
-        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i * 30)
-        end_date = start_date + timedelta(days=30)
-        
-        # Get highest bid for each ended auction in this period
-        monthly_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
-            .join(Bid, Item.item_id == Bid.item_id)\
-            .filter(and_(
-                Item.auction_end >= start_date, 
-                Item.auction_end < end_date,
-                Item.auction_end < now  # Only include ended auctions
-            ))\
-            .group_by(Item.item_id)\
-            .subquery()
-        
-        # Sum the highest bids from each auction
-        monthly_revenue = db.session.query(func.sum(monthly_auctions.c.highest_bid)).scalar()
-        
-        # Convert None to 0.0 for JSON
-        if monthly_revenue is None:
-            monthly_revenue = 0.0
-        else:
-            # Ensure the value is float
-            monthly_revenue = float(monthly_revenue)
-
-        manager['revenue_data'].append(monthly_revenue)
-        manager['revenue_labels'].append(start_date.strftime('%b'))
 
     return render_template('dashboard_manager.html', manager=manager, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
@@ -863,3 +834,54 @@ def update_expertise(user_id):
         'expertise': new_expertise
     }), 200
 
+
+@dashboard_page.route('/api/revenue', methods=['GET'])
+@login_required
+def get_revenue():
+    """Fetch revenue data for the manager dashboard based on time period and revenue type."""
+    # Get query parameters
+    period = request.args.get('period', '6m')  # Default to 6 months
+    revenue_type = request.args.get('type', 'all')  # Default to all revenue
+
+    # Calculate the start date based on the period
+    now = datetime.now()
+    if period == '1w':
+        start_date = now - timedelta(weeks=1)
+        group_format = '%Y-%m-%d'  # Group by day for 1 week
+        max_points = 7  # 7 days
+    elif period == '1m':
+        start_date = now - timedelta(days=30)
+        group_format = '%Y-%W'  # Group by week for 1 month (approx. 4-5 weeks)
+        max_points = 5  # Approx. 5 weeks
+    else:  # Default to 6 months
+        start_date = now - timedelta(days=180)
+        group_format = '%Y-%m'  # Group by month for 6 months
+        max_points = 6  # 6 months
+
+    # Base query for revenue
+    query = db.session.query(
+        func.sum(Bid.bid_amount).label('total_revenue'),
+        func.strftime(group_format, Item.auction_end).label('period')
+    ).join(Item, Bid.bid_id == Item.winning_bid_id)\
+     .filter(Item.auction_end >= start_date, Item.auction_end <= now)
+
+    # Filter based on revenue type
+    if revenue_type == 'paid':
+        query = query.filter(Item.status == 3)  # Only paid auctions
+    else:
+        query = query.filter(Item.status >= 2)  # Won or paid auctions
+
+    # Group, order, and execute the query
+    revenue_data = query.group_by(func.strftime(group_format, Item.auction_end))\
+                 .order_by(func.strftime(group_format, Item.auction_end))\
+                 .limit(max_points)\
+                 .all()
+
+    # Format the response
+    labels = [row.period for row in revenue_data]
+    data = [float(row.total_revenue or 0) for row in revenue_data]
+
+    return jsonify({
+        'labels': labels,
+        'data': data
+    })
