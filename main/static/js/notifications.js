@@ -105,7 +105,8 @@ $(document).ready(function() {
   });
 
   // Mark all notifications as read when dropdown is opened
-  $('.btn:contains("Notifications")').on('click', function() {
+  // Use the correct selector for the notification dropdown
+  $('#notif-button').closest('.dropdown').on('shown.bs.dropdown', function() {
     const unreadNotifications = $('.dropdown-item.fw-bold');
     if (unreadNotifications.length === 0) return;
 
@@ -118,8 +119,13 @@ $(document).ready(function() {
 
     if (notificationIds.length > 0) {
       markNotificationsAsRead(notificationIds);
-      $('.btn:contains("Notifications") .badge').text('');
-      $('.btn:contains("Notifications") .badge').addClass('d-none'); // Fixed selector
+      
+      // Make sure badge is hidden
+      const badge = $('#notif-button').find('.badge');
+      if (badge.length > 0) {
+        badge.text('');
+        badge.addClass('d-none');
+      }
     }
   });
 
