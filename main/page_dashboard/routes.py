@@ -863,3 +863,49 @@ def update_expertise(user_id):
         'expertise': new_expertise
     }), 200
 
+@dashboard_page.route('/api/revenue', methods=['GET'])
+@login_required
+def get_revenue():
+    """Fetch revenue data for the manager dashboard based on time period and revenue type."""
+    # Get query parameters
+    period = request.args.get('period', '6m')  # Default to 6 months
+    revenue_type = request.args.get('type', 'all')  # Default to all revenue
+
+    # Calculate the start date based on the period
+    now = datetime.now()
+    if period == '1w':
+        start_date = now - timedelta(weeks=1)
+        group_format = '%Y-%m-%d'  # Group by day for 1 week
+    elif period == '1m':
+        start_date = now - timedelta(days=30)
+        group_format = '%Y-%m-%d'  # Group by day for 1 month
+    else:  # Default to 6 months
+        start_date = now - timedelta(days=180)
+        group_format = '%Y-%m'  # Group by month for 6 months
+
+    # Base query for revenue
+    query = db.session.query(
+        func.sum(Bid.bid_amount).label('total_revenue'),
+        func.strftime(group_format, Item.auction_end).label('period')
+    ).join(Item, Bid.bid_id == Item.winning_bid_id)\
+     .filter(Item.auction_end >= start_date, Item.auction_end <= now)
+
+    # Filter based on revenue type
+    if revenue_type == 'paid':
+        query = query.filter(Item.status == 3)  # Only paid auctions
+    else:
+        query = query.filter(Item.status >= 2)  # Won or paid auctions
+
+    # Group, order, and execute the query
+    revenue_data = query.group_by(func.strftime(group_format, Item.auction_end))\
+                       .order_by(func.strftime(group_format, Item.auction_end))\
+                       .all()
+
+    # Format the response
+    labels = [row.period for row in revenue_data]
+    data = [float(row.total_revenue or 0) for row in revenue_data]
+
+    return jsonify({
+        'labels': labels,
+        'data': data
+    })
