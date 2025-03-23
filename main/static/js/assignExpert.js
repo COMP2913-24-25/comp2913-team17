@@ -22,7 +22,7 @@ $(document).ready(function() {
   // Trigger change event on page load to set initial availability text
   $('.expert-select').trigger('change');
   
-  // Assign an expert to an authentication request
+  // Assign an expert to an authentication request (Manual Assignment)
   $('.assign-expert-btn').on('click', async function() {
     const row = $(this).closest('tr');
     const requestId = row.data('request-id');
@@ -42,17 +42,7 @@ $(document).ready(function() {
         // Remove the row with animation
         row.fadeOut(300, function() {
           $(this).remove();
-          
-          // Check if the table is now empty
-          if ($('#auth-requests-card table tbody tr').length === 0) {
-            // Replace the auth-card with empty state
-            $('#auth-requests-card').replaceWith(`
-              <div class="empty-state">
-                <i class="fas fa-clipboard-check"></i>
-                <p class="empty-state-text">No pending authentication requests at this time.</p>
-              </div>
-            `);
-          }
+          checkEmptyTable();
         });
       } else {
         // Show error and do not remove the row
@@ -63,4 +53,91 @@ $(document).ready(function() {
       alert("Error assigning expert.");
     }
   });
+
+  // Auto-assign the recommended expert to an authentication request
+  $('.auto-assign-btn').on('click', async function() {
+    const row = $(this).closest('tr');
+    const requestId = row.data('request-id');
+    const expertId = $(this).data('expert-id');
+
+    try {
+      const response = await csrfFetch(`/dashboard/api/auto-assign-expert/${requestId}`, {
+        method: 'POST',
+        body: JSON.stringify({}) // No body needed, but keeping it consistent
+      });
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Show success message
+        alert('Expert auto-assigned successfully');
+
+        // Remove the row with animation
+        row.fadeOut(300, function() {
+          $(this).remove();
+          checkEmptyTable();
+        });
+      } else {
+        // Show error and do not remove the row
+        alert(data.error || "Error auto-assigning expert.");
+      }
+    } catch (error) {
+      console.log('Error:', error);
+      alert("Error auto-assigning expert.");
+    }
+  });
+
+  // Toggle all checkboxes when "Select All" is clicked
+  $('#select-all-requests').on('change', function() {
+    $('.request-checkbox').prop('checked', this.checked);
+  });
+
+  // Bulk auto-assign selected requests
+  $('.bulk-auto-assign-btn').on('click', async function() {
+    const selectedRows = $('.request-checkbox:checked').closest('tr');
+    if (selectedRows.length === 0) {
+      alert('Please select at least one request to auto-assign.');
+      return;
+    }
+
+    const requestIds = selectedRows.map(function() {
+      return $(this).data('request-id');
+    }).get();
+
+    try {
+      const response = await csrfFetch('/dashboard/api/bulk-auto-assign-experts', {
+        method: 'POST',
+        body: JSON.stringify({ request_ids: requestIds })
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        // Show success message
+        alert('Bulk auto-assignment successful: ' + data.assignments.length + ' requests assigned.');
+
+        // Remove assigned rows with animation
+        selectedRows.fadeOut(300, function() {
+          $(this).remove();
+          checkEmptyTable();
+        });
+      } else {
+        // Show error and do not remove rows
+        alert(data.error || "Error during bulk auto-assignment.");
+      }
+    } catch (error) {
+      console.log('Error:', error);
+      alert("Error during bulk auto-assignment.");
+    }
+  });
+
+  // Helper function to check if the table is empty and update UI
+  function checkEmptyTable() {
+    if ($('#auth-requests-card table tbody tr').length === 0) {
+      $('#auth-requests-card').replaceWith(`
+        <div class="empty-state">
+          <i class="fas fa-clipboard-check"></i>
+          <p class="empty-state-text">No pending authentication requests at this time.</p>
+        </div>
+      `);
+    }
+  }
 });

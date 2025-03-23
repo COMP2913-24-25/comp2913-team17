@@ -120,28 +120,32 @@
       {% endif %}
     </div>
 
-    <!-- Requests Tab -->
+            <!-- Requests Tab -->
     <div class="tab-pane fade" id="requests" role="tabpanel" aria-labelledby="requests-tab">
       <!-- Management: Pending Authentication Requests Section -->
       {% if manager['requests'] %}
         <div class="auth-card" id="auth-requests-card">
           <div class="card-header d-flex justify-content-between align-items-center">
             <span><i class="fas fa-clipboard-check me-2"></i> Pending Authentication Requests</span>
+            <button class="btn btn-primary bulk-auto-assign-btn">Bulk Auto-Assign</button>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="auth-table">
                 <thead>
                   <tr>
+                    <th><input type="checkbox" id="select-all-requests"></th>
                     <th>Requester</th>
                     <th>Item</th>
                     <th>Category</th>
+                    <th>Recommended Expert</th>
                     <th>Assign Expert</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for request, eligible_experts in manager['requests'] %}
+                  {% for request, eligible_experts, recommended_expert in manager['requests'] %}
                   <tr data-request-id="{{ request.request_id }}">
+                    <td data-label="Select"><input type="checkbox" class="request-checkbox"></td>
                     <td data-label="Requester" class="seller-name">
                       <i class="fas fa-user me-1"></i> {{ request.requester.username }}
                     </td>
@@ -154,6 +158,16 @@
                       <span class="badge bg-info p-2" {% if request.item.category.description %}title="{{ request.item.category.description }}"{% endif %}>
                         <i class="fas fa-tag"></i> {{ request.item.category.name }}
                       </span>
+                    </td>
+                    <td data-label="Recommended Expert">
+                      {% if recommended_expert %}
+                        {{ recommended_expert.username }}
+                        <button class="btn btn-card btn-sm auto-assign-btn" data-expert-id="{{ recommended_expert.id }}">
+                          <i class="fas fa-user-check me-1"></i> Auto-Assign
+                        </button>
+                      {% else %}
+                        None
+                      {% endif %}
                     </td>
                     <td data-label="Assign Expert">
                       {% if not eligible_experts %}
@@ -173,8 +187,7 @@
                               </option>
                               {% endfor %}
                             </select>
-                            <span class="expertise-text badge p-3" title="Expertise">
-                            </span>
+                            <span class="expertise-text badge p-3" title="Expertise"></span>
                           </div>
                           <div class="d-flex align-items-center justify-content-between gap-4 expert-assign-container">
                             <span class="availability-text seller-name"></span>
@@ -199,7 +212,7 @@
         </div>
       {% endif %}
     </div>
-
+    
     <!-- Statistics Tab -->
     <div class="tab-pane fade" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
       <!-- Statistics Section -->
