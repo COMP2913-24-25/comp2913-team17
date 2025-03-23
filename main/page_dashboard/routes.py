@@ -841,12 +841,15 @@ def get_revenue():
     if period == '1w':
         start_date = now - timedelta(weeks=1)
         group_format = '%Y-%m-%d'  # Group by day for 1 week
+        max_points = 7  # 7 days
     elif period == '1m':
         start_date = now - timedelta(days=30)
-        group_format = '%Y-%m-%d'  # Group by day for 1 month
+        group_format = '%Y-%W'  # Group by week for 1 month (approx. 4-5 weeks)
+        max_points = 5  # Approx. 5 weeks
     else:  # Default to 6 months
         start_date = now - timedelta(days=180)
         group_format = '%Y-%m'  # Group by month for 6 months
+        max_points = 6  # 6 months
 
     # Base query for revenue
     query = db.session.query(
@@ -863,8 +866,9 @@ def get_revenue():
 
     # Group, order, and execute the query
     revenue_data = query.group_by(func.strftime(group_format, Item.auction_end))\
-                       .order_by(func.strftime(group_format, Item.auction_end))\
-                       .all()
+                 .order_by(func.strftime(group_format, Item.auction_end))\
+                 .limit(max_points)\
+                 .all()
 
     # Format the response
     labels = [row.period for row in revenue_data]
