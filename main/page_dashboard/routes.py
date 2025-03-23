@@ -135,7 +135,7 @@ def handle_manager(now):
                 ~AuthenticationRequest.expert_assignments.any(ExpertAssignment.status != 3)
             )
         )).all()
-    requests = []  # Fixed indentation: aligned with rest of function body
+    requests = []
     # Pre-fetch all current assignments for workload calculation
     all_experts_assignments = dict(db.session.query(
         ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
@@ -162,23 +162,20 @@ def handle_manager(now):
     manager['requests'] = requests
 
     # Statistics Calculations
-    # Total Revenue (sum of highest bids for completed auctions)
-    completed_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
-        .join(Bid, Item.item_id == Bid.item_id)\
-        .filter(Item.auction_end < now)\
-        .group_by(Item.item_id)\
-        .subquery()
-    total_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid)).scalar() or 0.0
-    manager['total_revenue'] = total_revenue
+    # Total Revenue (sum of winning bids for won or paid auctions, status >= 2)
+    manager['total_revenue'] = db.session.query(func.sum(Bid.bid_amount))\
+        .join(Item, Bid.bid_id == Item.winning_bid_id)\
+        .filter(Item.status >= 2)\
+        .scalar() or 0.0
 
     # Commission Income (based on base_fee and authenticated_fee)
-    authenticated_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid))\
-        .join(Item, Item.item_id == completed_auctions.c.item_id)\
+    authenticated_revenue = db.session.query(func.sum(Bid.bid_amount))\
+        .join(Item, Bid.bid_id == Item.winning_bid_id)\
         .join(AuthenticationRequest, AuthenticationRequest.item_id == Item.item_id)\
-        .filter(AuthenticationRequest.status == 2)\
+        .filter(AuthenticationRequest.status == 2, Item.status >= 2)\
         .scalar() or 0.0
     
-    total_revenue = float(total_revenue)
+    total_revenue = float(manager['total_revenue'])
     authenticated_revenue = float(authenticated_revenue)
     
     standard_revenue = total_revenue - authenticated_revenue
@@ -191,38 +188,6 @@ def handle_manager(now):
 
     # Total Users
     manager['user_count'] = User.query.count()
-
-    # Revenue Data for Chart (monthly revenue for last 6 months)
-    manager['revenue_data'] = []
-    manager['revenue_labels'] = []
-
-    for i in range(5, -1, -1):
-        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i * 30)
-        end_date = start_date + timedelta(days=30)
-        
-        # Get highest bid for each ended auction in this period
-        monthly_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
-            .join(Bid, Item.item_id == Bid.item_id)\
-            .filter(and_(
-                Item.auction_end >= start_date, 
-                Item.auction_end < end_date,
-                Item.auction_end < now  # Only include ended auctions
-            ))\
-            .group_by(Item.item_id)\
-            .subquery()
-        
-        # Sum the highest bids from each auction
-        monthly_revenue = db.session.query(func.sum(monthly_auctions.c.highest_bid)).scalar()
-        
-        # Convert None to 0.0 for JSON
-        if monthly_revenue is None:
-            monthly_revenue = 0.0
-        else:
-            # Ensure the value is float
-            monthly_revenue = float(monthly_revenue)
-
-        manager['revenue_data'].append(monthly_revenue)
-        manager['revenue_labels'].append(start_date.strftime('%b'))
 
     return render_template('dashboard_manager.html', manager=manager, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
