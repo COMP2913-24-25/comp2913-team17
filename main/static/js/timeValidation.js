@@ -41,11 +41,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (status === 'unavailable') {
         row.find('.start-input, .end-input')
             .prop('disabled', true)
-            .addClass('bg-secondary text-white');
+            .addClass('disabled-input')
       } else {
         row.find('.start-input, .end-input')
             .prop('disabled', false)
-            .removeClass('bg-secondary text-white');
+            .removeClass('disabled-input');
       }
     });
 
