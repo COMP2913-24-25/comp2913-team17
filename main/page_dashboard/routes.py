@@ -168,6 +168,12 @@ def handle_manager(now):
         .filter(Item.status >= 2)\
         .scalar() or 0.0
 
+    # Paid Revenue (sum of winning bids for paid auctions, status == 3)
+    manager['paid_revenue'] = db.session.query(func.sum(Bid.bid_amount))\
+        .join(Item, Bid.bid_id == Item.winning_bid_id)\
+        .filter(Item.status == 3)\
+        .scalar() or 0.0
+
     # Commission Income (based on base_fee and authenticated_fee)
     authenticated_revenue = db.session.query(func.sum(Bid.bid_amount))\
         .join(Item, Bid.bid_id == Item.winning_bid_id)\
@@ -190,6 +196,7 @@ def handle_manager(now):
     manager['user_count'] = User.query.count()
 
     return render_template('dashboard_manager.html', manager=manager, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
+
 
 
 def handle_expert(now):

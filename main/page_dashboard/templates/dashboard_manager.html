@@ -221,33 +221,41 @@
       <span><i class="fas fa-chart-simple me-2"></i> Platform Statistics</span>
     </div>
     <div class="card-body p-4">
-      <div class="row">
-        <div class="col-md-3">
-          <div class="card text-center">
+      <div class="row g-3">
+        <div class="col-md-2">
+          <div class="card text-center h-100">
             <div class="card-body">
               <h5 class="card-title">Total Revenue</h5>
               <p class="card-text">£{{ "%.2f" | format(manager['total_revenue']) }}</p>
             </div>
           </div>
         </div>
-        <div class="col-md-3">
-          <div class="card text-center">
+        <div class="col-md-2">
+          <div class="card text-center h-100">
+            <div class="card-body">
+              <h5 class="card-title">Paid Revenue</h5>
+              <p class="card-text">£{{ "%.2f" | format(manager['paid_revenue']) }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="card text-center h-100">
             <div class="card-body">
               <h5 class="card-title">Commission Income ({{ "%.2f" | format(manager['commission_percentage']) }}%)</h5>
               <p class="card-text">£{{ "%.2f" | format(manager['commission_income']) }}</p>
             </div>
           </div>
         </div>
-        <div class="col-md-3">
-          <div class="card text-center">
+        <div class="col-md-2">
+          <div class="card text-center h-100">
             <div class="card-body">
               <h5 class="card-title">Active Auctions</h5>
               <p class="card-text">{{ manager['active_auctions'] }}</p>
             </div>
           </div>
         </div>
-        <div class="col-md-3">
-          <div class="card text-center">
+        <div class="col-md-2">
+          <div class="card text-center h-100">
             <div class="card-body">
               <h5 class="card-title">Total Users</h5>
               <p class="card-text">{{ manager['user_count'] }}</p>
