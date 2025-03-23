@@ -135,12 +135,16 @@ $(document).ready(function() {
     
     clearAllNotifications()
       .then(() => {
-        $('.notification-item').parent().remove();
-        $('.btn:contains("Notifications") .badge').text('');
-        $('.btn:contains("Notifications") .badge').addClass('d-none');
+        // Hide the badge
+        const badge = $('#notif-button').find('.badge');
+        if (badge.length > 0) {
+          badge.text('');
+          badge.addClass('d-none');
+        }
 
-        const notificationList = $('.btn:contains("Notifications")').next('.dropdown-menu');
-        notificationList.html('<li><div class="dropdown-item">No new notifications</div></li>');
+        // Get the notification dropdown menu
+        const notificationList = $('#notif-button').next('.dropdown-menu');
+        notificationList.empty().html('<li><div class="dropdown-item">No new notifications</div></li>');
       })
       .catch(error => console.error('Error clearing notifications:', error));
   });
