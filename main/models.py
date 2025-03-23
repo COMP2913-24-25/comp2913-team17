@@ -256,11 +256,43 @@ class Item(db.Model):
             # Notify winner and losers
             self.notify_winner()
             self.notify_losers()
+        
+        # Notify the seller if the auction has bid or not
+        self.notify_seller()
 
+    # Notify the seller
+    def notify_seller(self):
+        if self.winning_bid:
+            message = f"Your auction for '{self.title}' has ended. The item was sold to {self.winning_bid.bidder.username} for £{self.winning_bid.bid_amount}."
+            notification_type = 5
+        else:
+            message = f"Your auction for '{self.title}' has ended without any bids."
+            notification_type = 6
+        
+        # Create and save the notification
+        notification = Notification(
+            user_id=self.seller_id,
+            message=message,
+            item_url=self.url,
+            item_title=self.title,
+            notification_type=notification_type
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Send real-time notification
+        from app import socketio
+        socketio.emit('new_notification', {
+            'message': notification.message,
+            'item_url': notification.item_url,
+            'id': notification.id,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{self.seller.secret_key}')
+
+        send_notification_email(self.seller, notification)
 
     # Count the number of users watching an auction
     def watcher_count(self):
-        """Return the number of users watching this auction."""
         return len(self.watchers.all())
 
 class Image(db.Model):
