@@ -213,9 +213,10 @@
           <div class="mb-3">
             <h6 class="text-white">Subscribe to our newsletter</h6>
             <div class="input-group">
-              <input type="email" class="form-control" placeholder="Your email">
-              <button class="btn btn-accent" type="button">Subscribe</button>
+              <input type="email" class="form-control" id="newsletter-email" placeholder="Your email">
+              <button class="btn btn-accent" type="button" id="newsletter-subscribe">Subscribe</button>
             </div>
+            <div class="newsletter-feedback mt-2 small"></div>
           </div>
         </div>
       </div>
@@ -252,6 +253,7 @@
   
   <!-- Custom JS -->
   <script src="{{ url_for('static', filename='js/cookieConsent.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/newsletter.js') }}"></script>
   <script>
     // Automatically update the current year in the footer
     $(document).ready(function() {
