@@ -102,6 +102,34 @@ class User(UserMixin, db.Model):
         for item in finished_items:
             item.finalise_auction()
 
+    # Send a welcome notification to a new user
+    def send_welcome_notification(self):
+        notification = Notification(
+            user_id=self.id,
+            message=f"Welcome to Vintage Vault, {self.username}! Get started by browsing auctions or creating your own.",
+            notification_type=0  # Default notification type
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Send real-time notification
+        try:
+            from app import socketio
+            socketio.emit('new_notification', {
+                'id': notification.id,
+                'message': notification.message,
+                'created_at': datetime.now().strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{self.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send welcome notification: {e}")
+            
+        # Send welcome email
+        try:
+            send_notification_email(self, notification)
+        except Exception as e:
+            logger.error(f"Failed to send welcome email: {e}")
+        
+        return notification
 
 # Item Model
 class Item(db.Model):

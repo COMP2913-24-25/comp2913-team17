@@ -112,6 +112,9 @@ def register():
 
             db.session.add(user)
             db.session.commit()
+            
+            # Initialise welcome notificaition to a new user
+            user.send_welcome_notification()
 
             login_user(user)
             return redirect(url_for('home_page.index'))

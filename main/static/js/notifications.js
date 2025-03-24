@@ -8,7 +8,7 @@ $(document).ready(function() {
     // If we are on the authentication page and receive a notification, then don't show and mark as read
     const itemUrl = $('#item-link').attr('href');
 
-    if (itemUrl && itemUrl.split('/').pop() === data.item_url) {
+    if (itemUrl && data.item_url && itemUrl.split('/').pop() === data.item_url) {
       // Mark the notification as read without showing it
       if (data.id) {
         markNotificationsAsRead([data.id])
@@ -38,6 +38,7 @@ $(document).ready(function() {
     // Create new notification element
     let notificationElement = '';
     if (data.item_url) {
+      // Normal notification
       notificationElement = `
         <li>
           <a href="/item/${data.item_url}" 
@@ -49,6 +50,7 @@ $(document).ready(function() {
         </li>
       `;
     } else {
+      // Welcome notification
       notificationElement = `
         <li>
           <div class="dropdown-item fw-bold notification-item" data-notification-id="${data.id || ''}">
