@@ -3,7 +3,7 @@
 :root {
   --primary-color: #000;
   --secondary-color: hsl(0, 0%, 100%);
-  --accent-color: #f5c98e;
+  --accent-color: #ff9d00;
   --tertiary-color: #f0f0f0;
   --danger-color: #dc3545;
   --success-color: #28a745;
@@ -900,7 +900,7 @@ h1, h2, h3, h4, h5 {
 .pass-container .form-control:focus,
 .user-container .form-control:focus,
 .input-container:focus {
-  border-bottom: 2px solid #ff9d00;
+  border-bottom: 2px solid var(--accent-color);
 }
 
 .pass-container i, .user-container i {
@@ -939,7 +939,7 @@ h1, h2, h3, h4, h5 {
 }
 
 .google-btn:hover{
-  border: 2px solid #ff9d00;
+  border: 2px solid var(--accent-color);
 }
 
 .google-icon {
@@ -1111,14 +1111,113 @@ h1, h2, h3, h4, h5 {
   text-transform: uppercase;
 }
 
-.btn-group .btn[data-revenue-type="all"].active {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
+/* Update details styling */
+
+.update-details-wrapper {
+  width: 75%;
+  margin: auto;
+  background-color: #f7f7f7;
+  padding: 1rem;
 }
 
-.btn-group .btn[data-revenue-type="paid"].active {
-  background-color: #ff7f0e;
+.update-form-container h5 {
+  color: var(--accent-color);
+}
+
+#update-username-form .form-group label,
+#update-email-form .form-group label,
+#update-password-form .form-group label {
+  margin-bottom: 0.5rem;
+}
+
+#update-username-form .form-group input,
+#update-email-form .form-group input,
+#update-password-form .form-group input {
+  margin-bottom: 1rem;
+}
+
+#update-username-form .form-container,
+#update-email-form .form-container,
+#update-password-form .form-container {
+  margin-bottom: 2rem;
+}
+
+.update-list-group .list-group-item.active {
+  background-color: var(--accent-color);
   color: white;
-  border-color: #ff7f0e;
+  border: 1px solid var(--accent-color);
+}
+
+.update-list-group {
+  border-radius: 0;
+}
+
+.update-details-wrapper label {
+  font-family: var(--font-display);
+}
+
+.update-backdrop {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1514195037031-83d60ed3b448?q=80&w=2342&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  width: 100%;
+  height: 100vh;
+  margin: auto;
+}
+
+.update-backdrop h1 {
+  color: white;
+}
+
+.update-backdrop h3 {
+  font-size: 2rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.update-form-container input[type="text"], 
+.update-form-container input[type="email"], 
+.update-form-container input[type="password"] {
+  max-width: 30rem;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .update-form-container h3{
+    text-align: center;
+    padding-top: 2rem;
+    font-size: 1.75rem;
+  }
+
+  .update-form-container h5{
+    font-size: 1rem;
+  }
+
+  .update-details-wrapper {
+    width: 80%;
+  }
+}
+
+@media (max-width: 300px) {
+
+  #email-form h5 {
+    font-size: 1rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .update-form-container input[type="text"]::placeholder, 
+  .update-form-container input[type="email"]::placeholder, 
+  .update-form-container input[type="password"]::placeholder {
+    font-size: 0.75rem;
+  }
+
+  .update-backdrop h3 {
+    font-size: 1.5rem;
+  }
+
+  .update-details-wrapper {
+    width: 100%;
+  }
+
 }

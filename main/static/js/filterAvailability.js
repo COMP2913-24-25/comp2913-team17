@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('toggleFilter');
-    const categoryFilter = document.getElementById('categoryFilter');
     const dailyTable = document.getElementById('dailyTable');
-    const tbody = dailyTable.querySelector('tbody');
+    const weeklyTable = document.getElementById('weeklyTable');
+    const dailyTbody = dailyTable.querySelector('tbody');
+    const weeklyTbody = weeklyTable ? weeklyTable.querySelector('tbody') : null;
+    const categoryFilter = document.getElementById('categoryFilter');
     
     // Read the current timeslot from the data attribute
     const currentSlotStr = dailyTable.getAttribute('data-current-slot');
@@ -21,76 +23,68 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error("Current timeslot column not found.");
     }
     
-    let filterOn = false;
-    toggleBtn.addEventListener('click', function() {
-      const rows = tbody.querySelectorAll('tr');
-      if (!filterOn) {
-        // Hide rows where the cell in the current timeslot column does NOT have class "bg-dark-turquoise"
-        rows.forEach(row => {
+    // Global filter states
+    let availableNowFilterActive = false;
+    let selectedCategory = "";
+    
+    // Function to filter rows in the daily table
+    function filterDailyRows() {
+      const rows = dailyTbody.querySelectorAll('tr');
+      rows.forEach(row => {
+        let showRow = true;
+        
+        // Apply "available now" filter if active:
+        if (availableNowFilterActive) {
           const cells = row.querySelectorAll('td');
-          // Since the first cell is expert name, our timeslot cells start at index 1,
-          // so the current timeslot cell is at index currentIndex + 1.
-          const cell = cells[currentIndex + 1];
-          if (cell && !cell.classList.contains('bg-dark-turquoise')) {
-            row.style.display = 'none';
+          const cell = cells[currentIndex + 1]; // current timeslot cell
+          if (!(cell && cell.classList.contains('bg-dark-turquoise'))) {
+            showRow = false;
           }
-        });
-        toggleBtn.textContent = "Show All Experts";
-        filterOn = true;
-      } else {
-        // Show all rows
-        rows.forEach(row => {
-          row.style.display = '';
-        });
-        toggleBtn.textContent = "Show Only Currently Available Experts";
-        filterOn = false;
-      }
+        }
+        
+        // Apply category filter if one is selected:
+        if (selectedCategory) {
+          const rowCategories = row.getAttribute('data-categories') || "";
+          const categoriesArray = rowCategories.split(',');
+          if (!categoriesArray.includes(selectedCategory)) {
+            showRow = false;
+          }
+        }
+        
+        row.style.display = showRow ? '' : 'none';
+      });
+    }
+    
+    // Function to filter rows in the weekly table (only category filter applies)
+    function filterWeeklyRows() {
+      if (!weeklyTbody) return;
+      const rows = weeklyTbody.querySelectorAll('tr');
+      rows.forEach(row => {
+        let showRow = true;
+        if (selectedCategory) {
+          const rowCategories = row.getAttribute('data-categories') || "";
+          const categoriesArray = rowCategories.split(',');
+          if (!categoriesArray.includes(selectedCategory)) {
+            showRow = false;
+          }
+        }
+        row.style.display = showRow ? '' : 'none';
+      });
+    }
+    
+    // Toggle "available now" filter on the daily table
+    toggleBtn.addEventListener('click', function() {
+      availableNowFilterActive = !availableNowFilterActive;
+      toggleBtn.textContent = availableNowFilterActive ? "Show All Experts" : "Show Only Currently Available Experts";
+      filterDailyRows();
     });
-
-        categoryFilter.addEventListener('change', function() {
-          let category = categoryFilter.value;
-
-          fetch(`/manager/filter-experts?category_id=${category}`)
-          .then(response => response.json())
-          .then(data => {
-              console.log("API response:", data);
-              
-              tbody.innerHTML = "";
-      
-              // Check if the API response contains an error
-              if (data.error) {  
-                  console.error("API Error:", data.error);
-                  tbody.innerHTML = `<tr><td colspan="100%">No experts found.</td></tr>`;
-                  return;
-              }
-      
-              // Check if the API response is in the expected format
-              if (!Array.isArray(data)) {
-                  console.error("Unexpected API response format:", data);
-                  tbody.innerHTML = `<tr><td colspan="100%">No experts found for this category.</td></tr>`;
-                  return;
-              }
-      
-              data.forEach(expert => {  
-                  let row = document.createElement("tr");
-                  let nameCell = document.createElement("td");
-                  nameCell.textContent = expert.username;
-                  row.appendChild(nameCell);
-      
-                  let numColumns = document.querySelector("#dailyTable thead tr").children.length - 1;
-                  for (let i = 0; i < numColumns; i++) {
-                      let emptyCell = document.createElement("td");
-                      emptyCell.textContent = "-";
-                      row.appendChild(emptyCell);
-                  }
-      
-                  tbody.appendChild(row);
-              });
-      
-              // Reset the toggle button when new data is loaded
-              filterOn = false;
-              toggleBtn.textContent = "Show Only Currently Available Experts";
-          })
-          .catch(error => console.error("Error fetching experts:", error));    
-    });
-  });
+    
+    // Listen for category changes and update both tables
+    if (categoryFilter) {
+      categoryFilter.addEventListener('change', function() {
+        selectedCategory = categoryFilter.value;
+        filterDailyRows();
+        filterWeeklyRows();
+      });
+    }
+});

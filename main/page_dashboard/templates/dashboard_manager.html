@@ -214,75 +214,57 @@
     </div>
     
     <!-- Statistics Tab -->
-<div class="tab-pane fade" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
-  <!-- Statistics Section -->
-  <div class="expertise-card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span><i class="fas fa-chart-simple me-2"></i> Platform Statistics</span>
+    <div class="tab-pane fade" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
+      <!-- Statistics Section -->
+      <div class="expertise-card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-chart-simple me-2"></i> Platform Statistics</span>
+      </div>
+        <div class="card-body p-4">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title">Total Revenue</h5>
+                  <p class="card-text">£{{ "%.2f" | format(manager['total_revenue']) }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title">Commission Income ({{ "%.2f" | format(manager['commission_percentage']) }}%)</h5>
+                  <p class="card-text">£{{ "%.2f" | format(manager['commission_income']) }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title">Active Auctions</h5>
+                  <p class="card-text">{{ manager['active_auctions'] }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title">Total Users</h5>
+                  <p class="card-text">{{ manager['user_count'] }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <h5>Revenue Over Time (Last 6 Months)</h5>
+            <canvas id="revenueChart" width="400" height="200"
+              data-labels='{{ manager["revenue_labels"]|tojson|safe }}'
+              data-values='{{ manager["revenue_data"]|tojson|safe }}'
+            ></canvas>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="card-body p-4">
-      <div class="row g-3">
-        <div class="col-md-2">
-          <div class="card text-center h-100">
-            <div class="card-body">
-              <h5 class="card-title">Total Revenue</h5>
-              <p class="card-text">£{{ "%.2f" | format(manager['total_revenue']) }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-2">
-          <div class="card text-center h-100">
-            <div class="card-body">
-              <h5 class="card-title">Paid Revenue</h5>
-              <p class="card-text">£{{ "%.2f" | format(manager['paid_revenue']) }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-2">
-          <div class="card text-center h-100">
-            <div class="card-body">
-              <h5 class="card-title">Commission Income ({{ "%.2f" | format(manager['commission_percentage']) }}%)</h5>
-              <p class="card-text">£{{ "%.2f" | format(manager['commission_income']) }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-2">
-          <div class="card text-center h-100">
-            <div class="card-body">
-              <h5 class="card-title">Active Auctions</h5>
-              <p class="card-text">{{ manager['active_auctions'] }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-2">
-          <div class="card text-center h-100">
-            <div class="card-body">
-              <h5 class="card-title">Total Users</h5>
-              <p class="card-text">{{ manager['user_count'] }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="mt-4">
-        <h5>Revenue Over Time</h5>
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <!-- Revenue Type Toggle -->
-          <div class="btn-group me-2" role="group">
-            <button type="button" class="btn btn-sm btn-outline-primary active" data-revenue-type="all" style="border-color: #007bff; color: #007bff;">All Revenue</button>
-            <button type="button" class="btn btn-sm btn-outline-primary" data-revenue-type="paid" style="border-color: #ff7f0e; color: #ff7f0e;">Paid Revenue</button>
-          </div>
-          <!-- Time Period Toggle -->
-          <div class="btn-group" role="group">
-            <button type="button" class="btn btn-sm btn-outline-secondary active" data-period="6m">6 Months</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" data-period="1m">1 Month</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" data-period="1w">1 Week</button>
-          </div>
-        </div>
-        <div class="chart-container" style="max-height: 400px; max-width: 100%; min-width: 600px; overflow-x: auto;">
-          <canvas id="revenueChart"></canvas>
-        </div>
-      </div>
-
 
     <!-- Config Tab -->
     <div class="tab-pane fade" id="config" role="tabpanel" aria-labelledby="config-tab">
