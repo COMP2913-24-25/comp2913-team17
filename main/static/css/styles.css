@@ -1224,7 +1224,7 @@ h1, h2, h3, h4, h5 {
 
 /* Notifications */
 .notification-dropdown {
-  border-radius: 0;
+  border-radius: 5px;
   border: 1.5px solid var(--primary-color);
   box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
   padding: 0;
@@ -1232,6 +1232,10 @@ h1, h2, h3, h4, h5 {
 }
 
 .notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
   background-color: white;
 }
 
@@ -1240,7 +1244,8 @@ h1, h2, h3, h4, h5 {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--primary-color);
-  font-size: 0.85rem;
+  font-size: 1rem;
+  margin: 0;
 }
 
 #notification-list {
@@ -1262,7 +1267,7 @@ h1, h2, h3, h4, h5 {
 
 .notification-unread {
   background-color: rgba(255, 157, 0, 0.05);
-  border-left: 3px solid var(--accent-color);
+  border-left: 4px solid var(--accent-color);
 }
 
 .notification-unread:hover {
@@ -1295,17 +1300,18 @@ h1, h2, h3, h4, h5 {
 
 .notification-empty i {
   font-size: 1.5rem;
-  color: white;
+  color: #6c757d;
 }
 
 .notification-empty p {
   font-size: 0.85rem;
   margin-bottom: 0;
+  color: #6c757d;
 }
 
 #clear-all-notifications {
   font-size: 0.75rem;
-  padding: 0.5rem 0.5rem;
+  padding: 0.5rem 0.75rem;
   background: transparent;
   border-color: #dc3545;
   color: #dc3545;
