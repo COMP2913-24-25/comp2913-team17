@@ -18,7 +18,7 @@ $(document).ready(function() {
     }
 
     // Update notification count badge
-    const badge = $('.btn:contains("Notifications") .badge');
+    const badge = $('#notif-button .badge');
 
     // Create the badge if it doesn't exist
     if (badge.length === 0) {
@@ -30,7 +30,6 @@ $(document).ready(function() {
     } else {
       const currentCount = parseInt(badge.text()) || 0;
       badge.text(currentCount + 1);
-      
       if (badge.hasClass('d-none')) {
         badge.removeClass('d-none');
       }
@@ -43,7 +42,7 @@ $(document).ready(function() {
         <li>
           <a href="/item/${data.item_url}" 
              class="dropdown-item fw-bold text-decoration-none notification-item" 
-             data-notification-id="${data.id}">
+             data-notification-id="${data.id || ''}">
             <small class="text-muted d-block">${data.created_at}</small>
             ${data.message}
           </a>
@@ -52,7 +51,7 @@ $(document).ready(function() {
     } else {
       notificationElement = `
         <li>
-          <div class="dropdown-item fw-bold notification-item" data-notification-id="${data.id}">
+          <div class="dropdown-item fw-bold notification-item" data-notification-id="${data.id || ''}">
             <small class="text-muted d-block">${data.created_at}</small>
             ${data.message}
           </div>
@@ -61,7 +60,7 @@ $(document).ready(function() {
     }
 
     // Add notification to the dropdown menu
-    const notificationList = $('.btn:contains("Notifications")').next('.dropdown-menu');
+    const notificationList = $('#notification-list');
     
     // Remove "No new notifications" message if it exists
     notificationList.find(':contains("No new notifications")').parent().remove();

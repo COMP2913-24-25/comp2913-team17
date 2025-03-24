@@ -178,6 +178,7 @@ class Item(db.Model):
         try:
             from app import socketio
             socketio.emit('new_notification', {
+                'id': notification.id,
                 'message': notification.message,
                 'item_url': notification.item_url, 
                 'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
@@ -207,6 +208,7 @@ class Item(db.Model):
         # Send real-time notification
         from app import socketio
         socketio.emit('new_notification', {
+            'id': notification.id,
             'message': notification.message,
             'item_url': notification.item_url,
             'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
@@ -241,6 +243,7 @@ class Item(db.Model):
             # Send real-time notification
             from app import socketio
             socketio.emit('new_notification', {
+                'id': notification.id,
                 'message': notification.message,
                 'item_url': notification.item_url,
                 'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
@@ -436,6 +439,7 @@ class Notification(db.Model):
     item_url = db.Column(db.String(32), nullable=True)
     item_title = db.Column(db.String(256), nullable=True)
     # Notification type: 0 = Default, 1 = Outbid, 2 = Winner, 3 = Loser, 4 = Authentication Update
+    # 5 = Auction Ended (Sold), 6 = Auction Ended (Unsold)
     notification_type = db.Column(db.Integer, nullable=True, default=0)
 
 
