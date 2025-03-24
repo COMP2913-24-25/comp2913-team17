@@ -23,9 +23,6 @@
   border-radius: 0;
   margin-bottom: 1.5rem;
   background-color: var(--secondary-color);
-  overflow: visible;
-  position: relative;
-  z-index: 1;
 }
 
 .card-header {
