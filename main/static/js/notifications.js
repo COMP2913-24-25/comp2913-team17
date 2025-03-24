@@ -63,8 +63,8 @@ $(document).ready(function() {
     // Add notification to the dropdown menu
     const notificationList = $('.btn:contains("Notifications")').next('.dropdown-menu');
     
-    // Remove "No notifications" message if it exists
-    notificationList.find(':contains("No notifications")').parent().remove();
+    // Remove "No new notifications" message if it exists
+    notificationList.find(':contains("No new notifications")').parent().remove();
     
     // Add new notification at the top
     notificationList.prepend(notificationElement);
@@ -76,7 +76,7 @@ $(document).ready(function() {
     if ($(this).attr('href')) {
       event.preventDefault();
       
-      // Store the URL we'll navigate to after marking read
+      // Store the destination URL and notification ID
       const destinationUrl = $(this).attr('href');
       const notificationId = $(this).data('notification-id');
       
@@ -105,7 +105,6 @@ $(document).ready(function() {
   });
 
   // Mark all notifications as read when dropdown is opened
-  // Use the correct selector for the notification dropdown
   $('#notif-button').closest('.dropdown').on('shown.bs.dropdown', function() {
     const unreadNotifications = $('.dropdown-item.fw-bold');
     if (unreadNotifications.length === 0) return;
