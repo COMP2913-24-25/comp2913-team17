@@ -42,10 +42,12 @@ $(document).ready(function() {
       notificationElement = `
         <li>
           <a href="/item/${data.item_url}" 
-             class="dropdown-item fw-bold text-decoration-none notification-item" 
+             class="dropdown-item notification-item notification-unread" 
              data-notification-id="${data.id || ''}">
-            <small class="text-muted d-block">${data.created_at}</small>
-            ${data.message}
+            <div class="notification-content">
+              <div class="notification-message">${data.message}</div>
+              <div class="notification-time">${data.created_at}</div>
+            </div>
           </a>
         </li>
       `;
@@ -53,9 +55,11 @@ $(document).ready(function() {
       // Welcome notification
       notificationElement = `
         <li>
-          <div class="dropdown-item fw-bold notification-item" data-notification-id="${data.id || ''}">
-            <small class="text-muted d-block">${data.created_at}</small>
-            ${data.message}
+          <div class="dropdown-item notification-item notification-unread" data-notification-id="${data.id || ''}">
+            <div class="notification-content">
+              <div class="notification-message">${data.message}</div>
+              <div class="notification-time">${data.created_at}</div>
+            </div>
           </div>
         </li>
       `;
@@ -64,8 +68,10 @@ $(document).ready(function() {
     // Add notification to the dropdown menu
     const notificationList = $('#notification-list');
     
-    // Remove "No new notifications" message if it exists
-    notificationList.find(':contains("No new notifications")').parent().remove();
+    // Remove "No new notifications" message if notifications exist
+    if (notificationList.find('.notification-empty').length) {
+      notificationList.empty();
+    }
     
     // Add new notification at the top
     notificationList.prepend(notificationElement);
@@ -85,7 +91,7 @@ $(document).ready(function() {
         // Mark as read, then navigate
         markNotificationsAsRead([notificationId])
           .then(() => {
-            $(this).removeClass('fw-bold');
+            $(this).removeClass('notification-unread');
             window.location.href = destinationUrl;
           })
           .catch(error => {
@@ -100,21 +106,21 @@ $(document).ready(function() {
       const notificationId = $(this).data('notification-id');
       if (notificationId) {
         markNotificationsAsRead([notificationId]);
-        $(this).removeClass('fw-bold');
+        $(this).removeClass('notification-unread');
       }
     }
   });
 
   // Mark all notifications as read when dropdown is opened
   $('#notif-button').closest('.dropdown').on('shown.bs.dropdown', function() {
-    const unreadNotifications = $('.dropdown-item.fw-bold');
+    const unreadNotifications = $('.notification-item.notification-unread');
     if (unreadNotifications.length === 0) return;
 
     const notificationIds = [];
     unreadNotifications.each(function() {
       const id = $(this).data('notification-id');
       if (id) notificationIds.push(id);
-      $(this).removeClass('fw-bold');
+      $(this).removeClass('notification-unread');
     });
 
     if (notificationIds.length > 0) {
@@ -132,6 +138,7 @@ $(document).ready(function() {
   // Clear all notifications when clear all button is clicked
   $(document).on('click', '#clear-all-notifications', function(event) {
     event.preventDefault();
+    event.stopPropagation();
     
     clearAllNotifications()
       .then(() => {
@@ -142,9 +149,15 @@ $(document).ready(function() {
           badge.addClass('d-none');
         }
 
-        // Get the notification dropdown menu
-        const notificationList = $('#notif-button').next('.dropdown-menu');
-        notificationList.empty().html('<li><div class="dropdown-item">No new notifications</div></li>');
+        // Show empty state
+        $('#notification-list').html(`
+          <li>
+            <div class="dropdown-item notification-empty">
+              <i class="fas fa-bell-slash mx-auto d-block text-muted my-2"></i>
+              <p class="text-center text-muted">No new notifications</p>
+            </div>
+          </li>
+        `);
       })
       .catch(error => console.error('Error clearing notifications:', error));
   });
