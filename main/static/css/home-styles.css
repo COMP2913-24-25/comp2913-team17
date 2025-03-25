@@ -25,6 +25,7 @@
   position: relative;
   min-width: 200px;
   color: var(--accent-color);
+  overflow-y: hidden;
 }
 
 #rotating-word {

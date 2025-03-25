@@ -14,6 +14,6 @@ def terms():
 def privacy():
     return render_template('privacy.html')
 
-@addons_page.route('/about_us')
+@addons_page.route('/about-us')
 def about_us():
-    return render_template('about-us.html')
+    return render_template('about_us.html')
