@@ -1,6 +1,7 @@
 """Auction viewing routes."""
+
 import stripe
-from app import socketio
+from main import socketio
 from flask_socketio import join_room, leave_room
 from flask import flash, redirect, render_template, request, jsonify, url_for, current_app
 from flask_login import login_required, current_user

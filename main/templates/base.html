@@ -11,6 +11,8 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/favicon/apple-touch-icon.png') }}" />
   <meta name="apple-mobile-web-app-title" content="Vault" />
   <link rel="manifest" href="{{ url_for('static', filename='images/favicon/site.webmanifest') }}" />
+  <!-- Stop highlighting phone numbers on iOS -->
+  <meta name="format-detection" content="telephone=no">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,6 +66,14 @@
       <!-- Mobile Toggle Button -->
       <button class="navbar-toggler mx-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
+        {% if current_user.is_authenticated %}
+          {% set unread = current_user.notifications|selectattr('is_read', 'equalto', false)|list|length %}
+            {% if unread > 0 %}
+            <span class="position-absolute top-10 start-20 translate-middle badge rounded-pill bg-danger d-lg-none" style="font-size: 0.8rem;">
+              {{ unread }}
+            </span>
+            {% endif %}
+        {% endif %}
       </button>
       <!-- Nav Items -->
       <div class="collapse navbar-collapse" id="navbarContent">

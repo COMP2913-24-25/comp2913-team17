@@ -50,7 +50,7 @@
       <!-- Only experts and the creator can chat -->
       {% if authentication == 1 and (is_expert or is_creator) %}
       <form id="message-form" enctype="multipart/form-data">
-        <textarea id="message" placeholder="Enter your message" required></textarea>
+        <textarea class="form-control" id="message" placeholder="Enter your message" required></textarea>
         <div class="image-upload-container">
           <input type="file" id="images" name="files[]" accept="image/*" multiple>
           <small class="text-muted">
