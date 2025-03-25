@@ -161,45 +161,54 @@ def handle_manager(now):
     manager['requests'] = requests
 
     # Statistics Calculations
-    # Total Revenue (sum of highest bids for paid auctions only, status == 3)
+    # Projected Revenue (sum of highest bids for all completed auctions, paid and unpaid)
+    completed_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+        .join(Bid, Item.item_id == Bid.item_id)\
+        .filter(Item.auction_end < now)\
+        .group_by(Item.item_id)\
+        .subquery()
+    projected_revenue = db.session.query(func.sum(completed_auctions.c.highest_bid)).scalar() or 0.0
+    manager['projected_revenue'] = projected_revenue
+
+    # Paid Revenue (sum of highest bids for paid auctions only, status == 3)
     paid_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
         .join(Bid, Item.item_id == Bid.item_id)\
         .filter(Item.auction_end < now, Item.status == 3)\
         .group_by(Item.item_id)\
         .subquery()
-    total_revenue = db.session.query(func.sum(paid_auctions.c.highest_bid)).scalar() or 0.0
-    manager['total_revenue'] = total_revenue
+    paid_revenue = db.session.query(func.sum(paid_auctions.c.highest_bid)).scalar() or 0.0
+    manager['paid_revenue'] = paid_revenue
 
-    # Commission Income (based on base_fee and authenticated_fee for paid auctions)
+    # Commission Income (based on base_fee and authenticated_fee for paid auctions only)
     authenticated_revenue = db.session.query(func.sum(paid_auctions.c.highest_bid))\
         .join(Item, Item.item_id == paid_auctions.c.item_id)\
         .join(AuthenticationRequest, AuthenticationRequest.item_id == Item.item_id)\
         .filter(AuthenticationRequest.status == 2)\
         .scalar() or 0.0
     
-    total_revenue = float(total_revenue)
+    paid_revenue = float(paid_revenue)
     authenticated_revenue = float(authenticated_revenue)
     
-    standard_revenue = total_revenue - authenticated_revenue
+    standard_revenue = paid_revenue - authenticated_revenue
     commission_income = (standard_revenue * (manager['base_fee'] / 100)) + (authenticated_revenue * (manager['authenticated_fee'] / 100))
     manager['commission_income'] = commission_income
-    manager['commission_percentage'] = round((commission_income / total_revenue) * 100, 2) if total_revenue > 0 else 0.0
+    manager['commission_percentage'] = round((commission_income / paid_revenue) * 100, 2) if paid_revenue > 0 else 0.0
 
-    # Active Auctions (unchanged)
+    # Active Auctions
     manager['active_auctions'] = Item.query.filter(and_(Item.auction_start <= now, Item.auction_end >= now)).count()
 
-    # Total Users (unchanged)
+    # Total Users
     manager['user_count'] = User.query.count()
 
-    # Paid vs Total Completed Auctions (unchanged)
+    # Paid vs Total Completed Auctions
     manager['paid_auctions_count'] = Item.query.filter(Item.auction_end < now, Item.status == 3).count()
     manager['total_completed_auctions'] = Item.query.filter(Item.auction_end < now).count()
 
-    # Revenue Data for Chart (1 week, 1 month, 6 months, paid auctions only)
+    # Revenue Data for Chart (1 week, 1 month, 6 months, both projected and paid)
     manager['revenue_data'] = {
-        'week': {'labels': [], 'values': []},
-        'month': {'labels': [], 'values': []},
-        'six_months': {'labels': [], 'values': []}
+        'week': {'projected': {'labels': [], 'values': []}, 'paid': {'labels': [], 'values': []}},
+        'month': {'projected': {'labels': [], 'values': []}, 'paid': {'labels': [], 'values': []}},
+        'six_months': {'projected': {'labels': [], 'values': []}, 'paid': {'labels': [], 'values': []}}
     }
 
     # 1 Week (daily revenue for last 7 days)
@@ -207,7 +216,21 @@ def handle_manager(now):
         start_date = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = start_date + timedelta(days=1)
         
-        daily_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+        # Projected (all completed auctions)
+        daily_projected_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+            .join(Bid, Item.item_id == Bid.item_id)\
+            .filter(and_(
+                Item.auction_end >= start_date,
+                Item.auction_end < end_date,
+                Item.auction_end < now
+            ))\
+            .group_by(Item.item_id)\
+            .subquery()
+        daily_projected_revenue = db.session.query(func.sum(daily_projected_auctions.c.highest_bid)).scalar() or 0.0
+        daily_projected_revenue = float(daily_projected_revenue)
+        
+        # Paid (status == 3)
+        daily_paid_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
             .filter(and_(
                 Item.auction_end >= start_date,
@@ -217,19 +240,34 @@ def handle_manager(now):
             ))\
             .group_by(Item.item_id)\
             .subquery()
+        daily_paid_revenue = db.session.query(func.sum(daily_paid_auctions.c.highest_bid)).scalar() or 0.0
+        daily_paid_revenue = float(daily_paid_revenue)
         
-        daily_revenue = db.session.query(func.sum(daily_auctions.c.highest_bid)).scalar() or 0.0
-        daily_revenue = float(daily_revenue)
-        
-        manager['revenue_data']['week']['values'].append(daily_revenue)
-        manager['revenue_data']['week']['labels'].append(start_date.strftime('%a'))  # e.g., Mon, Tue
+        manager['revenue_data']['week']['projected']['values'].append(daily_projected_revenue)
+        manager['revenue_data']['week']['paid']['values'].append(daily_paid_revenue)
+        manager['revenue_data']['week']['projected']['labels'].append(start_date.strftime('%a'))
+        manager['revenue_data']['week']['paid']['labels'].append(start_date.strftime('%a'))
 
     # 1 Month (weekly revenue for last 4 weeks)
     for i in range(3, -1, -1):
         start_date = (now - timedelta(days=i * 7)).replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = start_date + timedelta(days=7)
         
-        weekly_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+        # Projected (all completed auctions)
+        weekly_projected_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+            .join(Bid, Item.item_id == Bid.item_id)\
+            .filter(and_(
+                Item.auction_end >= start_date,
+                Item.auction_end < end_date,
+                Item.auction_end < now
+            ))\
+            .group_by(Item.item_id)\
+            .subquery()
+        weekly_projected_revenue = db.session.query(func.sum(weekly_projected_auctions.c.highest_bid)).scalar() or 0.0
+        weekly_projected_revenue = float(weekly_projected_revenue)
+        
+        # Paid (status == 3)
+        weekly_paid_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
             .filter(and_(
                 Item.auction_end >= start_date,
@@ -239,19 +277,34 @@ def handle_manager(now):
             ))\
             .group_by(Item.item_id)\
             .subquery()
+        weekly_paid_revenue = db.session.query(func.sum(weekly_paid_auctions.c.highest_bid)).scalar() or 0.0
+        weekly_paid_revenue = float(weekly_paid_revenue)
         
-        weekly_revenue = db.session.query(func.sum(weekly_auctions.c.highest_bid)).scalar() or 0.0
-        weekly_revenue = float(weekly_revenue)
-        
-        manager['revenue_data']['month']['values'].append(weekly_revenue)
-        manager['revenue_data']['month']['labels'].append(f"Week {4 - i}")  # e.g., Week 1, Week 2
+        manager['revenue_data']['month']['projected']['values'].append(weekly_projected_revenue)
+        manager['revenue_data']['month']['paid']['values'].append(weekly_paid_revenue)
+        manager['revenue_data']['month']['projected']['labels'].append(f"Week {4 - i}")
+        manager['revenue_data']['month']['paid']['labels'].append(f"Week {4 - i}")
 
     # 6 Months (monthly revenue for last 6 months)
     for i in range(5, -1, -1):
         start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i * 30)
         end_date = start_date + timedelta(days=30)
         
-        monthly_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+        # Projected (all completed auctions)
+        monthly_projected_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
+            .join(Bid, Item.item_id == Bid.item_id)\
+            .filter(and_(
+                Item.auction_end >= start_date,
+                Item.auction_end < end_date,
+                Item.auction_end < now
+            ))\
+            .group_by(Item.item_id)\
+            .subquery()
+        monthly_projected_revenue = db.session.query(func.sum(monthly_projected_auctions.c.highest_bid)).scalar() or 0.0
+        monthly_projected_revenue = float(monthly_projected_revenue)
+        
+        # Paid (status == 3)
+        monthly_paid_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
             .filter(and_(
                 Item.auction_end >= start_date,
@@ -261,12 +314,13 @@ def handle_manager(now):
             ))\
             .group_by(Item.item_id)\
             .subquery()
+        monthly_paid_revenue = db.session.query(func.sum(monthly_paid_auctions.c.highest_bid)).scalar() or 0.0
+        monthly_paid_revenue = float(monthly_paid_revenue)
         
-        monthly_revenue = db.session.query(func.sum(monthly_auctions.c.highest_bid)).scalar() or 0.0
-        monthly_revenue = float(monthly_revenue)
-        
-        manager['revenue_data']['six_months']['values'].append(monthly_revenue)
-        manager['revenue_data']['six_months']['labels'].append(start_date.strftime('%b'))  # e.g., Jan, Feb
+        manager['revenue_data']['six_months']['projected']['values'].append(monthly_projected_revenue)
+        manager['revenue_data']['six_months']['paid']['values'].append(monthly_paid_revenue)
+        manager['revenue_data']['six_months']['projected']['labels'].append(start_date.strftime('%b'))
+        manager['revenue_data']['six_months']['paid']['labels'].append(start_date.strftime('%b'))
 
     return render_template('dashboard_manager.html', manager=manager, now=now, get_expert_availability=get_expert_availability, get_expertise=get_expertise)
 
