@@ -256,6 +256,10 @@ h1, h2, h3, h4, h5 {
   overflow-wrap: break-word;
   overflow-x: hidden;
   width: 100%;
+  height: auto;
+  min-height: fit-content;
+  max-height: none;
+  display: block;
 }
 
 .notification-item:hover {
