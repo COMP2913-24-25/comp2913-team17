@@ -149,7 +149,7 @@ def create_app(testing=False):
     app.register_blueprint(authenticate_item_page, url_prefix='/authenticate')
     app.register_blueprint(expert_page, url_prefix='/expert')
     app.register_blueprint(manager_page, url_prefix='/manager')
-    app.register_blueprint(addons_page, url_prefix='/addons')
+    app.register_blueprint(addons_page)
 
     @login_manager.user_loader
     def load_user(user_id):
