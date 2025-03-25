@@ -266,10 +266,19 @@
         </div>
       </div>
       <div class="mt-4">
-        <h5>Revenue Over Time (Last 6 Months, Paid Auctions)</h5>
+        <h5>Revenue Over Time (Paid Auctions)</h5>
+        <div class="btn-group mb-3" role="group" aria-label="Time period toggle">
+          <button type="button" class="btn btn-outline-primary time-toggle" data-period="week">1 Week</button>
+          <button type="button" class="btn btn-outline-primary time-toggle" data-period="month">1 Month</button>
+          <button type="button" class="btn btn-outline-primary time-toggle active" data-period="six_months">6 Months</button>
+        </div>
         <canvas id="revenueChart" width="400" height="200"
-          data-labels='{{ manager["revenue_labels"]|tojson|safe }}'
-          data-values='{{ manager["revenue_data"]|tojson|safe }}'
+          data-week-labels='{{ manager["revenue_data"]["week"]["labels"]|tojson|safe }}'
+          data-week-values='{{ manager["revenue_data"]["week"]["values"]|tojson|safe }}'
+          data-month-labels='{{ manager["revenue_data"]["month"]["labels"]|tojson|safe }}'
+          data-month-values='{{ manager["revenue_data"]["month"]["values"]|tojson|safe }}'
+          data-six-months-labels='{{ manager["revenue_data"]["six_months"]["labels"]|tojson|safe }}'
+          data-six-months-values='{{ manager["revenue_data"]["six_months"]["values"]|tojson|safe }}'
         ></canvas>
       </div>
     </div>
