@@ -5,7 +5,7 @@ import requests
 from flask import render_template, redirect, url_for, flash, request, current_app, session, abort
 from flask_login import login_user, logout_user, current_user
 from urllib.parse import urlparse, urlencode
-from app import socketio
+from main import socketio
 from flask_socketio import join_room
 from datetime import datetime
 from . import auth_page
