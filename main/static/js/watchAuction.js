@@ -67,6 +67,7 @@ $(document).ready(function() {
         });
     }
     
+    // Show the unwatch confirmation pop up
     function showUnwatchConfirmation(button, itemUrl) {
         console.log("Showing unwatch confirmation for:", itemUrl);
         
@@ -115,7 +116,7 @@ $(document).ready(function() {
         .then(data => {
             console.log("Unwatch success data:", data);
             if (data.status === 'success') {
-                // Replace with watch button - ensure consistent btn-lg class
+                // Replace with watch button
                 const newButton = $(`
                     <button id="watch-btn" class="btn btn-outline-dark btn-lg" data-item-url="${itemUrl}">
                         <i class="fas fa-eye"></i> Add to Watchlist
