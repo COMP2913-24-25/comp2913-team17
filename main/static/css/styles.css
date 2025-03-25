@@ -759,12 +759,7 @@ h1, h2, h3, h4, h5 {
   }
   
   .logo-text {
-    font-size: 1.2rem;
-  }
-  
-  .logo-svg {
-    width: 30px;
-    height: 30px;
+    font-size: 1.6rem;
   }
 }
 
