@@ -6,30 +6,48 @@ document.addEventListener('DOMContentLoaded', function () {
     // Get all data from data attributes
     const data = {
       week: {
-        labels: JSON.parse(ctx.dataset.weekLabels || '[]'),
-        values: JSON.parse(ctx.dataset.weekValues || '[]')
+        projected: {
+          labels: JSON.parse(ctx.dataset.weekProjectedLabels || '[]'),
+          values: JSON.parse(ctx.dataset.weekProjectedValues || '[]')
+        },
+        paid: {
+          labels: JSON.parse(ctx.dataset.weekPaidLabels || '[]'),
+          values: JSON.parse(ctx.dataset.weekPaidValues || '[]')
+        }
       },
       month: {
-        labels: JSON.parse(ctx.dataset.monthLabels || '[]'),
-        values: JSON.parse(ctx.dataset.monthValues || '[]')
+        projected: {
+          labels: JSON.parse(ctx.dataset.monthProjectedLabels || '[]'),
+          values: JSON.parse(ctx.dataset.monthProjectedValues || '[]')
+        },
+        paid: {
+          labels: JSON.parse(ctx.dataset.monthPaidLabels || '[]'),
+          values: JSON.parse(ctx.dataset.monthPaidValues || '[]')
+        }
       },
       six_months: {
-        labels: JSON.parse(ctx.dataset.sixMonthsLabels || '[]'),
-        values: JSON.parse(ctx.dataset.sixMonthsValues || '[]')
+        projected: {
+          labels: JSON.parse(ctx.dataset.sixMonthsProjectedLabels || '[]'),
+          values: JSON.parse(ctx.dataset.sixMonthsProjectedValues || '[]')
+        },
+        paid: {
+          labels: JSON.parse(ctx.dataset.sixMonthsPaidLabels || '[]'),
+          values: JSON.parse(ctx.dataset.sixMonthsPaidValues || '[]')
+        }
       }
     };
 
-    // Initialize chart with 6 months as default
+    // Initialise chart with 6 months projected revenue as default
     const revenueChart = new Chart(ctx.getContext('2d'), {
       type: 'line',
       data: {
-        labels: data.six_months.labels,
+        labels: data.six_months.projected.labels,
         datasets: [{
-          label: 'Revenue (£, Paid Auctions)',
+          label: 'Projected Revenue (£)',
           backgroundColor: 'rgba(54, 162, 235, 0.2)',
           borderColor: 'rgba(54, 162, 235, 1)',
           borderWidth: 1,
-          data: data.six_months.values
+          data: data.six_months.projected.values
         }]
       },
       options: {
@@ -51,20 +69,36 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    // Toggle functionality
-    const toggleButtons = document.querySelectorAll('.time-toggle');
-    toggleButtons.forEach(button => {
-      button.addEventListener('click', function () {
-        const period = this.dataset.period;
+    // Function to update chart
+    function updateChart(period, revenueType) {
+      revenueChart.data.labels = data[period][revenueType].labels;
+      revenueChart.data.datasets[0].data = data[period][revenueType].values;
+      revenueChart.data.datasets[0].label = revenueType === 'projected' ? 'Projected Revenue (£)' : 'Paid Revenue (£)';
+      revenueChart.update();
+    }
 
-        // Update chart data
-        revenueChart.data.labels = data[period].labels;
-        revenueChart.data.datasets[0].data = data[period].values;
-        revenueChart.update();
+    // Time period toggle
+    const timeToggles = document.querySelectorAll('.time-toggle');
+    let currentPeriod = 'six_months';
+    let currentRevenueType = 'projected';
 
-        // Update active button
-        toggleButtons.forEach(btn => btn.classList.remove('active'));
-        this.classList.add('active');
+    timeToggles.forEach(toggle => {
+      toggle.addEventListener('change', function () {
+        if (this.checked) {
+          currentPeriod = this.value;
+          updateChart(currentPeriod, currentRevenueType);
+        }
+      });
+    });
+
+    // Revenue type toggle
+    const revenueToggles = document.querySelectorAll('.revenue-toggle');
+    revenueToggles.forEach(toggle => {
+      toggle.addEventListener('change', function () {
+        if (this.checked) {
+          currentRevenueType = this.value;
+          updateChart(currentPeriod, currentRevenueType);
+        }
       });
     });
   }
