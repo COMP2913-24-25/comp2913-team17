@@ -176,7 +176,7 @@ class Item(db.Model):
         
         # Send real-time notification
         try:
-            from app import socketio
+            from main import socketio
             socketio.emit('new_notification', {
                 'message': notification.message,
                 'item_url': notification.item_url, 
@@ -205,7 +205,7 @@ class Item(db.Model):
         db.session.commit()
         
         # Send real-time notification
-        from app import socketio
+        from main import socketio
         socketio.emit('new_notification', {
             'message': notification.message,
             'item_url': notification.item_url,
@@ -239,7 +239,7 @@ class Item(db.Model):
             db.session.commit()
             
             # Send real-time notification
-            from app import socketio
+            from main import socketio
             socketio.emit('new_notification', {
                 'message': notification.message,
                 'item_url': notification.item_url,
@@ -281,7 +281,7 @@ class Item(db.Model):
         db.session.commit()
         
         # Send real-time notification
-        from app import socketio
+        from main import socketio
         socketio.emit('new_notification', {
             'message': notification.message,
             'item_url': notification.item_url,

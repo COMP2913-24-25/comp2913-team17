@@ -13,6 +13,7 @@ from .models import db
 from .init_db import populate_db
 from .limiter_utils import configure_limiter
 from .extensions import csrf
+from .db_utils import reset_database
 
 socketio = SocketIO()
 scheduler = None
@@ -37,8 +38,23 @@ def create_app(testing=False):
     app.config['STRIPE_PUBLISHABLE_KEY'] = os.environ.get('STRIPE_PUBLISHABLE_KEY')
     app.config['STRIPE_WEBHOOK_SECRET'] = os.environ.get('STRIPE_WEBHOOK_SECRET')
 
-    # Configure the database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+    # Configure the database based on environment
+    if os.environ.get('DATABASE_URL'):
+        database_url = os.environ.get('DATABASE_URL')
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+
+        # Set NullPool for PostgreSQL to avoid threading issues with Gunicorn
+        from sqlalchemy.pool import NullPool
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'poolclass': NullPool,
+            'connect_args': {}
+        }
+    else:
+        # Local SQLite database
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialise security features
@@ -101,34 +117,40 @@ def create_app(testing=False):
 
     # Initialise the scheduler
     if not testing and scheduler is None:
-        scheduler = APScheduler()
-        scheduler.init_app(app)
-        scheduler.api_enabled = True
+        if os.environ.get('RENDER') != 'true' or os.environ.get('RENDER_SERVICE_TYPE') == 'web':
+            scheduler = APScheduler()
+            scheduler.init_app(app)
+            scheduler.api_enabled = True
 
-        app.config.update(
-            SCHEDULER_API_ENABLED=True,
-        )
+            app.config.update(
+                SCHEDULER_API_ENABLED=True,
+            )
 
-        # Check for ended auctions every minute
-        @scheduler.task('interval', id='check_ended_auctions', seconds=60, misfire_grace_time=30)
-        def check_ended_auctions_job():
-            with app.app_context():
-                from .page_item.routes import check_ended_auctions
-                try:
-                    check_ended_auctions()
-                except Exception as e:
-                    print(f'Error checking ended auctions: {str(e)}')
+            # Check for ended auctions every minute
+            @scheduler.task('interval', id='check_ended_auctions', seconds=60, misfire_grace_time=30)
+            def check_ended_auctions_job():
+                with app.app_context():
+                    from .page_item.routes import check_ended_auctions
+                    try:
+                        check_ended_auctions()
+                    except Exception as e:
+                        print(f'Error checking ended auctions: {str(e)}')
 
-        scheduler.start()
+            scheduler.start()
 
     # Initialise the database
     db.init_app(app)
 
     with app.app_context():
         # Creates tables if they don't exist
-        db.create_all()
-        # Populate dummy data if it doesn't already exist
-        populate_db(app)
+        if os.environ.get('RENDER') == 'true':
+            # If running on Render, reset the database completely
+            reset_database(app, db)
+        else:
+            # For local development, just create tables if they don't exist
+            db.create_all()
+            # Populate dummy data if it doesn't already exist
+            populate_db(app)
 
     # Import and registers the blueprints
     from .page_home import home_page
@@ -149,7 +171,7 @@ def create_app(testing=False):
     app.register_blueprint(authenticate_item_page, url_prefix='/authenticate')
     app.register_blueprint(expert_page, url_prefix='/expert')
     app.register_blueprint(manager_page, url_prefix='/manager')
-    app.register_blueprint(addons_page, url_prefix='/addons')
+    app.register_blueprint(addons_page)
 
     @login_manager.user_loader
     def load_user(user_id):
