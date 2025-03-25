@@ -1,6 +1,6 @@
 """Dashboard related routes."""
 
-from app import socketio
+from main import socketio
 from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
 from datetime import date, datetime, timedelta

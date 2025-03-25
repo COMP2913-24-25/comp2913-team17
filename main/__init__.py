@@ -15,10 +15,13 @@ from .limiter_utils import configure_limiter
 from .extensions import csrf
 
 socketio = SocketIO()
-scheduler = APScheduler()
+scheduler = None
 mail = Mail()
 
-def create_app():
+def create_app(testing=False):
+    """Creates and configures the Flask app."""
+    global scheduler
+
     app = Flask(__name__, static_url_path='', static_folder='static')
 
     # Load environment variables
@@ -97,24 +100,26 @@ def create_app():
     socketio.init_app(app, cors_allowed_origins='*')
 
     # Initialise the scheduler
-    scheduler.init_app(app)
-    scheduler.api_enabled = True
+    if not testing and scheduler is None:
+        scheduler = APScheduler()
+        scheduler.init_app(app)
+        scheduler.api_enabled = True
 
-    app.config.update(
-        SCHEDULER_API_ENABLED=True,
-    )
+        app.config.update(
+            SCHEDULER_API_ENABLED=True,
+        )
 
-    # Check for ended auctions every minute
-    @scheduler.task('interval', id='check_ended_auctions', seconds=60, misfire_grace_time=30)
-    def check_ended_auctions_job():
-        with app.app_context():
-            from .page_item.routes import check_ended_auctions
-            try:
-                check_ended_auctions()
-            except Exception as e:
-                print(f'Error checking ended auctions: {str(e)}')
+        # Check for ended auctions every minute
+        @scheduler.task('interval', id='check_ended_auctions', seconds=60, misfire_grace_time=30)
+        def check_ended_auctions_job():
+            with app.app_context():
+                from .page_item.routes import check_ended_auctions
+                try:
+                    check_ended_auctions()
+                except Exception as e:
+                    print(f'Error checking ended auctions: {str(e)}')
 
-    scheduler.start()
+        scheduler.start()
 
     # Initialise the database
     db.init_app(app)
@@ -144,7 +149,7 @@ def create_app():
     app.register_blueprint(authenticate_item_page, url_prefix='/authenticate')
     app.register_blueprint(expert_page, url_prefix='/expert')
     app.register_blueprint(manager_page, url_prefix='/manager')
-    app.register_blueprint(addons_page, url_prefix='/addons')
+    app.register_blueprint(addons_page)
 
     @login_manager.user_loader
     def load_user(user_id):

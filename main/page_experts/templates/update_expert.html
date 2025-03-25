@@ -16,10 +16,6 @@
          class="btn btn-primary me-2">
          Previous Week
       </a>
-    {% else %}
-      <button type="button" class="btn btn-outline-secondary me-2" disabled>
-         Previous Week
-      </button>
     {% endif %}
     <a href="{{ url_for('expert_page.update_availability') }}?week_start={{ next_week.strftime('%Y-%m-%d') }}"
        class="btn btn-primary">
@@ -90,7 +86,7 @@
       </button>
     </div>
 
-    <div class="d-flex justify-content-center mt-3">
+    <div class="d-flex justify-content-center my-3">
       <button type="submit" class="btn btn-primary">
         Save Availability
       </button>

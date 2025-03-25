@@ -1,6 +1,6 @@
 """Auction viewing routes."""
 
-from app import socketio
+from main import socketio
 from flask_socketio import join_room, leave_room
 from flask import render_template, flash, redirect, url_for, jsonify, request
 from flask_login import login_required, current_user
