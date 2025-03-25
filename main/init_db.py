@@ -846,7 +846,7 @@ def populate_db(app):
             if auction.bids:
                 highest = auction.highest_bid()
                 # Notify the highest bidder that their bid is accepted
-                winner = User.query.get(highest.bidder_id)
+                winner = db.session.get(User, highest.bidder_id)
                 winner_notification = Notification(
                     user_id=winner.id,
                     message=f"Congratulations! Your bid on '{auction.title}' has been accepted.",
@@ -861,7 +861,7 @@ def populate_db(app):
                 # Notify all other bidders that they have been outbid
                 for bid in auction.bids:
                     if bid.bidder_id != highest.bidder_id:
-                        other_user = User.query.get(bid.bidder_id)
+                        other_user = db.session.get(User, bid.bidder_id)
                         outbid_notification = Notification(
                             user_id=other_user.id,
                             message=f"You have been outbid on '{auction.title}'.",

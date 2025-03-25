@@ -148,10 +148,6 @@
   background-color: var(--tertiary-color);
 }
 
-.auth-table tr:last-child td {
-  border-bottom: none;
-}
-
 .item-title {
   font-weight: 600;
   color: var(--primary-color);
@@ -345,6 +341,10 @@
     font-family: var(--font-mono);
     font-size: 0.8rem;
     text-transform: uppercase;
+  }
+
+  .auth-table tr td:last-child {
+    border-bottom: none;
   }
 }
 
