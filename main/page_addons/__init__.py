@@ -16,4 +16,4 @@ def privacy():
 
 @addons_page.route('/about_us')
 def about_us():
-    return render_template('about_us.html')
+    return render_template('about-us.html')
