@@ -225,8 +225,16 @@
         <div class="col-md-3">
           <div class="card text-center">
             <div class="card-body">
-              <h5 class="card-title">Total Revenue</h5>
-              <p class="card-text">£{{ "%.2f" | format(manager['total_revenue']) }}</p>
+              <h5 class="card-title">Projected Revenue</h5>
+              <p class="card-text">£{{ "%.2f" | format(manager['projected_revenue']) }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Paid Revenue</h5>
+              <p class="card-text">£{{ "%.2f" | format(manager['paid_revenue']) }}</p>
             </div>
           </div>
         </div>
@@ -246,6 +254,8 @@
             </div>
           </div>
         </div>
+      </div>
+      <div class="row mt-4">
         <div class="col-md-3">
           <div class="card text-center">
             <div class="card-body">
@@ -254,8 +264,6 @@
             </div>
           </div>
         </div>
-      </div>
-      <div class="row mt-4">
         <div class="col-md-3">
           <div class="card text-center">
             <div class="card-body">
@@ -266,19 +274,46 @@
         </div>
       </div>
       <div class="mt-4">
-        <h5>Revenue Over Time (Paid Auctions)</h5>
-        <div class="btn-group mb-3" role="group" aria-label="Time period toggle">
-          <button type="button" class="btn btn-outline-primary time-toggle" data-period="week">1 Week</button>
-          <button type="button" class="btn btn-outline-primary time-toggle" data-period="month">1 Month</button>
-          <button type="button" class="btn btn-outline-primary time-toggle active" data-period="six_months">6 Months</button>
+        <h5>Revenue Over Time</h5>
+        <div class="mb-3">
+          <label class="me-3">Time Period:</label>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input time-toggle" type="radio" name="timePeriod" id="weekToggle" value="week">
+            <label class="form-check-label" for="weekToggle">1 Week</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input time-toggle" type="radio" name="timePeriod" id="monthToggle" value="month">
+            <label class="form-check-label" for="monthToggle">1 Month</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input time-toggle" type="radio" name="timePeriod" id="sixMonthsToggle" value="six_months" checked>
+            <label class="form-check-label" for="sixMonthsToggle">6 Months</label>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="me-3">Revenue Type:</label>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input revenue-toggle" type="radio" name="revenueType" id="projectedToggle" value="projected" checked>
+            <label class="form-check-label" for="projectedToggle">Projected</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input revenue-toggle" type="radio" name="revenueType" id="paidToggle" value="paid">
+            <label class="form-check-label" for="paidToggle">Paid</label>
+          </div>
         </div>
         <canvas id="revenueChart" width="400" height="200"
-          data-week-labels='{{ manager["revenue_data"]["week"]["labels"]|tojson|safe }}'
-          data-week-values='{{ manager["revenue_data"]["week"]["values"]|tojson|safe }}'
-          data-month-labels='{{ manager["revenue_data"]["month"]["labels"]|tojson|safe }}'
-          data-month-values='{{ manager["revenue_data"]["month"]["values"]|tojson|safe }}'
-          data-six-months-labels='{{ manager["revenue_data"]["six_months"]["labels"]|tojson|safe }}'
-          data-six-months-values='{{ manager["revenue_data"]["six_months"]["values"]|tojson|safe }}'
+          data-week-projected-labels='{{ manager["revenue_data"]["week"]["projected"]["labels"]|tojson|safe }}'
+          data-week-projected-values='{{ manager["revenue_data"]["week"]["projected"]["values"]|tojson|safe }}'
+          data-week-paid-labels='{{ manager["revenue_data"]["week"]["paid"]["labels"]|tojson|safe }}'
+          data-week-paid-values='{{ manager["revenue_data"]["week"]["paid"]["values"]|tojson|safe }}'
+          data-month-projected-labels='{{ manager["revenue_data"]["month"]["projected"]["labels"]|tojson|safe }}'
+          data-month-projected-values='{{ manager["revenue_data"]["month"]["projected"]["values"]|tojson|safe }}'
+          data-month-paid-labels='{{ manager["revenue_data"]["month"]["paid"]["labels"]|tojson|safe }}'
+          data-month-paid-values='{{ manager["revenue_data"]["month"]["paid"]["values"]|tojson|safe }}'
+          data-six-months-projected-labels='{{ manager["revenue_data"]["six_months"]["projected"]["labels"]|tojson|safe }}'
+          data-six-months-projected-values='{{ manager["revenue_data"]["six_months"]["projected"]["values"]|tojson|safe }}'
+          data-six-months-paid-labels='{{ manager["revenue_data"]["six_months"]["paid"]["labels"]|tojson|safe }}'
+          data-six-months-paid-values='{{ manager["revenue_data"]["six_months"]["paid"]["values"]|tojson|safe }}'
         ></canvas>
       </div>
     </div>
