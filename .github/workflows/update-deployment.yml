@@ -1,0 +1,73 @@
+name: Auto Update Deployment Branch
+
+on:
+  # Trigger when main branch is updated or manually
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update-deployment-branch:
+    name: Update Deployment Branch
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          # Fetch all history for all branches
+          fetch-depth: 0
+      
+      - name: Setup Git identity
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+      
+      - name: Update deployment branch
+        id: update
+        run: |
+          DEPLOYMENT_BRANCH="deployment"
+          
+          # Fetch latest changes from origin for both branches
+          git fetch origin main
+          git fetch origin $DEPLOYMENT_BRANCH
+          
+          # Checkout the deployment branch
+          git checkout $DEPLOYMENT_BRANCH
+          
+          # Create a temporary branch to test the merge
+          git checkout -b temp-merge-test
+          
+          # Try to merge main into the temporary branch
+          if git merge origin/main -m "Auto-merge main into $DEPLOYMENT_BRANCH" --no-commit; then
+            # No conflicts, discard the test merge and perform the actual merge
+            git merge --abort
+            git checkout $DEPLOYMENT_BRANCH
+            
+            # Perform the actual merge
+            if git merge origin/main -m "Auto-merge main into $DEPLOYMENT_BRANCH"; then
+              echo "Merge successful. Pushing changes."
+              git push origin $DEPLOYMENT_BRANCH
+              echo "success=true" >> $GITHUB_OUTPUT
+            else
+              echo "Unexpected issue during final merge. Aborting."
+              git merge --abort
+              echo "success=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Merge conflict detected
+            echo "Merge conflicts detected. Not updating deployment branch."
+            git merge --abort
+            git checkout $DEPLOYMENT_BRANCH
+            echo "success=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Clean up temporary branch
+          git branch -D temp-merge-test
+      
+      - name: Notify on failure
+        if: steps.update.outputs.success == 'false'
+        run: |
+          echo "Failed to update deployment branch due to conflicts. Manual intervention required."
+          gh issue create --title "Deployment branch update failed" --body "The automatic update of the deployment branch failed due to conflicts. Manual intervention required."
