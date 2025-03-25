@@ -107,12 +107,12 @@ class User(UserMixin, db.Model):
         notification = Notification(
             user_id=self.id,
             message=f"Welcome to Vintage Vault, {self.username}! Get started by browsing auctions or creating your own.",
-            notification_type=0  # Default notification type
+            notification_type=0
         )
         db.session.add(notification)
         db.session.commit()
         
-        # Send real-time notification
+        # Send welcome notification
         try:
             from app import socketio
             socketio.emit('new_notification', {
@@ -321,6 +321,36 @@ class Item(db.Model):
         }, room=f'user_{self.seller.secret_key}')
 
         send_notification_email(self.seller, notification)
+
+    def notify_payment(self):
+        if not self.winning_bid:
+            return
+            
+        notification = Notification(
+            user_id=self.seller_id,
+            message=f"Payment received! {self.winning_bid.bidder.username} has paid £{self.winning_bid.bid_amount} for '{self.title}'.",
+            item_url=self.url,
+            item_title=self.title,
+            notification_type=7
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Send real-time notification
+        try:
+            from app import socketio
+            socketio.emit('new_notification', {
+                'id': notification.id,
+                'message': notification.message,
+                'item_url': notification.item_url,
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{self.seller.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send payment notification: {e}")
+            
+        # Send email notification
+        send_notification_email(self.seller, notification)
+
 
     # Count the number of users watching an auction
     def watcher_count(self):
