@@ -44,8 +44,8 @@ document.addEventListener('DOMContentLoaded', function () {
         labels: data.six_months.projected.labels,
         datasets: [{
           label: 'Projected Revenue (£)',
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(255, 157, 0, 0.2)',
+          borderColor: 'rgba(255, 157, 0, 1)',
           borderWidth: 1,
           data: data.six_months.projected.values
         }]
