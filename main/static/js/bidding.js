@@ -29,6 +29,31 @@ $(document).ready(function() {
   const currentPrice = $('#price-section');
   const bidHelp = $('#bid-amount-help');
 
+  function showBidAlert(message, type = 'danger') {
+    
+    // Remove any existing alerts
+    $('.bid-alert-banner').remove();
+    
+    // Create the alert element
+    const alertEl = $(`
+      <div class="alert alert-${type} bid-alert-banner alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    `);
+    
+    // Insert the alert after the price section
+    $('#price-section').after(alertEl);
+    
+    // Hide the modal after a successful bid
+    $('.place-bid-modal').modal('hide');
+    
+    // Automatically close the alert after 5 seconds
+    setTimeout(() => {
+      alertEl.alert('close');
+    }, 5000);
+  }
+
   // Initialise live countdown
   function startCountdown() {
     if (countdown.length) {
@@ -124,12 +149,12 @@ $(document).ready(function() {
 
       const newBid = parseFloat(bidAmount.val());
       if (!newBid || isNaN(newBid)) {
-        alert('Please enter a valid bid amount.');
+        showBidAlert('Please enter a valid bid amount.', 'warning');
         return;
       }
 
       if (newBid <= maxBid.val()) {
-        alert('Bid amount must be greater than the current bid.');
+        showBidAlert('Bid amount must be greater than the current bid.', 'warning');
         return;
       }
       
@@ -143,9 +168,12 @@ $(document).ready(function() {
         if (response.status !== 200) {
           throw data;
         }
+        
+        // Success message after successful bid
+        showBidAlert(`Your bid of £${newBid.toFixed(2)} has been placed successfully!`, 'success');
       } catch (error) {
         console.log('Error:', error);
-        alert(`Error placing bid. Please try again.`);
+        showBidAlert(`Error placing bid. Please try again.`, 'danger');
       }
     });
   };
