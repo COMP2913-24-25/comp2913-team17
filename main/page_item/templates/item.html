@@ -13,6 +13,9 @@
   </div>
 </div>
 
+<!-- Bidding Alert Container - Add this new container -->
+<div id="bidding-alert-container" class="container mt-3"></div>
+
 <div class="container mt-5">
   <div class="row">
     <!-- Image Column -->
@@ -347,4 +350,43 @@
   </script>
   <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 {% endif %}
+
+<!-- Add inline script to fix bidding alerts -->
+<script>
+  // Override the showBidAlert function to use our dedicated container
+  $(document).ready(function() {
+    // Store the original showBidAlert function if it exists
+    let originalShowBidAlert = window.showBidAlert;
+    
+    // Create a new showBidAlert function that uses our container
+    window.showBidAlert = function(message, type = 'danger') {
+      // Remove any existing alerts
+      $('#bidding-alert-container .alert').remove();
+      
+      // Create the alert element
+      const alertEl = $(`
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `);
+      
+      // Add to our dedicated container
+      $('#bidding-alert-container').append(alertEl);
+      
+      // Hide the modal after a bid
+      $('.place-bid-modal').modal('hide');
+      
+      // Automatically close the alert after 5 seconds
+      setTimeout(() => {
+        alertEl.alert('close');
+      }, 5000);
+      
+      // If the original function exists, call it too (for backwards compatibility)
+      if (typeof originalShowBidAlert === 'function') {
+        originalShowBidAlert(message, type);
+      }
+    };
+  });
+</script>
 {% endblock %}
