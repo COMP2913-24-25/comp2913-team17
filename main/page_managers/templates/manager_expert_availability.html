@@ -3,19 +3,19 @@
 {% block title %}Expert Availability Overview{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-styles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manager-view-styles.css') }}">
 
 <!-- Header -->
-<div class="dashboard-header">
+<div class="manager-header">
   <div class="container">
-    <h1 class="dashboard-title mb-0">Expert Availability Overview</h1>
+    <h1 class="manager-title mb-0">Expert Availability Overview</h1>
   </div>
 </div>
 
 <div class="container">
   <!-- Tabs -->
-  <div class="dashboard-tabs-container">
-    <ul class="nav nav-tabs dashboard-tabs" id="expertAvailabilityTabs" role="tablist">
+  <div class="manager-tabs-container">
+    <ul class="nav nav-tabs manager-tabs" id="expertAvailabilityTabs" role="tablist">
       <li class="nav-item" role="presentation">
         <a class="nav-link active" id="daily-tab" data-bs-toggle="tab" href="#daily" role="tab" aria-controls="daily" aria-selected="true">
           Daily View
@@ -27,11 +27,11 @@
         </a>
       </li>
     </ul>
-    <div class="dashboard-tabs-divider"></div>
+    <div class="manager-tabs-divider"></div>
   </div>
 
   <!-- Category Filter -->
-  <div class="auth-card mt-4">
+  <div class="manager-card mt-4">
     <div class="card-header">
       <i class="fas fa-filter me-2"></i> Filter by Category
     </div>
@@ -49,15 +49,15 @@
 
     <!-- Daily View -->
     <div class="tab-pane fade show active" id="daily" role="tabpanel" aria-labelledby="daily-tab">
-      <div class="auth-card">
+      <div class="manager-card" id="dailyTableContainer" style="position: relative;">
         <div class="card-header d-flex justify-content-between align-items-center">
           <span><i class="fas fa-calendar-day me-2"></i> Daily Availability for {{ today.strftime('%A, %b %d, %Y') }}</span>
-          <button id="toggleFilter" class="btn btn-card">
+          <button id="toggleFilter" class="btn btn-manager">
             Show Only Currently Available Experts
           </button>
         </div>
         <div class="card-body table-responsive p-0">
-          <table class="auth-table table-bordered" id="dailyTable" data-current-slot="{{ current_slot.strftime('%H:%M') }}">
+          <table class="manager-table table-bordered" id="dailyTable" data-current-slot="{{ current_slot.strftime('%H:%M') }}">
             <thead>
               <tr>
                 <th>Expert</th>
@@ -91,6 +91,8 @@
               {% endfor %}
             </tbody>
           </table>
+          <!-- Add the Current Time Indicator -->
+          <div id="currentTimeIndicator"></div>
         </div>
         <div class="card-footer text-muted text-end px-3">
           Current time: {{ current_time.strftime('%H:%M') }}
@@ -98,14 +100,15 @@
       </div>
     </div>
 
+
     <!-- Weekly View -->
     <div class="tab-pane fade" id="weekly" role="tabpanel" aria-labelledby="weekly-tab">
-      <div class="auth-card">
+      <div class="manager-card">
         <div class="card-header">
           <i class="fas fa-calendar-week me-2"></i> Weekly Availability (Next 7 Days)
         </div>
         <div class="card-body table-responsive p-0">
-          <table class="auth-table table-bordered" id="weeklyTable">
+          <table class="manager-table table-bordered" id="weeklyTable">
             <thead>
               <tr>
                 <th>Expert</th>
@@ -136,4 +139,5 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/filterAvailability.js') }}"></script>
+<script src="{{ url_for('static', filename='js/timeIndicator.js') }}"></script>
 {% endblock %}
