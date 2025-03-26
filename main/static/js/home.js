@@ -89,6 +89,8 @@ $(document).ready(function() {
   });
   
   $('#type-filter').on('change', function() {
+    $('#auction-type').text($(this).find('option:selected').text());
+    sessionStorage.setItem('lastType', $(this).val());
     applyFilters();
   });
   
@@ -246,4 +248,13 @@ $(document).ready(function() {
   
   window.addEventListener('scroll', reveal);
   reveal();
+
+  // Set default filter to whatever it last was or live auctions
+  const lastType = sessionStorage.getItem('lastType');
+  if (lastType) {
+    $('#type-filter').val(lastType);
+  } else {
+    $('#type-filter').val('1');
+  }
+  $('#type-filter').change();
 });
