@@ -17,6 +17,27 @@ def populate_db(app):
 
         now = datetime.now()
 
+        # Manager Config first to set platform fees
+        configs = [
+            ManagerConfig(
+                config_key='base_platform_fee',
+                config_value='1.00',
+                description='Base platform fee percentage for standard items'
+            ),
+            ManagerConfig(
+                config_key='authenticated_platform_fee',
+                config_value='5.00',
+                description='Platform fee percentage for authenticated items'
+            ),
+            ManagerConfig(
+                config_key='max_auction_duration',
+                config_value='5',
+                description='Maximum auction duration in days'
+            )
+        ]
+        db.session.add_all(configs)
+        db.session.commit()
+
         # Regular Users
         user1 = User(username='alice', email='alice@example.com', role=1)
         user1.set_password('Alice@123')
@@ -435,8 +456,7 @@ def populate_db(app):
                 auth_req = AuthenticationRequest(
                     item_id=auction.item_id,
                     requester_id=auction.seller_id,
-                    request_date=now,
-                    fee_percent=5.00
+                    request_date=now
                 )
                 db.session.add(auth_req)
         db.session.commit()
@@ -504,7 +524,6 @@ def populate_db(app):
             item_id=auction4.item_id,
             requester_id=auction4.seller_id,
             request_date=now,
-            fee_percent=5.00,
             status=2  # Authenticated
         )
         db.session.add(auth_req_sculpt)
@@ -557,7 +576,6 @@ def populate_db(app):
             item_id=auction9.item_id,
             requester_id=auction9.seller_id,
             request_date=now,
-            fee_percent=5.00,
             status=2  # Authenticated
         )
         db.session.add(auth_req_moby)
@@ -609,7 +627,6 @@ def populate_db(app):
             item_id=auction11.item_id,
             requester_id=auction11.seller_id,
             request_date=now,
-            fee_percent=5.00,
             status=2  # Authenticated
         )
         db.session.add(auth_req_ferrari)
@@ -661,7 +678,6 @@ def populate_db(app):
             item_id=auction8.item_id,
             requester_id=auction8.seller_id,
             request_date=now,
-            fee_percent=5.00,
             status=3  # 3 = Declined/Denied
         )
         db.session.add(auth_req_book)
@@ -719,7 +735,6 @@ def populate_db(app):
             item_id=auction10.item_id,
             requester_id=auction10.seller_id,
             request_date=now,
-            fee_percent=5.00,
             status=1 
         )
         db.session.add(auth_req_rolex)
@@ -817,27 +832,6 @@ def populate_db(app):
             )
             db.session.add(availability)
 
-        db.session.commit()
-        
-        # Manager Config
-        configs = [
-            ManagerConfig(
-                config_key='base_platform_fee',
-                config_value='1.00',
-                description='Base platform fee percentage for standard items'
-            ),
-            ManagerConfig(
-                config_key='authenticated_platform_fee',
-                config_value='5.00',
-                description='Platform fee percentage for authenticated items'
-            ),
-            ManagerConfig(
-                config_key='max_auction_duration',
-                config_value='5',
-                description='Maximum auction duration in days'
-            )
-        ]
-        db.session.add_all(configs)
         db.session.commit()
 
         # For every auction, generate fake notifications for the bids

@@ -71,8 +71,7 @@ def index():
         if form.authenticate_item.data:
             request = AuthenticationRequest(
                 item_id=item.item_id,
-                requester_id=current_user.id,
-                fee_percent=authentication_fee
+                requester_id=current_user.id
             )
             db.session.add(request)
 
