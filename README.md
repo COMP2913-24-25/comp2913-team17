@@ -32,7 +32,7 @@ This project utilises GitHub's built-in tools for development tracking:
 ## Running the Application
 
 1. Insert an environment variable file named '.env' in the project root directory.
-   This should be in the following format:
+   This should be in the following format with the keys and values filled in:
 
 ```bash
 SECRET_KEY=
@@ -41,8 +41,12 @@ GOOGLE_CLIENT_SECRET=
 AWS_ACCESS_KEY=
 AWS_SECRET_KEY=
 AWS_BUCKET=
+AWS_REGION=
 EMAIL_USER=
 EMAIL_PASSWORD=
+STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
 ```
 
 2. Create your virtual environment:
@@ -53,14 +57,14 @@ python3 -m venv myenv
 
 3. Activate your virtual environment:
 ```bash
+# For Linux/MacOS
+source myenv/bin/activate
+
 # For Windows Command Prompt
 myenv\Scripts\activate
 
 # For Windows PowerShell
 .\myenv\Scripts\Activate.ps1
-
-# For Linux/MacOS
-source myenv/bin/activate
 ```
 
 3. Install dependencies:
@@ -68,26 +72,26 @@ source myenv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Run Flask application:
+4. Run the Flask application in development mode:
 ```bash
-# For production:
-set FLASK_ENV=production # Command Prompt
-$env:FLASK_ENV="production" # PowerShell
-export FLASK_ENV=production # Linux/MacOS
-
-flask run
-
-# For development mode with debugging:
-set FLASK_ENV=development # Command Prompt
-$env:FLASK_ENV="development" # PowerShell
-export FLASK_ENV=development # Linux/MacOS
-
-flask run
+flask run --debug
 ```
+By default, the application will use an existing SQLite database file named `database.db` in the main directory. If this file is not present, the application will create a new database file populated with dummy data. To run the application with no initial data, use the following command:
+
+```bash
+# For Linux/MacOS
+EMPTY_DB=1 flask run --debug
+
+# For Windows Command Prompt
+set EMPTY_DB=1 && flask run --debug
+
+# For Windows PowerShell
+$env:EMPTY_DB=1; flask run --debug
+```     
 
 5. Access the application:
-- Open browser at: http://localhost:5000
-- New feature at: http://localhost:5000/new-feature
+- Open the browser at: http://localhost:5000
+- Access any page at: http://localhost:5000/page
 
 # Security Features
 
