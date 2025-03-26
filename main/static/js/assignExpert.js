@@ -59,7 +59,7 @@ $(document).ready(function() {
   $('.bulk-auto-assign-btn').on('click', function() {
     const selectedRows = $('.request-checkbox:checked').closest('tr');
     if (selectedRows.length === 0) {
-      alert('Please select at least one request to auto-assign.');
+      showErrorBanner('Please select at least one request to auto-assign.');
       return;
     }
 
@@ -83,6 +83,50 @@ $(document).ready(function() {
         </div>
       `);
     }
+  }
+  
+  function showSuccessBanner(message) {
+    // Remove any existing banners
+    $('.success-banner').remove();
+    
+    // Create the banner
+    const banner = $(`
+      <div class="success-banner alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>Success!</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    `);
+    
+    // Add the banner to the top of the requests tab content
+    $('#requests').prepend(banner);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      banner.alert('close');
+    }, 5000);
+  }
+  
+  function showErrorBanner(message) {
+    // Remove any existing error banners
+    $('.error-banner').remove();
+    
+    // Create the banner
+    const banner = $(`
+      <div class="error-banner alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <strong>Error!</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    `);
+    
+    // Add the banner to the top of the requests tab content
+    $('#requests').prepend(banner);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      banner.alert('close');
+    }, 5000);
   }
   
   function showAssignConfirmation(type, options) {
@@ -171,8 +215,8 @@ $(document).ready(function() {
       const data = await response.json();
       
       if (response.ok) {
-        // Show success message
-        alert('Expert assigned successfully');
+        // Show success banner instead of alert
+        showSuccessBanner('Expert assigned successfully');
 
         // Remove the row with animation
         row.fadeOut(300, function() {
@@ -180,12 +224,12 @@ $(document).ready(function() {
           checkEmptyTable();
         });
       } else {
-        // Show error and do not remove the row
-        alert(data.error || "Error assigning expert.");
+        // Show error banner instead of alert
+        showErrorBanner(data.error || "Error assigning expert.");
       }
     } catch (error) {
       console.log('Error:', error);
-      alert("Error assigning expert.");
+      showErrorBanner("Error assigning expert.");
     }
   }
   
@@ -199,8 +243,8 @@ $(document).ready(function() {
       const data = await response.json();
       
       if (response.ok) {
-        // Show success message
-        alert('Expert auto-assigned successfully');
+        // Show success banner instead of alert
+        showSuccessBanner('Expert auto-assigned successfully');
 
         // Remove the row with animation
         row.fadeOut(300, function() {
@@ -208,12 +252,12 @@ $(document).ready(function() {
           checkEmptyTable();
         });
       } else {
-        // Show error and do not remove the row
-        alert(data.error || "Error auto-assigning expert.");
+        // Show error banner instead of alert
+        showErrorBanner(data.error || "Error auto-assigning expert.");
       }
     } catch (error) {
       console.log('Error:', error);
-      alert("Error auto-assigning expert.");
+      showErrorBanner("Error auto-assigning expert.");
     }
   }
   
@@ -227,8 +271,8 @@ $(document).ready(function() {
       const data = await response.json();
 
       if (response.ok) {
-        // Show success message
-        alert('Bulk auto-assignment successful: ' + data.assignments.length + ' requests assigned.');
+        // Show success banner instead of alert
+        showSuccessBanner('Bulk auto-assignment successful: ' + data.assignments.length + ' requests assigned.');
 
         // Remove assigned rows with animation
         selectedRows.fadeOut(300, function() {
@@ -236,12 +280,12 @@ $(document).ready(function() {
           checkEmptyTable();
         });
       } else {
-        // Show error and do not remove rows
-        alert(data.error || "Error during bulk auto-assignment.");
+        // Show error banner instead of alert
+        showErrorBanner(data.error || "Error during bulk auto-assignment.");
       }
     } catch (error) {
       console.log('Error:', error);
-      alert("Error during bulk auto-assignment.");
+      showErrorBanner("Error during bulk auto-assignment.");
     }
   }
 });
