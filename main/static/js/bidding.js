@@ -42,10 +42,13 @@ $(document).ready(function() {
       </div>
     `);
     
-    // Insert the alert after the price section
-    $('#price-section').after(alertEl);
+    if ($('.countdown-label').length) {
+      $('.countdown-label').closest('.mb-4').after(alertEl);
+    } else {
+      $('#price-section').after(alertEl);
+    }
     
-    // Hide the modal after a successful bid
+    // Hide the modal after a bid
     $('.place-bid-modal').modal('hide');
     
     // Automatically close the alert after 5 seconds

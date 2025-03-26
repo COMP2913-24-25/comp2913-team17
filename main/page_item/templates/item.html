@@ -4,6 +4,15 @@
 
 {% block content %}
 
+<!-- Payment Status Alert - Add this at the top of the content -->
+<div id="payment-status-alert" class="container mt-3" style="display: none;">
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    <strong>Payment Canceled!</strong> Your order has not been processed.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+</div>
+
 <div class="container mt-5">
   <div class="row">
     <!-- Image Column -->
@@ -311,8 +320,31 @@
   <script src="https://js.stripe.com/v3/"></script>
   <script>
     window.stripePublishableKey = "{{ stripe_publishable_key }}";
+    
+    // Check for payment status directly in HTML to ensure it runs early
+    document.addEventListener('DOMContentLoaded', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment_status');
+      
+      if (paymentStatus === 'canceled') {
+        document.getElementById('payment-status-alert').style.display = 'block';
+        
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+          const alert = document.getElementById('payment-status-alert');
+          if (alert) {
+            const bsAlert = new bootstrap.Alert(alert.querySelector('.alert'));
+            bsAlert.close();
+          }
+        }, 10000);
+        
+        // Remove the parameter from the URL to prevent showing the message on refresh
+        const url = new URL(window.location);
+        url.searchParams.delete('payment_status');
+        window.history.replaceState({}, '', url);
+      }
+    });
   </script>
   <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 {% endif %}
 {% endblock %}
-  

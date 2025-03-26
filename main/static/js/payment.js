@@ -1,6 +1,19 @@
 // Retrieve the CSRF token from the meta tag
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+// Check for canceled payment on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('payment_status') === 'canceled') {
+    showErrorBanner('Payment was canceled. Your order has not been processed.');
+    
+    // Remove the parameter from the URL
+    const url = new URL(window.location);
+    url.searchParams.delete('payment_status');
+    window.history.replaceState({}, '', url);
+  }
+});
+
 // Function to show success banner
 function showSuccessBanner(message) {
   // Remove any existing banners
@@ -92,10 +105,14 @@ document.querySelectorAll('.checkout-button').forEach(button => {
     // Get the current page URL to return to after payment
     const returnUrl = window.location.href;
     
+    // Create cancel URL with parameter - ensure it's a full URL
+    const cancelUrl = new URL(window.location.href);
+    cancelUrl.searchParams.set('payment_status', 'canceled');
+    
     // Show payment confirmation dialog
     showPaymentConfirmation({itemUrl, returnUrl}, async () => {
       try {
-        // Create a Checkout Session
+        // Create a Checkout Session with explicit cancel URL
         const response = await fetch(`/item/${itemUrl}/create-checkout-session`, {
           method: 'POST',
           headers: {
@@ -103,7 +120,8 @@ document.querySelectorAll('.checkout-button').forEach(button => {
             'X-CSRFToken': csrfToken
           },
           body: JSON.stringify({
-            'returnUrl': returnUrl
+            'returnUrl': returnUrl,
+            'cancelUrl': cancelUrl.toString()
           })
         });
 
