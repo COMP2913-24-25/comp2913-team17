@@ -120,9 +120,9 @@
                   <td>{{ expert.username }}</td>
                   {% for day in days %}
                     {% if weekly_availability[expert.id][day] %}
-                      <td class="bg-success text-white text-center">Available</td>
+                    <td data-label="{{ day.strftime('%a, %b %d') }}" class="bg-success text-white text-center">Available</td>
                     {% else %}
-                      <td class="bg-danger text-white text-center">Unavailable</td>
+                    <td data-label="{{ day.strftime('%a, %b %d') }}" class="bg-danger text-white text-center">Unavailable</td>
                     {% endif %}
                   {% endfor %}
                 </tr>
