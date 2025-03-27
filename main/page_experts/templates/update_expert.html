@@ -46,7 +46,7 @@
             {% set availability = week_availabilities[current_day] %}
             <tr data-day="{{ current_day.strftime('%Y-%m-%d') }}">
               <th scope="row">{{ current_day.strftime('%A, %b %d') }}</th>
-              <td>
+              <td data-label="Start Time (8:00 - 20:00):">
                 <input type="time"
                        aria-label="Start time for {{ current_day.strftime('%A, %b %d') }}"
                        class="availability-input start-input {% if current_day < today or (availability and not availability.status) %}disabled-input{% endif %}"
@@ -55,7 +55,7 @@
                        value="{{ availability.start_time.strftime('%H:%M') if availability and availability.start_time else '' }}"
                        {% if current_day < today or (availability and not availability.status) %}disabled{% endif %}>
               </td>
-              <td>
+              <td data-label="End Time (8:00 - 20:00):">
                 <input type="time"
                        aria-label="End time for {{ current_day.strftime('%A, %b %d') }}"
                        class="availability-input end-input {% if current_day < today or (availability and not availability.status) %}disabled-input{% endif %}"
@@ -64,7 +64,7 @@
                        value="{{ availability.end_time.strftime('%H:%M') if availability and availability.end_time else '' }}"
                        {% if current_day < today or (availability and not availability.status) %}disabled{% endif %}>
               </td>
-              <td>
+              <td data-label="Status:">
                 <select name="day_{{ i }}_status"
                         aria-label="Status for {{ current_day.strftime('%A, %b %d') }}"
                         class="availability-select status-select {% if current_day < today %}disabled-input{% endif %}"
@@ -74,6 +74,7 @@
                 </select>
               </td>
             </tr>
+            
           {% endfor %}
         </tbody>
       </table>
@@ -83,6 +84,13 @@
     <div class="d-flex justify-content-center mt-2">
       <button type="button" id="mark-week-unavailable" class="btn btn-danger">
         Mark Whole Week as Unavailable
+      </button>
+    </div>
+
+    <!-- Mark Whole Week as Available Button -->
+    <div class="d-flex justify-content-center mt-2">
+      <button type="button" id="mark-week-available" class="btn btn-success">
+        Mark Whole Week as Available
       </button>
     </div>
 
