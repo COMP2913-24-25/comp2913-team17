@@ -28,13 +28,14 @@ class CreateAuctionForm(FlaskForm):
     auction_end = DateTimeLocalField(
         'Auction End Time',
         validators=[DataRequired()],
-        format='%Y-%m-%dT%H:%M'
+        format='%Y-%m-%dT%H:%M',
+        default=lambda: datetime.now() + timedelta(hours=1)  # Default to 1 hour from now
     )
 
     minimum_price = DecimalField(
         'Minimum Price (£)',
         validators=[
-            NumberRange(min=0.00, message='Minimum price cannot be negative')
+            NumberRange(min=0.00, max=999998.00, message='Minimum price must be between £0.00 and £999,998.00')
         ],
         places=2,
         default=0.00
@@ -85,4 +86,4 @@ class CreateAuctionForm(FlaskForm):
         elif req_duration > maximum_duration:
             raise ValidationError(f"Auction duration cannot be longer than {maximum_duration.days} days.")
         elif req_duration < minimum_duration:
-            raise ValidationError("Auctions must last for at least 1 hour.")
+            raise ValidationError("Auction duration must be at least an hour.")

@@ -173,6 +173,120 @@ def place_bid(url):
         print(f"Error placing bid: {str(e)}")
         return jsonify({'error': 'Error placing bid. Please try again.'}), 500
 
+def notify_outbid(self, user):
+    notification = Notification(
+        user_id=user.id,
+        message=f"You have been outbid on '{self.title}'",
+        item_url=self.url,
+        item_title=self.title,
+        notification_type=1
+    )
+    db.session.add(notification)
+    db.session.commit()
+    
+    # Send real-time notification
+    try:
+        from app import socketio
+        socketio.emit('new_notification', {
+            'id': notification.id,
+            'message': notification.message,
+            'item_url': notification.item_url, 
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{user.secret_key}')
+    except Exception as e:
+        logger.error(f"Failed to send notification: {e}")
+        
+    # Send email
+    send_notification_email(user, notification)
+
+def notify_winner(self):
+    if not self.winning_bid:
+        return
+    
+    winner = User.query.get(self.winning_bid.bidder_id)
+    notification = Notification(
+        user_id=winner.id,
+        message=f"Congratulations! You won the auction for '{self.title}'",
+        item_url=self.url,
+        item_title=self.title,
+        notification_type=2
+    )
+    db.session.add(notification)
+    db.session.commit()
+    
+    # Send real-time notification
+    from app import socketio
+    socketio.emit('new_notification', {
+        'id': notification.id,
+        'message': notification.message,
+        'item_url': notification.item_url,
+        'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+    }, room=f'user_{winner.secret_key}')
+    
+    # Send email
+    send_notification_email(winner, notification)
+
+def notify_losers(self):
+    if not self.winning_bid:
+        return
+        
+    # Get unique bidders excluding winner
+    bidders = set()
+    for bid in self.bids:
+        if bid.bidder_id != self.winning_bid.bidder_id:
+            bidders.add(bid.bidder_id)
+    
+    for bidder_id in bidders:
+        bidder = User.query.get(bidder_id)
+        notification = Notification(
+            user_id=bidder.id,
+            message=f"The auction for '{self.title}' has ended. Unfortunately, you didn't win.",
+            item_url=self.url,
+            item_title=self.title,
+            notification_type=3
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Send real-time notification
+        from app import socketio
+        socketio.emit('new_notification', {
+            'id': notification.id,
+            'message': notification.message,
+            'item_url': notification.item_url,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+        }, room=f'user_{bidder.secret_key}')
+
+def notify_seller(self):
+    if self.winning_bid:
+        message = f"Your auction for '{self.title}' has ended. The item was sold to {self.winning_bid.bidder.username} for £{self.winning_bid.bid_amount}."
+        notification_type = 5
+    else:
+        message = f"Your auction for '{self.title}' has ended without any bids."
+        notification_type = 6
+    
+    # Create and save the notification
+    notification = Notification(
+        user_id=self.seller_id,
+        message=message,
+        item_url=self.url,
+        item_title=self.title,
+        notification_type=notification_type
+    )
+    db.session.add(notification)
+    db.session.commit()
+    
+    # Send real-time notification
+    from app import socketio
+    socketio.emit('new_notification', {
+        'message': notification.message,
+        'item_url': notification.item_url,
+        'id': notification.id,
+        'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+    }, room=f'user_{self.seller.secret_key}')
+
+    send_notification_email(self.seller, notification)
+
 def check_ended_auctions():
     """Check for auctions that have ended but don't have a winner yet."""
     finished_items = Item.query.filter(
@@ -269,6 +383,19 @@ def mark_notifications_read():
     except Exception as e:
         logger.error(f"Error marking specific notifications as read: {str(e)}")
         return jsonify({'error': 'Failed to mark notifications as read'}), 500
+    
+@item_page.route('/api/notifications/clear-all', methods=['POST'])
+@login_required
+def clear_all_notifications():
+    try:
+        notifications = Notification.query.filter_by(user_id=current_user.id).all()
+        for notification in notifications:
+            db.session.delete(notification)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        logger.error(f"Error clearing all notifications: {str(e)}")
+        return jsonify({'error': 'Failed to clear notifications'}), 500
 
 @item_page.route('/<url>/create-payment-intent', methods=['POST'])
 @login_required
@@ -323,6 +450,10 @@ def mark_won(url):
     item.locked = True
     item.status = 3  # paid
     db.session.commit()
+
+    # Notify the seller once the payment is successful
+    item.notify_payment()
+    
     return jsonify({'status': 'success'})
 
 @item_page.route('/<url>/redirect-after-payment')
@@ -445,6 +576,8 @@ def stripe_webhook():
                 item.locked = True
                 item.status = 3  # paid
                 db.session.commit()
+                # Notify seller about successful payment
+                item.notify_payment()
                 current_app.logger.info(f"Item {item.title} marked as paid via webhook.")
     return "", 200
     # FUNCTION contains loggers, remove in final version

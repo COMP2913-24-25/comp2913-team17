@@ -29,6 +29,34 @@ $(document).ready(function() {
   const currentPrice = $('#price-section');
   const bidHelp = $('#bid-amount-help');
 
+  function showBidAlert(message, type = 'danger') {
+    
+    // Remove any existing alerts
+    $('.bid-alert-banner').remove();
+    
+    // Create the alert element
+    const alertEl = $(`
+      <div class="alert alert-${type} bid-alert-banner alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    `);
+    
+    if ($('.countdown-label').length) {
+      $('.countdown-label').closest('.mb-4').after(alertEl);
+    } else {
+      $('#price-section').after(alertEl);
+    }
+    
+    // Hide the modal after a bid
+    $('.place-bid-modal').modal('hide');
+    
+    // Automatically close the alert after 5 seconds
+    setTimeout(() => {
+      alertEl.alert('close');
+    }, 5000);
+  }
+
   // Initialise live countdown
   function startCountdown() {
     if (countdown.length) {
@@ -122,40 +150,36 @@ if (bidForm.length) {
   bidForm.on('submit', async function(e) {
     e.preventDefault();
 
-    const newBid = parseFloat(bidAmount.val());
-    if (!newBid || isNaN(newBid)) {
-      alert('Please enter a valid bid amount.');
-      return;
-    }
-
-    if (newBid <= maxBid.val()) {
-      alert('Bid amount must be greater than the current bid.');
-      return;
-    }
-
-    if (newBid > 999999.00) {
-      alert('Bid amount cannot exceed £999,999.');
-      return;
-    }
-    
-    try {
-      const response = await csrfFetch(`/item/${itemURL}/bid`, {
-        method: 'POST',
-        body: JSON.stringify({ bid_amount: newBid })
-      });
-          
-      const data = await response.json();
-      if (response.status !== 200) {
-        // Display the specific error message from the server
-        alert(data.error || 'Error placing bid. Please try again.');
+      const newBid = parseFloat(bidAmount.val());
+      if (!newBid || isNaN(newBid)) {
+        showBidAlert('Please enter a valid bid amount.', 'warning');
         return;
       }
-    } catch (error) {
-      console.log('Error:', error);
-      alert('An unexpected error occurred. Please try again.');
-    }
-  });
-}
+
+      if (newBid <= maxBid.val()) {
+        showBidAlert('Bid amount must be greater than the current bid.', 'warning');
+        return;
+      }
+      
+      try {
+        const response = await csrfFetch(`/item/${itemURL}/bid`, {
+          method: 'POST',
+          body: JSON.stringify({ bid_amount: newBid })
+        });
+            
+        const data = await response.json();
+        if (response.status !== 200) {
+          throw data;
+        }
+        
+        // Success message after successful bid
+        showBidAlert(`Your bid of £${newBid.toFixed(2)} has been placed successfully!`, 'success');
+      } catch (error) {
+        console.log('Error:', error);
+        showBidAlert(`Error placing bid. Please try again.`, 'danger');
+      }
+    });
+  };
 
   // Listen for bid updates
   window.globalSocket.on('bid_update', function(data) {
