@@ -2,16 +2,58 @@
 
 const authFee = $('meta[name="auth-fee"]').attr('content');
 
-$('#create-auction-form').on('submit', (e) => {
-  if ($('#authenticate-item').is(':checked')) {
-    if (!confirm(
-      'Are you sure you want to submit an authentication request?\n\n' +
-      `The final fee will be ${authFee}% of the final sale price if the item is authenticated.`
-    )) {
-      e.preventDefault();
-    }
+// Create authentication confirmation modal
+$(document).ready(function() {
+  if ($('#authConfirmationModal').length === 0) {
+    $('body').append(`
+      <div class="modal fade" id="authConfirmationModal" tabindex="-1" aria-labelledby="authConfirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="authConfirmationModalLabel">Confirm Authentication Request</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to submit an authentication request?</p>
+              <p>The final fee will be <strong>${authFee}%</strong> of the final sale price if the item is authenticated.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" id="confirm-auth-btn">Confirm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `);
   }
-})
+
+  // Store the form submission for later use
+  let formToSubmit = null;
+
+  // Handle the form submission
+  $('#create-auction-form').on('submit', function(e) {
+    if ($('#authenticate-item').is(':checked')) {
+      e.preventDefault(); // Prevent default form submission
+      formToSubmit = $(this); // Store the form
+      
+      // Show the confirmation modal
+      const authModal = new bootstrap.Modal(document.getElementById('authConfirmationModal'));
+      authModal.show();
+    }
+  });
+
+  // Handle the confirmation button click
+  $(document).on('click', '#confirm-auth-btn', function() {
+    // Hide the modal
+    const authModal = bootstrap.Modal.getInstance(document.getElementById('authConfirmationModal'));
+    authModal.hide();
+    
+    // Submit the form programmatically
+    if (formToSubmit) {
+      formToSubmit.off('submit'); // Remove the event handler to prevent infinite loop
+      formToSubmit.submit(); // Submit the form
+    }
+  });
+});
 
 $(document).ready(function() {
   $('#upload-images').on('change', function() {
