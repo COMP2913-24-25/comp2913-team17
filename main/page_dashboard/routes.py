@@ -123,8 +123,8 @@ def handle_manager(now):
 
     db.session.commit()
 
-    # Get all user roles except managers
-    manager['users'] = db.session.query(User).filter(User.role != 3).all()
+    # Get all user roles except managers ordered by role and username
+    manager['users'] = db.session.query(User).filter(User.role != 3).order_by(User.role.desc(), User.username.asc()).all()
 
     # Pending authentication requests
     manager_authentications(manager, now)

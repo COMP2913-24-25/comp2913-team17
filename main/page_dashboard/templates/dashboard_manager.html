@@ -45,11 +45,25 @@
   <div class="tab-content" id="managerDashboardTabsContent">
     <!-- Users Tab -->
     <div class="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
-      <!-- View Rota Button for managers -->
-      <div class="mb-4">
-        <a href="{{ url_for('manager_page.expert_availability') }}" class="btn btn-card">
-          <i class="fas fa-user-clock me-2"></i> Expert Availability Overview
-        </a>
+      <div class="d-flex flex-wrap justify-content-between align-items-start mb-4">
+        <!-- Expert availability button -->
+        <div class="mb-2 mb-md-0">
+          <a href="{{ url_for('manager_page.expert_availability') }}" class="btn btn-card">
+            <i class="fas fa-user-clock me-2"></i> Expert Availability Overview
+          </a>
+        </div>
+        
+        <!-- User search and filter -->
+        <div class="user-search-container">
+          <div class="search-filter-wrapper mb-2">
+            <input type="text" id="user-search" class="form-control" placeholder="SEARCH USERS...">
+            <select id="role-filter" class="form-select filter-dropdown">
+              <option value="0">ALL ROLES</option>
+              <option value="1">USERS</option>
+              <option value="2">EXPERTS</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- Manager User Role Interface -->
@@ -398,4 +412,5 @@
 <script src="{{ url_for('static', filename='js/assignExpert.js') }}"></script>
 <script src="{{ url_for('static', filename='js/managementCharts.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboardTabs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/filterUsers.js') }}"></script>
 {% endblock %}
