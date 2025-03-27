@@ -28,7 +28,7 @@ def expert_availability():
     current_slot = current_time.replace(minute=0, second=0, microsecond=0)
     
     # Get all experts (users with role 2)
-    experts = User.query.filter_by(role=2).all()
+    experts = User.query.filter_by(role=2).order_by(User.username.asc()).all()
     
     # For daily view: get each expert's availability for today
     daily_availability = {}

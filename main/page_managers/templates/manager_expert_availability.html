@@ -72,20 +72,28 @@
                   <td>{{ expert.username }}</td>
                   {% set avail = daily_availability[expert.id] %}
                   {% for slot in time_slots %}
-                    {% set slot_str = slot.strftime('%H:%M') %}
-                    {% if slot_str == current_slot.strftime('%H:%M') %}
-                      {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
-                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-dark-turquoise text-white text-center">Now</td>
-                      {% else %}
-                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-dark-orange text-white text-center">Now</td>
-                      {% endif %}
+                  {% set slot_str = slot.strftime('%H:%M') %}
+                  {% if slot_str == current_slot.strftime('%H:%M') %}
+                    {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
+                      <td data-label="{{ slot.strftime('%H:%M') }}"
+                          class="bg-success text-white text-center"
+                          title="Available at {{ slot.strftime('%H:%M') }}">Now</td>
                     {% else %}
-                      {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
-                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-success text-white text-center">A</td>
-                      {% else %}
-                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-danger text-white text-center">-</td>
-                      {% endif %}
+                      <td data-label="{{ slot.strftime('%H:%M') }}"
+                          class="bg-danger text-white text-center"
+                          title="Unavailable at {{ slot.strftime('%H:%M') }}">Now</td>
                     {% endif %}
+                    {% else %}
+                    {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
+                      <td data-label="{{ slot.strftime('%H:%M') }}"
+                          class="bg-success text-white text-center"
+                          title="Available at {{ slot.strftime('%H:%M') }}">Available</td>
+                    {% else %}
+                      <td data-label="{{ slot.strftime('%H:%M') }}"
+                          class="bg-danger text-white text-center"
+                          title="Unavailable at {{ slot.strftime('%H:%M') }}">Unavailable</td>
+                    {% endif %}
+                  {% endif %}                  
                   {% endfor %}
                 </tr>
               {% endfor %}
@@ -119,11 +127,15 @@
                 <tr data-categories="{% for ec in expert.expert_categories %}{{ ec.category.id }}{% if not loop.last %},{% endif %}{% endfor %}">
                   <td>{{ expert.username }}</td>
                   {% for day in days %}
-                    {% if weekly_availability[expert.id][day] %}
-                    <td data-label="{{ day.strftime('%a, %b %d') }}" class="bg-success text-white text-center">Available</td>
-                    {% else %}
-                    <td data-label="{{ day.strftime('%a, %b %d') }}" class="bg-danger text-white text-center">Unavailable</td>
-                    {% endif %}
+                  {% if weekly_availability[expert.id][day] %}
+                  <td data-label="{{ day.strftime('%a, %b %d') }}"
+                      class="bg-success text-white text-center"
+                      title="Available at {{ day.strftime('%a, %b %d') }}">Available</td>
+                {% else %}
+                  <td data-label="{{ day.strftime('%a, %b %d') }}"
+                      class="bg-danger text-white text-center"
+                      title="Unavailable at {{ day.strftime('%a, %b %d') }}">Unavailable</td>
+                {% endif %}                
                   {% endfor %}
                 </tr>
               {% endfor %}
