@@ -213,6 +213,58 @@
   margin-right: 0.5rem;
 }
 
+.expertise-header {
+  gap: 3rem;
+}
+
+/* Mobile select all checkbox initially hidden on desktop */
+.mobile-select-all {
+  display: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+/* User search and filter styling */
+.user-search-container {
+  max-width: 450px;
+  width: 100%;
+}
+
+.user-search-container .search-filter-wrapper {
+  border: 1.5px solid var(--primary-color);
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  background-color: white;
+}
+
+.user-search-container #user-search {
+  border: none;
+  border-right: 1.5px solid var(--primary-color);
+  border-radius: 0;
+  flex-grow: 1;
+  padding: 0.8rem 1.2rem;
+  font-family: var(--font-mono);
+}
+
+.user-search-container .filter-dropdown {
+  border: none;
+  border-left: 0;
+  border-radius: 0;
+  width: 150px;
+  padding: 0.8rem 1.2rem;
+  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  background-color: var(--tertiary-color);
+  cursor: pointer;
+}
+
+.user-search-container #user-search:focus,
+.user-search-container .filter-dropdown:focus {
+  box-shadow: none;
+  outline: none;
+}
+
 /* Mobile adjustments */
 @media (max-width: 996px) {
   .dashboard-tabs .nav-link {
@@ -237,6 +289,116 @@
   .text-short {
     display: inline;
   }
+
+  .user-search-container {
+    margin-top: 1rem;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  #user-search {
+    border-right: none !important;
+    border-bottom: 1.5px solid var(--primary-color) !important;
+  }
+
+  .filter-dropdown {
+    border-top: 2px solid var(--primary-color);
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+}
+
+/* Chart styling */
+.chart-container {
+  background-color: var(--secondary-color);
+  border: 1.5px solid var(--primary-color);
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Statistics Cards */
+.stats-cards {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -10px;
+}
+
+.stat-card {
+  background-color: var(--secondary-color);
+  border: 1.5px solid var(--primary-color);
+  height: 100%;
+  min-height: 150px;
+  padding: 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  width: 100%;
+  overflow: hidden;
+  cursor: default;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent-color);
+}
+
+.stat-card:focus-within {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+.stat-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  min-height: 2.4rem;
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  color: var(--primary-color);
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  word-break: break-word;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart-controls {
+  background-color: var(--tertiary-color);
+  border: 1.5px solid var(--primary-color);
+  padding: 1rem;
+}
+
+.chart-controls label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.chart-controls .form-check-label {
+  font-size: 0.85rem;
+}
+
+.chart-controls .form-check-input:checked {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
 }
 
 @media (max-width: 768px) {
@@ -345,6 +507,75 @@
 
   .auth-table tr td:last-child {
     border-bottom: none;
+  }
+
+  /* Show mobile select all checkbox */
+  .mobile-select-all {
+    display: block;
+  }
+
+  .bulk-auto-assign-btn {
+    font-size: 0.9rem;
+    padding: 0.2rem;
+  }
+
+  .chart-container {
+    padding: 0.75rem;
+    height: 350px !important;
+  }
+  
+  .chart-controls {
+    padding: 0.75rem;
+  }
+  
+  .chart-controls label {
+    font-size: 0.8rem;
+  }
+  
+  .chart-controls .form-check-label {
+    font-size: 0.75rem;
+  }
+
+  .stat-card {
+    min-height: 130px;
+    padding: 1rem;
+  }
+  
+  .stat-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .stat-value {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Chart container */
+  .chart-container {
+    height: 300px !important;
+  }
+  
+  /* Stat cards for smaller screens */
+  .col-sm-6.col-md-4.col-lg-4.mb-4 {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+  
+  .stat-card {
+    min-height: 110px;
+    padding: 0.8rem;
+  }
+  
+  .stat-title {
+    font-size: 0.8rem;
+    min-height: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .stat-value {
+    font-size: 1.1rem;
   }
 }
 

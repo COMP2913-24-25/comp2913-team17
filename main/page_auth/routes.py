@@ -47,7 +47,7 @@ def login():
         
         # Check if user exists
         if not user:
-            flash('This user account is not exist. Please create a new account.', 'danger')
+            flash('This user account does not exist. Please create a new account.', 'warning')
             return render_template('login.html', form=form)
         
         # Check if account is locked

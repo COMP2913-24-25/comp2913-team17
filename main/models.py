@@ -80,7 +80,7 @@ class User(UserMixin, db.Model):
         # Increment failed login attempts and lock account if threshold reached
         self.failed_login_attempts += 1
         # Lock after 5 failed attempts
-        if self.failed_login_attempts >= 2:
+        if self.failed_login_attempts >= 5:
             # Lock for 15 minutes
             self.locked_until = datetime.now() + timedelta(minutes=15)
     
@@ -260,13 +260,16 @@ class Item(db.Model):
         db.session.commit()
         
         # Send real-time notification
-        from main import socketio
-        socketio.emit('new_notification', {
-            'id': notification.id,
-            'message': notification.message,
-            'item_url': notification.item_url,
-            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
-        }, room=f'user_{winner.secret_key}')
+        try:
+            from main import socketio
+            socketio.emit('new_notification', {
+                'id': notification.id,
+                'message': notification.message,
+                'item_url': notification.item_url,
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{winner.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send notification: {e}")
         
         # Send email
         send_notification_email(winner, notification)
@@ -295,13 +298,16 @@ class Item(db.Model):
             db.session.commit()
             
             # Send real-time notification
-            from main import socketio
-            socketio.emit('new_notification', {
-                'id': notification.id,
-                'message': notification.message,
-                'item_url': notification.item_url,
-                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
-            }, room=f'user_{bidder.secret_key}')
+            try:
+                from main import socketio
+                socketio.emit('new_notification', {
+                    'id': notification.id,
+                    'message': notification.message,
+                    'item_url': notification.item_url,
+                    'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+                }, room=f'user_{bidder.secret_key}')
+            except Exception as e:
+                logger.error(f"Failed to send notification: {e}")
 
     # Set the winning bid and notify users about the auction outcome
     def finalise_auction(self):
@@ -338,13 +344,16 @@ class Item(db.Model):
         db.session.commit()
         
         # Send real-time notification
-        from main import socketio
-        socketio.emit('new_notification', {
-            'message': notification.message,
-            'item_url': notification.item_url,
-            'id': notification.id,
-            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
-        }, room=f'user_{self.seller.secret_key}')
+        try:
+            from main import socketio
+            socketio.emit('new_notification', {
+                'message': notification.message,
+                'item_url': notification.item_url,
+                'id': notification.id,
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{self.seller.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send notification: {e}")
 
         send_notification_email(self.seller, notification)
 

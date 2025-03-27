@@ -123,8 +123,8 @@ def handle_manager(now):
 
     db.session.commit()
 
-    # Get all user roles except managers
-    manager['users'] = db.session.query(User).filter(User.role != 3).all()
+    # Get all user roles except managers ordered by role and username
+    manager['users'] = db.session.query(User).filter(User.role != 3).order_by(User.role.desc(), User.username.asc()).all()
 
     # Pending authentication requests
     manager_authentications(manager, now)
@@ -158,7 +158,7 @@ def manager_authentications(manager, now):
                 ~User.expert_assignments.any(
                     ExpertAssignment.request_id == req.request_id
                 )
-            )).all()
+            )).order_by(User.username.asc()).all()
         # Calculate AI expert recommendation for eligible experts
         if eligible_experts:
             scores = [(expert, calculate_expert_suitability(expert, req, all_experts_assignments, now)) 
@@ -535,7 +535,6 @@ def assign_expert(request_id):
 
     now_dt = datetime.now()
     now_date = now_dt.date()
-    now_time = now_dt.time()
 
     # Get all availability records for the expert between now and auction end date (inclusive)
     avail_records = db.session.query(ExpertAvailability).filter(
@@ -618,6 +617,18 @@ def assign_expert(request_id):
         }, room=f'user_{authentication_request.requester.secret_key}')
     except Exception as e:
         print(f'SocketIO Error: {e}')
+
+    try:
+        socketio.emit('new_message', {
+            'message': 'Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
+            'sender': user.username,
+            'sender_id': str(expert),
+            'sender_role': str(2),
+            'images': None,
+            'sent_at': message.sent_at.strftime('%H:%M - %d/%m/%Y')
+        }, room=authentication_request.url)
+    except Exception as e:
+        print(f'SocketIO Error: {e}')
         
     # Send emails
     send_notification_email(user, notification_expert)
@@ -659,15 +670,24 @@ def auto_assign_expert(request_id):
 
     # Calculate suitability scores
     now = datetime.now()
+
+    # Get number of pending assignments for each expert
     all_experts_assignments = dict(db.session.query(
         ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
-    ).filter(ExpertAssignment.status.in_([1, 2])).group_by(ExpertAssignment.expert_id).all())
+    ).filter(ExpertAssignment.status == 1).group_by(ExpertAssignment.expert_id).all())
     
     scores = [(expert, calculate_expert_suitability(expert, auth_request, all_experts_assignments, now)) 
              for expert in eligible_experts]
     max_score = max(score for _, score in scores)
     best_experts = [expert for expert, score in scores if score == max_score]
-    recommended_expert = choice(best_experts)
+    best_expert_ids = set(expert.id for expert in best_experts)
+    print(best_expert_ids)
+
+    # Preferentially pick the expert displayed in the recommendation
+    if request.is_json and request.json.get('recommendation') and request.json.get('recommendation') in best_expert_ids:
+        recommended_expert = User.query.filter_by(id=request.json['recommendation']).first()
+    else:
+        recommended_expert = choice(best_experts)
 
     # Assign the expert
     assignment = ExpertAssignment(request_id=request_id, expert_id=recommended_expert.id)
@@ -677,7 +697,7 @@ def auto_assign_expert(request_id):
     message = Message(
         authentication_request_id=request_id,
         sender_id=recommended_expert.id,
-        message_text='Hi, I have been assigned to authenticate this item. Please provide any relevant info.',
+        message_text='Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
         sent_at=now
     )
     db.session.add(message)
@@ -709,6 +729,7 @@ def auto_assign_expert(request_id):
         }, room=f'user_{recommended_expert.secret_key}')
     except Exception as e:
         print(f'SocketIO Error: {e}')
+
     try:
         socketio.emit('new_notification', {
             'message': notification_requester.message,
@@ -717,6 +738,19 @@ def auto_assign_expert(request_id):
         }, room=f'user_{auth_request.requester.secret_key}')
     except Exception as e:
         print(f'SocketIO Error: {e}')
+
+    try:
+        socketio.emit('new_message', {
+            'message': message.message_text,
+            'sender': recommended_expert.username,
+            'sender_id': str(recommended_expert.id),
+            'sender_role': str(2),
+            'images': None,
+            'sent_at': message.sent_at.strftime('%H:%M - %d/%m/%Y')
+        }, room=auth_request.url)
+    except Exception as e:
+        print(f'SocketIO Error: {e}')
+
     send_notification_email(recommended_expert, notification_expert)
     send_notification_email(auth_request.requester, notification_requester)
 
@@ -741,9 +775,11 @@ def bulk_auto_assign_experts():
         return jsonify({'error': 'Request IDs must be a list'}), 400
 
     now = datetime.now()
+
+    # Get number of pending assignments for each expert
     all_experts_assignments = dict(db.session.query(
         ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
-    ).filter(ExpertAssignment.status.in_([1, 2])).group_by(ExpertAssignment.expert_id).all())
+    ).filter(ExpertAssignment.status == 1).group_by(ExpertAssignment.expert_id).all())
     
     assignments_made = []
     for request_id in request_ids:
@@ -773,7 +809,7 @@ def bulk_auto_assign_experts():
         message = Message(
             authentication_request_id=request_id,
             sender_id=recommended_expert.id,
-            message_text='Hi, I have been assigned to authenticate this item. Please provide any relevant info.',
+            message_text='Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
             sent_at=now
         )
         db.session.add(message)
@@ -804,6 +840,7 @@ def bulk_auto_assign_experts():
     for assignment in assignments_made:
         expert = User.query.get(assignment['expert_id'])
         auth_request = AuthenticationRequest.query.get(assignment['request_id'])
+        
         try:
             socketio.emit('new_notification', {
                 'message': f'You have been assigned to authenticate {auth_request.item.title}',
@@ -812,6 +849,7 @@ def bulk_auto_assign_experts():
             }, room=f'user_{expert.secret_key}')
         except Exception as e:
             print(f'SocketIO Error: {e}')
+
         try:
             socketio.emit('new_notification', {
                 'message': f'An expert has been assigned to authenticate your item: {auth_request.item.title}',
@@ -820,9 +858,23 @@ def bulk_auto_assign_experts():
             }, room=f'user_{auth_request.requester.secret_key}')
         except Exception as e:
             print(f'SocketIO Error: {e}')
+
+        try:
+            socketio.emit('new_message', {
+                'message': 'Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.',
+                'sender': expert.username,
+                'sender_id': str(expert.id),
+                'sender_role': str(2),
+                'images': None,
+                'sent_at': now.strftime('%H:%M - %d/%m/%Y')
+            }, room=auth_request.url)
+        except Exception as e:
+            print(f'SocketIO Error: {e}')
+
         send_notification_email(expert, Notification(
             user_id=expert.id, message=f'You have been assigned to authenticate {auth_request.item.title}',
             item_url=auth_request.item.url, item_title=auth_request.item.title, notification_type=4))
+        
         send_notification_email(auth_request.requester, Notification(
             user_id=auth_request.requester_id, message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}',
             item_url=auth_request.item.url, item_title=auth_request.item.title, notification_type=4))

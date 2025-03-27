@@ -31,8 +31,8 @@ This project utilises GitHub's built-in tools for development tracking:
 
 ## Running the Application
 
-1. Insert an environment variable file named '.env' in the project root directory.
-   This should be in the following format:
+1. Insert an environment variable file named `.env` in the project root directory.
+   This should be in the following format with the keys and values filled in:
 
 ```bash
 SECRET_KEY=
@@ -41,8 +41,12 @@ GOOGLE_CLIENT_SECRET=
 AWS_ACCESS_KEY=
 AWS_SECRET_KEY=
 AWS_BUCKET=
+AWS_REGION=
 EMAIL_USER=
 EMAIL_PASSWORD=
+STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
 ```
 
 2. Create your virtual environment:
@@ -53,14 +57,14 @@ python3 -m venv myenv
 
 3. Activate your virtual environment:
 ```bash
+# For Linux/MacOS
+source myenv/bin/activate
+
 # For Windows Command Prompt
 myenv\Scripts\activate
 
 # For Windows PowerShell
 .\myenv\Scripts\Activate.ps1
-
-# For Linux/MacOS
-source myenv/bin/activate
 ```
 
 3. Install dependencies:
@@ -68,26 +72,34 @@ source myenv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Run Flask application:
+4. Run the Flask application in development mode:
 ```bash
-# For production:
-set FLASK_ENV=production # Command Prompt
-$env:FLASK_ENV="production" # PowerShell
-export FLASK_ENV=production # Linux/MacOS
+flask run --debug
+```
+By default, the application will use an existing SQLite database file named `database.db` in the main directory. If this file is not present, the application will create a new database file populated with dummy data. To run the application with no initial data, use the following command:
 
-flask run
+```bash
+# For Linux/MacOS
+EMPTY_DB=1 flask run --debug
 
-# For development mode with debugging:
-set FLASK_ENV=development # Command Prompt
-$env:FLASK_ENV="development" # PowerShell
-export FLASK_ENV=development # Linux/MacOS
+# For Windows Command Prompt
+set EMPTY_DB=1 && flask run --debug
 
-flask run
+# For Windows PowerShell
+$env:EMPTY_DB=1; flask run --debug
 ```
 
-5. Access the application:
-- Open browser at: http://localhost:5000
-- New feature at: http://localhost:5000/new-feature
+5. To accomodate payments, you will need to set up Stripe CLI, instructions can be found [here](https://docs.stripe.com/stripe-cli). Once you have set up Stripe CLI and populated the `.env` file with your Stripe API keys, you will need to run the following command:
+
+```bash
+stripe listen --forward-to http://127.0.0.1:5000/item/stripe-webhook
+```
+
+6. Access the application:
+- Open the browser at: http://localhost:5000
+- Access any page at: http://localhost:5000/page
+
+A live version of the application can be found at: https://vintage-vault-aesv.onrender.com/
 
 # Security Features
 
@@ -410,13 +422,3 @@ Install the "Python" extension in VS Code and add to settings.json:
     "python.linting.banditEnabled": true
 }
 ```
-
-## Useful Links
-
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/IsXyYN_x)
-
-[![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=18092142)
-
-- https://www.freecodecamp.org/news/how-to-use-blueprints-to-organize-flask-apps/
-- https://flask.palletsprojects.com/en/2.0.x/tutorial/tests/
-- https://flask.palletsprojects.com/en/2.0.x/blueprints/
