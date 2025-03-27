@@ -31,7 +31,7 @@ This project utilises GitHub's built-in tools for development tracking:
 
 ## Running the Application
 
-1. Insert an environment variable file named '.env' in the project root directory.
+1. Insert an environment variable file named `.env` in the project root directory.
    This should be in the following format with the keys and values filled in:
 
 ```bash
@@ -87,11 +87,19 @@ set EMPTY_DB=1 && flask run --debug
 
 # For Windows PowerShell
 $env:EMPTY_DB=1; flask run --debug
-```     
+```
 
-5. Access the application:
+5. To accomodate payments, you will need to set up Stripe CLI, instructions can be found [here](https://docs.stripe.com/stripe-cli). Once you have set up Stripe CLI and populated the `.env` file with your Stripe API keys, you will need to run the following command:
+
+```bash
+stripe listen --forward-to http://127.0.0.1:5000/item/stripe-webhook
+```
+
+6. Access the application:
 - Open the browser at: http://localhost:5000
 - Access any page at: http://localhost:5000/page
+
+A live version of the application can be found at: https://vintage-vault-aesv.onrender.com/
 
 # Security Features
 
@@ -414,13 +422,3 @@ Install the "Python" extension in VS Code and add to settings.json:
     "python.linting.banditEnabled": true
 }
 ```
-
-## Useful Links
-
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/IsXyYN_x)
-
-[![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=18092142)
-
-- https://www.freecodecamp.org/news/how-to-use-blueprints-to-organize-flask-apps/
-- https://flask.palletsprojects.com/en/2.0.x/tutorial/tests/
-- https://flask.palletsprojects.com/en/2.0.x/blueprints/
