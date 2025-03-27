@@ -24,7 +24,7 @@ class RegisterForm(FlaskForm):
     password = PasswordField('Password', validators=[
                              DataRequired(),
                              Length(min=8, max=24, message='Password must be between 8 and 24 characters.'),
-                             Regexp(regex='^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]).+$', 
+                             Regexp(regex=r'^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+{}[\]:;<>,.?~\-]).+$', 
                                     message='Password must have at least one uppercase letter, one number, and one special character')])
     confirm_password = PasswordField('Confirm Password', validators=[
                                      DataRequired(),
@@ -41,7 +41,7 @@ class UpdateForm(FlaskForm):
     password = PasswordField('Password', validators=[
                              Optional(),
                              Length(min=8, max=24, message='Password must be between 8 and 24 characters.'),
-                             Regexp(regex='^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]).+$',
+                             Regexp(regex=r'^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+{}[\]:;<>,.?~\-]).+$',
                                     message='Password must have at least one uppercase letter, one number, and one special character')])
     confirm_password = PasswordField('Confirm Password', validators=[
                                     Optional(),
@@ -55,7 +55,7 @@ class UpdatePasswordForm(FlaskForm):
     new_password = PasswordField('New Password', validators=[
         Optional(),
         Length(min=8, max=24, message='Password must be between 8 and 24 characters.'),
-        Regexp(regex='^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]).+$',
+        Regexp(regex=r'^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+{}[\]:;<>,.?~\-]).+$',
                message='Password must have at least one uppercase letter, one number, and one special character')
     ])
     confirm_password = PasswordField('Confirm New Password', validators=[
