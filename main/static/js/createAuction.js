@@ -10,7 +10,7 @@ $('#create-auction-form').on('submit', (e) => {
       e.preventDefault();
     }
   }
-});
+})
 
 $(document).ready(function() {
   $('#upload-images').on('change', function() {
