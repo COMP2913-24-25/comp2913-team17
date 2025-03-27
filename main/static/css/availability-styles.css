@@ -28,6 +28,13 @@
     border-color: var(--accent-color);
     background-color: #fff;
   }
+
+  /* Added for icon spacing consistency */
+  .availability-icon {
+    font-size: 1.2rem;
+    vertical-align: middle;
+  }
+
   
   /* Disabled state for table inputs/selects */
   .disabled-input {
@@ -93,6 +100,8 @@
     min-width: 110px;
     display: inline-block;
   }
+
+
 }
 
 
