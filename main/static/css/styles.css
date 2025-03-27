@@ -1225,7 +1225,6 @@ h1, h2, h3, h4, h5 {
   .update-details-wrapper {
     width: 100%;
   }
-
 }
 
 .form-warning {
@@ -1342,4 +1341,11 @@ h1, h2, h3, h4, h5 {
 #clear-all-notifications:hover {
   background-color: #dc3545;
   color: white;
+}
+
+/* Prevent iOS zoom on inputs */
+@media screen and (-webkit-min-device-pixel-ratio:0) { 
+  input[type="number"] {
+    font-size: 16px !important;
+  }
 }
