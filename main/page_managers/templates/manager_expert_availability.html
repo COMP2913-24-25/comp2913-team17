@@ -87,11 +87,11 @@
                     {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
                       <td data-label="{{ slot.strftime('%H:%M') }}"
                           class="bg-success text-white text-center"
-                          title="Available at {{ slot.strftime('%H:%M') }}">✔️</td>
+                          title="Available at {{ slot.strftime('%H:%M') }}">✓</td>
                     {% else %}
                       <td data-label="{{ slot.strftime('%H:%M') }}"
                           class="bg-danger text-white text-center"
-                          title="Unavailable at {{ slot.strftime('%H:%M') }}">❌</td>
+                          title="Unavailable at {{ slot.strftime('%H:%M') }}">✘</td>
                     {% endif %}
                   {% endif %}                  
                   {% endfor %}
@@ -130,11 +130,11 @@
                   {% if weekly_availability[expert.id][day] %}
                   <td data-label="{{ day.strftime('%a, %b %d') }}"
                       class="bg-success text-white text-center"
-                      title="Available at {{ day.strftime('%a, %b %d') }}">✔️</td>
+                      title="Available at {{ day.strftime('%a, %b %d') }}">✔</td>
                 {% else %}
                   <td data-label="{{ day.strftime('%a, %b %d') }}"
                       class="bg-danger text-white text-center"
-                      title="Unavailable at {{ day.strftime('%a, %b %d') }}">❌</td>
+                      title="Unavailable at {{ day.strftime('%a, %b %d') }}">✘</td>
                 {% endif %}                
                   {% endfor %}
                 </tr>
