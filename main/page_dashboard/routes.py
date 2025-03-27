@@ -840,6 +840,7 @@ def bulk_auto_assign_experts():
     for assignment in assignments_made:
         expert = User.query.get(assignment['expert_id'])
         auth_request = AuthenticationRequest.query.get(assignment['request_id'])
+        
         try:
             socketio.emit('new_notification', {
                 'message': f'You have been assigned to authenticate {auth_request.item.title}',

@@ -151,12 +151,16 @@ def place_bid(url):
         db.session.add(new_bid)
         db.session.commit()
 
-        socketio.emit('bid_update', {
-            'bid_userid': current_user.id,
-            'bid_username': current_user.username,
-            'bid_amount': bid_amount,
-            'bid_time': new_bid.bid_time.strftime('%Y-%m-%d %H:%M')
-        }, room=url)
+        # Send bid update to the auction room
+        try:
+            socketio.emit('bid_update', {
+                'bid_userid': current_user.id,
+                'bid_username': current_user.username,
+                'bid_amount': bid_amount,
+                'bid_time': new_bid.bid_time.strftime('%Y-%m-%d %H:%M')
+            }, room=url)
+        except Exception as e:
+            logger.error(f"Error sending bid update: {str(e)}")
 
         try:
             if current_highest and current_highest.bidder_id != current_user.id:
@@ -201,17 +205,23 @@ def check_ended_auctions():
                 db.session.add(notification_user)
                 db.session.commit()
 
-                socketio.emit('new_notification', {
-                    'message': notification_user.message,
-                    'item_url': notification_user.item_url,
-                    'created_at': notification_user.created_at.strftime('%Y-%m-%d %H:%M')
-                }, room=f'user_{item.seller.secret_key}')
+                try:
+                    socketio.emit('new_notification', {
+                        'message': notification_user.message,
+                        'item_url': notification_user.item_url,
+                        'created_at': notification_user.created_at.strftime('%Y-%m-%d %H:%M')
+                    }, room=f'user_{item.seller.secret_key}')
+                except Exception as e:
+                    logger.error(f"Error sending new notification: {str(e)}")
 
                 # Send email
                 send_notification_email(item.seller, notification_user)
 
                 # Update the authentication room
-                socketio.emit('force_reload', { 'status': 'Auction ended' }, room=item.authentication_requests[0].url)
+                try:
+                    socketio.emit('force_reload', { 'status': 'Auction ended' }, room=item.authentication_requests[0].url)
+                except Exception as e:
+                    logger.error(f"Error sending force reload: {str(e)}")
 
                 # Send notification to the expert
                 if item.authentication_requests[0].expert_assignments:
@@ -226,26 +236,36 @@ def check_ended_auctions():
                     )
                     db.session.add(notification_expert)
                     db.session.commit()
-
-                    socketio.emit('new_notification', {
-                        'message': notification_expert.message,
-                        'item_url': notification_expert.item_url,
-                        'created_at': notification_expert.created_at.strftime('%Y-%m-%d %H:%M')
-                    }, room=f'user_{item.authentication_requests[0].expert_assignments[-1].expert.secret_key}')
+                    
+                    try:
+                        socketio.emit('new_notification', {
+                            'message': notification_expert.message,
+                            'item_url': notification_expert.item_url,
+                            'created_at': notification_expert.created_at.strftime('%Y-%m-%d %H:%M')
+                        }, room=f'user_{item.authentication_requests[0].expert_assignments[-1].expert.secret_key}')
+                    except Exception as e:
+                        logger.error(f"Error sending new notification: {str(e)}")
         
             
                     # Send email
                     send_notification_email(item.authentication_requests[0].expert_assignments[-1].expert, notification_expert)
 
+            # Notify the auction room of the auction ending
             if highest_bid:
-                socketio.emit('auction_ended', {
-                    'winner': True,
-                    'winning_bidder_id': highest_bid.bidder.id,
-                    'winning_bidder_username': highest_bid.bidder.username,
-                    'winning_bid_amount': float(highest_bid.bid_amount)
-                }, room=item.url)
+                try:
+                    socketio.emit('auction_ended', {
+                        'winner': True,
+                        'winning_bidder_id': highest_bid.bidder.id,
+                        'winning_bidder_username': highest_bid.bidder.username,
+                        'winning_bid_amount': float(highest_bid.bid_amount)
+                    }, room=item.url)
+                except Exception as e:
+                    logger.error(f"Error sending auction ended notification: {str(e)}")
             else:
-                socketio.emit('auction_ended', {'winner': False}, room=item.url)
+                try:
+                    socketio.emit('auction_ended', {'winner': False}, room=item.url)
+                except Exception as e:
+                    logger.error(f"Error sending auction ended notification: {str(e)}")
         except Exception as e:
             logger.error(f"Error finalising auction {item.item_id}: {e}")
 
