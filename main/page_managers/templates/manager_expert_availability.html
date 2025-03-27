@@ -83,13 +83,17 @@
                           class="bg-danger text-white text-center"
                           title="Unavailable at {{ slot.strftime('%H:%M') }}">Now</td>
                     {% endif %}
-                  {% else %}                
-                      {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
-                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-success text-white text-center">A</td>
-                      {% else %}
-                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-danger text-white text-center">-</td>
-                      {% endif %}
+                    {% else %}
+                    {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
+                      <td data-label="{{ slot.strftime('%H:%M') }}"
+                          class="bg-success text-white text-center"
+                          title="Available at {{ slot.strftime('%H:%M') }}">✔️</td>
+                    {% else %}
+                      <td data-label="{{ slot.strftime('%H:%M') }}"
+                          class="bg-danger text-white text-center"
+                          title="Unavailable at {{ slot.strftime('%H:%M') }}">❌</td>
                     {% endif %}
+                  {% endif %}                  
                   {% endfor %}
                 </tr>
               {% endfor %}
