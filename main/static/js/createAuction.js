@@ -75,16 +75,24 @@ $(document).ready(function() {
 
     if (!endTimeInput) {
       timerElement.text("Select a date to see the countdown");
-      timerElement.removeClass('text-danger'); // Ensure no red text when no date is selected
+      timerElement.removeClass('text-danger');
       return;
     }
 
     const endTime = new Date(endTimeInput);
+
+    // Check if the date is invalid
+    if (isNaN(endTime.getTime())) {
+      timerElement.text("Invalid date format");
+      timerElement.addClass('text-danger');
+      return;
+    }
+
     const now = new Date();
 
     if (endTime <= now) {
       timerElement.text("Auction end must be in the future");
-      timerElement.addClass('text-danger'); // Red text for invalid past date
+      timerElement.addClass('text-danger');
       return;
     }
 
@@ -96,7 +104,7 @@ $(document).ready(function() {
 
     timerElement.text(`${days}d ${hours}h ${minutes}m ${seconds}s`);
 
-    // Text becomes red if the end date is less than 24 hours
+    // Apply red text if less than 24 hours (24 * 60 * 60 * 1000 milliseconds)
     if (timeDiff < 24 * 60 * 60 * 1000) {
       timerElement.addClass('text-danger');
     } else {
