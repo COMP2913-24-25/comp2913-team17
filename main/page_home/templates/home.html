@@ -45,6 +45,14 @@
         <option value="{{ category.id }}" title="{{ category.description }}">{{ category.name.upper() }}</option>
         {% endfor %}
       </select>
+      <!-- Sort Dropdown -->
+      <select id="sort-filter" class="form-select filter-dropdown">
+        <option value="ending-soonest" selected>ENDING SOONEST</option>
+        <option value="price-low-high">PRICE: LOW TO HIGH</option>
+        <option value="price-high-low">PRICE: HIGH TO LOW</option>
+        <option value="ending-latest">ENDING LATEST</option>
+        <option value="title-a-z">TITLE: A TO Z</option>
+      </select>
     </div>
     <!-- Authentication filter -->
     <div class="form-check">
@@ -60,7 +68,7 @@
     {% if items %}
       <div class="d-flex flex-wrap justify-content-center" id="auction-container">
         {% for item in items %}
-        <div class="auction-grid-wrapper" data-item-id="{{ item.item_id }}" data-title="{{ item.title | lower }}" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+        <div class="auction-grid-wrapper" data-item-id="{{ item.item_id }}" data-title="{{ item.title | lower }}" data-end="{{ item.auction_end.isoformat() }}" data-price="{{ item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price }}" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
           <a href="{{ url_for('item_page.index', url=item.url) }}" style="text-decoration: none; color: inherit; display: block;">
             <div class="auction-item">
               <div class="auction-image-container">
@@ -174,7 +182,5 @@
   </div>
 </div>
 <!-- Scripts -->
-
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
-
 {% endblock %}
