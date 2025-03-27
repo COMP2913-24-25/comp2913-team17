@@ -19,6 +19,7 @@ $(document).ready(function() {
 
     // Update notification count badge
     const badge = $('#notif-button .badge');
+    const mobileBadge = $('.navbar-toggler .badge');
 
     // Create the badge if it doesn't exist
     if (badge.length === 0) {
@@ -32,6 +33,20 @@ $(document).ready(function() {
       badge.text(currentCount + 1);
       if (badge.hasClass('d-none')) {
         badge.removeClass('d-none');
+      }
+    }
+    
+    if (mobileBadge.length === 0) {
+      $('.navbar-toggler').append(`
+        <span class="position-absolute top-10 start-20 translate-middle badge rounded-pill bg-danger d-lg-none" style="font-size: 0.8rem;">
+          1
+        </span>
+      `);
+    } else {
+      const currentMobileCount = parseInt(mobileBadge.text()) || 0;
+      mobileBadge.text(currentMobileCount + 1);
+      if (mobileBadge.hasClass('d-none')) {
+        mobileBadge.removeClass('d-none');
       }
     }
 
@@ -132,6 +147,13 @@ $(document).ready(function() {
         badge.text('');
         badge.addClass('d-none');
       }
+      
+      // Make sure mobile badge is hidden too
+      const mobileBadge = $('.navbar-toggler').find('.badge');
+      if (mobileBadge.length > 0) {
+        mobileBadge.text('');
+        mobileBadge.addClass('d-none');
+      }
     }
   });
 
@@ -147,6 +169,13 @@ $(document).ready(function() {
         if (badge.length > 0) {
           badge.text('');
           badge.addClass('d-none');
+        }
+        
+        // Hide the mobile badge
+        const mobileBadge = $('.navbar-toggler').find('.badge');
+        if (mobileBadge.length > 0) {
+          mobileBadge.text('');
+          mobileBadge.addClass('d-none');
         }
 
         // Show empty state
