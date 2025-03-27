@@ -102,6 +102,34 @@ class User(UserMixin, db.Model):
         for item in finished_items:
             item.finalise_auction()
 
+    # Send a welcome notification to a new user
+    def send_welcome_notification(self):
+        notification = Notification(
+            user_id=self.id,
+            message=f"Welcome to Vintage Vault, {self.username}! Get started by browsing auctions or creating your own.",
+            notification_type=0  # Default notification type
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Send real-time notification
+        try:
+            from app import socketio
+            socketio.emit('new_notification', {
+                'id': notification.id,
+                'message': notification.message,
+                'created_at': datetime.now().strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{self.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send welcome notification: {e}")
+            
+        # Send welcome email
+        try:
+            send_notification_email(self, notification)
+        except Exception as e:
+            logger.error(f"Failed to send welcome email: {e}")
+        
+        return notification
 
 # Item Model
 class Item(db.Model):
@@ -178,6 +206,7 @@ class Item(db.Model):
         try:
             from main import socketio
             socketio.emit('new_notification', {
+                'id': notification.id,
                 'message': notification.message,
                 'item_url': notification.item_url, 
                 'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
@@ -207,6 +236,7 @@ class Item(db.Model):
         # Send real-time notification
         from main import socketio
         socketio.emit('new_notification', {
+            'id': notification.id,
             'message': notification.message,
             'item_url': notification.item_url,
             'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
@@ -241,6 +271,7 @@ class Item(db.Model):
             # Send real-time notification
             from main import socketio
             socketio.emit('new_notification', {
+                'id': notification.id,
                 'message': notification.message,
                 'item_url': notification.item_url,
                 'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
@@ -436,6 +467,7 @@ class Notification(db.Model):
     item_url = db.Column(db.String(32), nullable=True)
     item_title = db.Column(db.String(256), nullable=True)
     # Notification type: 0 = Default, 1 = Outbid, 2 = Winner, 3 = Loser, 4 = Authentication Update
+    # 5 = Auction Ended (Sold), 6 = Auction Ended (Unsold)
     notification_type = db.Column(db.Integer, nullable=True, default=0)
 
 
