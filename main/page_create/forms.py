@@ -84,6 +84,5 @@ class CreateAuctionForm(FlaskForm):
             raise ValidationError("Auction end must occur after auction start time.")
         elif req_duration > maximum_duration:
             raise ValidationError(f"Auction duration cannot be longer than {maximum_duration.days} days.")
-        
         elif req_duration < minimum_duration:
             raise ValidationError("Auction duration must be at least an hour.")

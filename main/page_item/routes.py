@@ -448,6 +448,10 @@ def mark_won(url):
     item.locked = True
     item.status = 3  # paid
     db.session.commit()
+
+    # Notify the seller once the payment is successful
+    item.notify_payment()
+    
     return jsonify({'status': 'success'})
 
 @item_page.route('/<url>/redirect-after-payment')
@@ -570,6 +574,8 @@ def stripe_webhook():
                 item.locked = True
                 item.status = 3  # paid
                 db.session.commit()
+                # Notify seller about successful payment
+                item.notify_payment()
                 current_app.logger.info(f"Item {item.title} marked as paid via webhook.")
     return "", 200
     # FUNCTION contains loggers, remove in final version

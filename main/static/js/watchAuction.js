@@ -1,8 +1,7 @@
 $(document).ready(function() {
     console.log("Watch auction script loaded");
     
-    // Initialize properly based on server state
-    // This ensures consistency between client and server state
+    // Initialise properly based on server state
     const initialButton = $('#watch-btn, #unwatch-btn');
     if (initialButton.length) {
         console.log("Initial button state:", initialButton.attr('id'));
@@ -39,7 +38,6 @@ $(document).ready(function() {
         .then(data => {
             console.log("Watch success data:", data);
             if (data.status === 'success') {
-                // Replace with the unwatch button - add btn-lg to make it the same size
                 const newButton = $(`
                     <button id="unwatch-btn" class="btn btn-success btn-lg" data-item-url="${itemUrl}">
                         <i class="fas fa-check"></i> Watched
@@ -67,6 +65,7 @@ $(document).ready(function() {
         });
     }
     
+    // Show the unwatch confirmation pop up
     function showUnwatchConfirmation(button, itemUrl) {
         console.log("Showing unwatch confirmation for:", itemUrl);
         
@@ -115,7 +114,7 @@ $(document).ready(function() {
         .then(data => {
             console.log("Unwatch success data:", data);
             if (data.status === 'success') {
-                // Replace with watch button - ensure consistent btn-lg class
+                // Replace with watch button
                 const newButton = $(`
                     <button id="watch-btn" class="btn btn-outline-dark btn-lg" data-item-url="${itemUrl}">
                         <i class="fas fa-eye"></i> Add to Watchlist
