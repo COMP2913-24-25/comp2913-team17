@@ -53,3 +53,18 @@
     width: 100%;
     border-collapse: collapse;
   }
+
+  #dailyTable thead,
+  #weeklyTable thead {
+    display: none;
+  }
+
+  #dailyTable tr,
+  #weeklyTable tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 0.5rem;
+  }
+
