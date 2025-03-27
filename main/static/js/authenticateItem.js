@@ -2,11 +2,127 @@
 
 $(document).ready(function() {
   // Expert item authentication button
-  $('#authenticate-item').on('click', async function() {
-    if (!confirm('Are you sure you want to authenticate this item?\nThis action cannot be undone.')) {
-      return;
-    }
+  $('#authenticate-item').on('click', function() {
+    showAuthenticateConfirmation();
+  });
 
+  // Expert item authentication rejection button
+  $('#decline-item').on('click', function() {
+    showDeclineConfirmation();
+  });
+
+  // Expert item reassignment button
+  $('#reassign-item').on('click', function() {
+    showReassignConfirmation();
+  });
+
+  function showAuthenticateConfirmation() {
+    console.log("Showing authenticate confirmation");
+
+    if ($('#authenticateConfirmationModal').length === 0) {
+      $('body').append(`
+        <div class="modal fade" id="authenticateConfirmationModal" tabindex="-1" aria-labelledby="authenticateConfirmationModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="authenticateConfirmationModalLabel">Confirm Authentication</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p>Are you sure you want to authenticate this item?</p>
+                <p><strong>Warning:</strong> This action cannot be undone.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirm-authenticate-btn">Yes, Authenticate</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+    
+    const authenticateModal = new bootstrap.Modal(document.getElementById('authenticateConfirmationModal'));
+    authenticateModal.show();
+    
+    $('#confirm-authenticate-btn').off('click').on('click', function() {
+      authenticateModal.hide();
+      performAuthentication();
+    });
+  }
+
+  function showDeclineConfirmation() {
+    console.log("Showing decline confirmation");
+  
+    if ($('#declineConfirmationModal').length === 0) {
+      $('body').append(`
+        <div class="modal fade" id="declineConfirmationModal" tabindex="-1" aria-labelledby="declineConfirmationModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="declineConfirmationModalLabel">Confirm Decline</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p>Are you sure you want to decline this item?</p>
+                <p><strong>Warning:</strong> This action cannot be undone.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-decline-btn">Yes, Decline</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+    
+    const declineModal = new bootstrap.Modal(document.getElementById('declineConfirmationModal'));
+    declineModal.show();
+    
+    $('#confirm-decline-btn').off('click').on('click', function() {
+      declineModal.hide();
+      performDecline();
+    });
+  }
+
+  function showReassignConfirmation() {
+    console.log("Showing reassign confirmation");
+    
+    if ($('#reassignConfirmationModal').length === 0) {
+      $('body').append(`
+        <div class="modal fade" id="reassignConfirmationModal" tabindex="-1" aria-labelledby="reassignConfirmationModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="reassignConfirmationModalLabel">Confirm Reassignment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p>Are you sure you want to reassign this item?</p>
+                <p><strong>Warning:</strong> This action cannot be undone.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-reassign-btn">Yes, Reassign</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+    
+    const reassignModal = new bootstrap.Modal(document.getElementById('reassignConfirmationModal'));
+    reassignModal.show();
+    
+    $('#confirm-reassign-btn').off('click').on('click', function() {
+      reassignModal.hide();
+      performReassign();
+    });
+  }
+
+  // Perform the authentication action
+  async function performAuthentication() {
     try {
       const response = await csrfFetch(`${window.location.pathname}/api/accept`, {
         method: 'POST'
@@ -23,14 +139,10 @@ $(document).ready(function() {
     } catch (error) {
       console.log('Error:', error);
     }
-  });
+  }
 
-  // Expert item authentication rejection button
-  $('#decline-item').on('click', async function() {
-    if (!confirm('Are you sure you want to decline this item?\nThis action cannot be undone.')) {
-      return;
-    }
-
+  // Perform the decline action
+  async function performDecline() {
     try {
       const response = await csrfFetch(`${window.location.pathname}/api/decline`, {
         method: 'POST'
@@ -47,14 +159,10 @@ $(document).ready(function() {
     } catch (error) {
       console.log('Error:', error);
     }
-  });
+  }
 
-  // Expert item reassignment button
-  $('#reassign-item').on('click', async function() {
-    if (!confirm('Are you sure you want to reassign this item?\nThis action cannot be undone.')) {
-      return;
-    }
-
+  // Perform the reassign action
+  async function performReassign() {
     try {
       const response = await csrfFetch(`${window.location.pathname}/api/reassign`, {
         method: 'POST'
@@ -71,7 +179,7 @@ $(document).ready(function() {
     } catch (error) {
       console.log('Error:', error);
     }
-  });
+  }
 
   const url = window.location.pathname.split('/').pop();
   window.globalSocket.emit('join_chat', { auth_url: url });
