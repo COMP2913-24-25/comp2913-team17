@@ -124,7 +124,6 @@ def place_bid(url):
 
     try:
         bid_amount = float(request.json.get('bid_amount'))
-        print(bid_amount)
         current_highest = item.highest_bid()
 
         if not bid_amount:
@@ -135,6 +134,9 @@ def place_bid(url):
 
         if bid_amount < 0:
             return jsonify({'error': 'Bid amount must be a positive number.'}), 400
+
+        if bid_amount > 999999.00:
+            return jsonify({'error': 'Bid amount cannot exceed £999,999.'}), 400
 
         if current_highest and bid_amount <= current_highest.bid_amount:
             return jsonify({'error': 'Your bid must be higher than the current bid.'}), 400
