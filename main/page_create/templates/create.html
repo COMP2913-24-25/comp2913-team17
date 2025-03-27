@@ -51,13 +51,15 @@
       {% endfor %}
     </div>
     <!-- Auction End Time -->
-    <div class="form-group">
-      <label for="enter-end-time" class="form-label">Auction End Time</label>
-      {{ form.auction_end(class_="form-control required-field", id_="enter-end-time", type="datetime-local") }}
-      {% for error in form.auction_end.errors %}
-      <div class="alert alert-danger" role="alert">{{ error }}</div>
-      {% endfor %}
-    </div>
+<div class="form-group">
+  <label for="enter-end-time" class="form-label">Auction End Time</label>
+  {{ form.auction_end(class_="form-control required-field", id_="enter-end-time", type="datetime-local") }}
+  <!-- Countdown Display -->
+  <div id="countdown" class="mt-2 text-muted">Auction duration: <span id="timer">Select a date to see the countdown</span></div>
+  {% for error in form.auction_end.errors %}
+  <div class="alert alert-danger" role="alert">{{ error }}</div>
+  {% endfor %}
+</div>
     <!-- Minimum Price -->
     <div class="form-group">
       <label for="enter-price" class="form-label">Minimum Price (£)</label>

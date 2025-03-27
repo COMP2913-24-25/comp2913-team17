@@ -1,59 +1,16 @@
 // Check if the user wants to authenticate the item before submitting the form
-
 const authFee = $('meta[name="auth-fee"]').attr('content');
 
-// Create authentication confirmation modal
-$(document).ready(function() {
-  if ($('#authConfirmationModal').length === 0) {
-    $('body').append(`
-      <div class="modal fade" id="authConfirmationModal" tabindex="-1" aria-labelledby="authConfirmationModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="authConfirmationModalLabel">Confirm Authentication Request</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <p>Are you sure you want to submit an authentication request?</p>
-              <p>The final fee will be <strong>${authFee}%</strong> of the final sale price if the item is authenticated.</p>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-primary" id="confirm-auth-btn">Confirm</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `);
+$('#create-auction-form').on('submit', (e) => {
+  if ($('#authenticate-item').is(':checked')) {
+    if (!confirm(
+      'Are you sure you want to submit an authentication request?\n\n' +
+      `The final fee will be ${authFee}% of the final sale price if the item is authenticated.`
+    )) {
+      e.preventDefault();
+    }
   }
-
-  // Store the form submission for later use
-  let formToSubmit = null;
-
-  // Handle the form submission
-  $('#create-auction-form').on('submit', function(e) {
-    if ($('#authenticate-item').is(':checked')) {
-      e.preventDefault(); // Prevent default form submission
-      formToSubmit = $(this); // Store the form
-      
-      // Show the confirmation modal
-      const authModal = new bootstrap.Modal(document.getElementById('authConfirmationModal'));
-      authModal.show();
-    }
-  });
-
-  // Handle the confirmation button click
-  $(document).on('click', '#confirm-auth-btn', function() {
-    // Hide the modal
-    const authModal = bootstrap.Modal.getInstance(document.getElementById('authConfirmationModal'));
-    authModal.hide();
-    
-    // Submit the form programmatically
-    if (formToSubmit) {
-      formToSubmit.off('submit'); // Remove the event handler to prevent infinite loop
-      formToSubmit.submit(); // Submit the form
-    }
-  });
-});
+})
 
 $(document).ready(function() {
   $('#upload-images').on('change', function() {
@@ -64,12 +21,12 @@ $(document).ready(function() {
 
     if (images.length > 5) {
       // Error message when user uploads more than 5 images
-      window.alert("Please select up to 5 images maximum")
+      window.alert("Please select up to 5 images maximum");
       // Clear the uploaded files from the file selector
       this.value = "";
     } else if (images.length > 0) {
       // Render a list of the filenames with each name in its own div
-      // Each div is given its own index id for targetting
+      // Each div is given its own index id for targeting
       let imageNames = Array.from(images).map((image, index) => 
         `<div class="image-${index} image-item">
           <i class="delete-btn fa-solid fa-square-minus" data-index="${index}"></i>
@@ -78,9 +35,7 @@ $(document).ready(function() {
       imageList.append(imageNames);
     }
   });
-});
 
-$(document).ready(function() {
   /*
    * Delete buttons are not rendered until user selects images
    * attach event to parent window and target delete buttons
@@ -110,6 +65,59 @@ $(document).ready(function() {
       $(element).addClass(`image-${newIndex} image-item`);
       // Update the data index of each delete button
       $(element).find('.delete-btn').data('index', newIndex);
-    })
-  })
-})
+    });
+  });
+
+  // Function to calculate and display the countdown
+  function updateCountdown() {
+    const endTimeInput = $('#enter-end-time').val();
+    const timerElement = $('#timer');
+
+    if (!endTimeInput) {
+      timerElement.text("Select a date to see the countdown");
+      timerElement.removeClass('text-danger');
+      return;
+    }
+
+    const endTime = new Date(endTimeInput);
+
+    // Check if the date is invalid
+    if (isNaN(endTime.getTime())) {
+      timerElement.text("Invalid date format");
+      timerElement.addClass('text-danger');
+      return;
+    }
+
+    const now = new Date();
+
+    if (endTime <= now) {
+      timerElement.text("Auction end must be in the future");
+      timerElement.addClass('text-danger');
+      return;
+    }
+
+    const timeDiff = endTime - now;
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+    timerElement.text(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+
+    // Apply red text if less than 24 hours (24 * 60 * 60 * 1000 milliseconds)
+    if (timeDiff < 24 * 60 * 60 * 1000) {
+      timerElement.addClass('text-danger');
+    } else {
+      timerElement.removeClass('text-danger');
+    }
+  }
+
+  // Event listener for changes to the auction end time input
+  $('#enter-end-time').on('input', updateCountdown);
+
+  // Update the countdown every second
+  setInterval(updateCountdown, 1000);
+
+  // Initial call to set the countdown based on the default value
+  updateCountdown();
+});
