@@ -326,6 +326,7 @@ class Item(db.Model):
         if not self.winning_bid:
             return
             
+        # Notify the seller
         notification = Notification(
             user_id=self.seller_id,
             message=f"Payment received! {self.winning_bid.bidder.username} has paid £{self.winning_bid.bid_amount} for '{self.title}'.",
@@ -350,7 +351,40 @@ class Item(db.Model):
             
         # Send email notification
         send_notification_email(self.seller, notification)
+        
+        # Also notify the buyer (auction winner)
+        self.notify_payment_buyer()
 
+    def notify_payment_buyer(self):
+        """Notify the buyer (auction winner) about successful payment"""
+        if not self.winning_bid:
+            return
+            
+        buyer = User.query.get(self.winning_bid.bidder_id)
+        notification = Notification(
+            user_id=buyer.id,
+            message=f"Payment successful! You have paid £{self.winning_bid.bid_amount} for '{self.title}'.",
+            item_url=self.url,
+            item_title=self.title,
+            notification_type=8  # New notification type for buyer payment confirmation
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Send real-time notification
+        try:
+            from app import socketio
+            socketio.emit('new_notification', {
+                'id': notification.id,
+                'message': notification.message,
+                'item_url': notification.item_url,
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{buyer.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send buyer payment notification: {e}")
+            
+        # Send email notification
+        send_notification_email(buyer, notification)
 
     # Count the number of users watching an auction
     def watcher_count(self):
