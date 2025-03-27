@@ -321,7 +321,9 @@ $(document).ready(function() {
   // Listen for new messages from window.globalSocketIO
   window.globalSocket.on('new_message', function(data) {
     let messageClass = 'other-messages';
-    if (data.sender_id === $('meta[name="user-id"]').attr('content')) {
+    // Left align expert messages for managers
+    if (data.sender_id === $('meta[name="user-id"]').attr('content') ||
+        (data.sender_role === '1' && $('meta[name="user-role"]').attr('content') === '3')) {
       messageClass = 'my-messages';
     }
 

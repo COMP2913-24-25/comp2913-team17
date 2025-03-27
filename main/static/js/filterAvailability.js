@@ -88,3 +88,30 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 });
+
+// Expert table filter on username search
+function filterExperts() {
+  const searchTerm = $('#expert-search').val().toLowerCase().trim();
+  const selectedCategory = $('#categoryFilter').val(); // '' means All Categories
+
+  $('#dailyTable tbody tr, #weeklyTable tbody tr').each(function() {
+    const row = $(this);
+    const username = row.find('td:first').text().toLowerCase();
+    const categories = row.data('categories')?.toString().split(',') || [];
+
+    const matchesSearch = searchTerm === '' || username.includes(searchTerm);
+    const matchesCategory = selectedCategory === '' || categories.includes(selectedCategory);
+
+    if (matchesSearch && matchesCategory) {
+      row.show();
+    } else {
+      row.hide();
+    }
+  });
+}
+
+$(document).ready(function() {
+  $('#expert-search').on('input', filterExperts);
+  $('#categoryFilter').on('change', filterExperts);
+});
+

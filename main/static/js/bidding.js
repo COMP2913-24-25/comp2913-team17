@@ -220,7 +220,7 @@ if (bidForm.length) {
 
     bidHistory.prepend(newBid);
 
-    bidCount.html($(`<a href='#' class="bid-count">${bidHistory.children().length / 2} bids</a>`));
+    bidCount.html($(`<button href='#' class="bid-count btn btn-primary">${bidHistory.children().length / 2} bids</button>`));
     bidHistory.prop('start', bidHistory.children().length / 2);
 
     // Update suggested bid

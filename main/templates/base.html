@@ -79,6 +79,7 @@
       <div class="collapse navbar-collapse" id="navbarContent">
         {% if current_user.is_authenticated %}
         <meta name="user-id" content="{{ current_user.id }}">
+        <meta name="user-role" content="{{ current_user.role }}">
         <meta name="user-key" content="{{ current_user.secret_key }}">
         <div class="ms-auto d-flex align-items-center">
           <!-- Notifications dropdown -->
