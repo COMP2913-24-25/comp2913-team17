@@ -77,7 +77,7 @@ def index(url):
         joinedload(Message.images)
     ).filter(
         Message.authentication_request_id == authentication.request_id
-    ).all()
+    ).order_by(Message.sent_at.asc()).all()
 
     # Pre-compute image URLs for each message
     for message in messages:
@@ -275,6 +275,7 @@ def new_message(url):
         'message': message.message_text,
         'sender': current_user.username,
         'sender_id': str(current_user.id),
+        'sender_role': str(current_user.role),
         'images': image_urls,
         'sent_at': message.sent_at.strftime('%H:%M - %d/%m/%Y')
     }, room=url)
