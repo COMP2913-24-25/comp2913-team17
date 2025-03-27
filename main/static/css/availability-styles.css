@@ -39,3 +39,17 @@
 
   /* Responsive table for mobile devices */
 @media screen and (max-width: 768px) {
+
+  #dailyTable,
+  #weeklyTable {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #dailyTable table,
+  #weeklyTable table {
+    width: 100%;
+    border-collapse: collapse;
+  }
