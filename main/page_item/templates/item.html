@@ -208,16 +208,18 @@
                       <label for="bid_amount" class="form-label">Your Bid Amount</label>
                       <div class="input-group">
                         <span class="input-group-text">£</span>
-                        <input 
+                        <input
                           type="number"
                           class="form-control"
                           id="bid_amount"
                           name="bid_amount"
                           step="0.01"
                           min="{{ suggested_bid }}"
+                          max="999999.00"  <!-- Added max limit -->
                           value="{{ suggested_bid }}"
                           required
                         >
+                        
                       </div>
                       <div class="form-text" id="bid-amount-help">
                         {% if item.highest_bid() %}

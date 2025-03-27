@@ -118,37 +118,42 @@ $(document).ready(function() {
   window.globalSocket.emit('join_auction', { 'item_url': itemURL });
 
   // Submit a bid
-  if (bidForm.length) {
-    bidForm.on('submit', async function(e) {
-      e.preventDefault();
+if (bidForm.length) {
+  bidForm.on('submit', async function(e) {
+    e.preventDefault();
 
-      const newBid = parseFloat(bidAmount.val());
-      if (!newBid || isNaN(newBid)) {
-        alert('Please enter a valid bid amount.');
-        return;
-      }
+    const newBid = parseFloat(bidAmount.val());
+    if (!newBid || isNaN(newBid)) {
+      alert('Please enter a valid bid amount.');
+      return;
+    }
 
-      if (newBid <= maxBid.val()) {
-        alert('Bid amount must be greater than the current bid.');
-        return;
+    if (newBid <= maxBid.val()) {
+      alert('Bid amount must be greater than the current bid.');
+      return;
+    }
+
+    if (newBid > 999999.00) {
+      alert('Bid amount cannot exceed £999,999.');
+      return;
+    }
+    
+    try {
+      const response = await csrfFetch(`/item/${itemURL}/bid`, {
+        method: 'POST',
+        body: JSON.stringify({ bid_amount: newBid })
+      });
+          
+      const data = await response.json();
+      if (response.status !== 200) {
+        throw data;
       }
-      
-      try {
-        const response = await csrfFetch(`/item/${itemURL}/bid`, {
-          method: 'POST',
-          body: JSON.stringify({ bid_amount: newBid })
-        });
-            
-        const data = await response.json();
-        if (response.status !== 200) {
-          throw data;
-        }
-      } catch (error) {
-        console.log('Error:', error);
-        alert(`Error placing bid. Please try again.`);
-      }
-    });
-  };
+    } catch (error) {
+      console.log('Error:', error);
+      alert(`Error placing bid. Please try again.`);
+    }
+  });
+}
 
   // Listen for bid updates
   window.globalSocket.on('bid_update', function(data) {
