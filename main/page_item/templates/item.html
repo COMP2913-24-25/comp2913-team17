@@ -303,6 +303,9 @@
             </div>
           {% endif %}
         {% endif %}
+        {% if is_allowed %}
+            <a class="alert alert-info mt-2 text-center authentication-alert" href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}">Click to view authentication request</a>
+          {% endif %}
       </div>
   </div>
   <hr>

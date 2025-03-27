@@ -4,7 +4,7 @@ from ..models import Item, Category
 
 @home_page.route('/')
 def index():
-    items = Item.query.order_by(Item.auction_end.asc()).all()
+    items = Item.query.order_by(Item.auction_completed.asc(), Item.auction_end.asc()).all()
     categories = Category.query.order_by(Category.name).all()
     category_names = [category.name.upper() for category in categories if category.name != 'Miscellaneous'] + ['TREASURES']
 

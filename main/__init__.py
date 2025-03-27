@@ -125,10 +125,14 @@ def create_app(testing=False):
     db.init_app(app)
 
     with app.app_context():
-        # Creates tables if they don't exist
-        db.create_all()
-        # Populate dummy data if it doesn't already exist
-        populate_db(app)
+        # Empty the database if required
+        if os.environ.get('EMPTY_DB'):
+            db.drop_all()
+            db.create_all()
+        # Otherwise, populate dummy data if it doesn't already exist
+        else:
+            db.create_all()
+            populate_db(app)
 
     # Import and registers the blueprints
     from .page_home import home_page

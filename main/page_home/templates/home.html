@@ -34,7 +34,7 @@
       <input type="text" id="search-bar" class="form-control" placeholder="SEARCH AUCTIONS...">
       <!-- Auction Type filter -->
       <select id="type-filter" class="form-select filter-dropdown">
-        <option value="" title="Filter by auction status">ALL AUCTIONS</option>
+        <option value="0" title="Filter by auction status">ALL AUCTIONS</option>
         <option value="1" title="Live Auctions">LIVE AUCTIONS</option>
         <option value="2" title="Ended Auctions">ENDED AUCTIONS</option>
       </select>
@@ -64,7 +64,7 @@
   </div>
   <!-- Auction Items -->
   <div class="mb-4 reveal">
-    <h2 class="section-title">CURRENT AUCTIONS</h2>
+    <h2 class="section-title" id="auction-type">LIVE AUCTIONS</h2>
     {% if items %}
       <div class="d-flex flex-wrap justify-content-center" id="auction-container">
         {% for item in items %}
