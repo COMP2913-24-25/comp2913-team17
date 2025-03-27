@@ -146,9 +146,9 @@ $(document).ready(function() {
   window.globalSocket.emit('join_auction', { 'item_url': itemURL });
 
   // Submit a bid
-  if (bidForm.length) {
-    bidForm.on('submit', async function(e) {
-      e.preventDefault();
+if (bidForm.length) {
+  bidForm.on('submit', async function(e) {
+    e.preventDefault();
 
       const newBid = parseFloat(bidAmount.val());
       if (!newBid || isNaN(newBid)) {
