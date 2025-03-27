@@ -277,10 +277,6 @@ h1, h2, h3, h4, h5 {
   font-family: var(--font-mono);
 }
 
-.alert-danger {
-  background-color: var(--accent-color);
-  color: var(--secondary-color);
-}
 /* Countdown Timer */
 .countdown {
   font-weight: 700;
@@ -1220,4 +1216,8 @@ h1, h2, h3, h4, h5 {
     width: 100%;
   }
 
+}
+
+.form-warning {
+  color: red;
 }
