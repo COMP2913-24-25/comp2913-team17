@@ -1266,12 +1266,16 @@ h1, h2, h3, h4, h5 {
 }
 
 .notification-unread {
-  background-color: rgba(255, 157, 0, 0.05);
+  background-color: rgba(255, 157, 0, 0.15);
   border-left: 4px solid var(--accent-color);
 }
 
+.notification-unread .notification-message {
+  font-weight: bold;
+}
+
 .notification-unread:hover {
-  background-color: rgba(255, 157, 0, 0.1);
+  background-color: rgba(255, 157, 0, 0.25);
 }
 
 .notification-content {
