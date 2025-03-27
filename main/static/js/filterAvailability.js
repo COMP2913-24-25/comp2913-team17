@@ -88,3 +88,19 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 });
+
+// Expert table filter on username search
+$(document).ready(function() {
+  $('#expert-search').on('input', function() {
+    const searchTerm = $(this).val().toLowerCase().trim();
+    
+    $('#dailyTable tbody tr, #weeklyTable tbody tr').each(function() {
+      const username = $(this).find('td:first').text().toLowerCase();
+      if (username.includes(searchTerm)) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+  });
+});
