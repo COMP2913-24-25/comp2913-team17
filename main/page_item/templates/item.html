@@ -4,6 +4,18 @@
 
 {% block content %}
 
+<!-- Payment Status Alert - Add this at the top of the content -->
+<div id="payment-status-alert" class="container mt-3" style="display: none;">
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    <strong>Payment Canceled!</strong> Your order has not been processed.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+</div>
+
+<!-- Bidding Alert Container - Add this new container -->
+<div id="bidding-alert-container" class="container mt-3"></div>
+
 <div class="container mt-5">
   <div class="row">
     <!-- Image Column -->
@@ -122,7 +134,7 @@
         <div class="row">
           <div class="col">
             <div>
-              <a href='#' class="bid-count" data-bs-toggle="modal" data-bs-target=".bid-history-modal">{{ bids|length }} bids</a>
+              <button href='#' class="bid-count btn btn-primary" data-bs-toggle="modal" data-bs-target=".bid-history-modal">{{ bids|length }} bids</button>
               {% if not is_auction_over %}
               <span class="countdown-label">Ends in:</span> 
               {% endif %}
@@ -218,6 +230,7 @@
                           value="{{ suggested_bid }}"
                           required
                         >
+                        
                       </div>
                       <div class="form-text" id="bid-amount-help">
                         {% if item.highest_bid() %}
@@ -314,8 +327,70 @@
   <script src="https://js.stripe.com/v3/"></script>
   <script>
     window.stripePublishableKey = "{{ stripe_publishable_key }}";
+    
+    // Check for payment status directly in HTML to ensure it runs early
+    document.addEventListener('DOMContentLoaded', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment_status');
+      
+      if (paymentStatus === 'canceled') {
+        document.getElementById('payment-status-alert').style.display = 'block';
+        
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+          const alert = document.getElementById('payment-status-alert');
+          if (alert) {
+            const bsAlert = new bootstrap.Alert(alert.querySelector('.alert'));
+            bsAlert.close();
+          }
+        }, 10000);
+        
+        // Remove the parameter from the URL to prevent showing the message on refresh
+        const url = new URL(window.location);
+        url.searchParams.delete('payment_status');
+        window.history.replaceState({}, '', url);
+      }
+    });
   </script>
   <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 {% endif %}
+
+<!-- Add inline script to fix bidding alerts -->
+<script>
+  // Override the showBidAlert function to use our dedicated container
+  $(document).ready(function() {
+    // Store the original showBidAlert function if it exists
+    let originalShowBidAlert = window.showBidAlert;
+    
+    // Create a new showBidAlert function that uses our container
+    window.showBidAlert = function(message, type = 'danger') {
+      // Remove any existing alerts
+      $('#bidding-alert-container .alert').remove();
+      
+      // Create the alert element
+      const alertEl = $(`
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `);
+      
+      // Add to our dedicated container
+      $('#bidding-alert-container').append(alertEl);
+      
+      // Hide the modal after a bid
+      $('.place-bid-modal').modal('hide');
+      
+      // Automatically close the alert after 5 seconds
+      setTimeout(() => {
+        alertEl.alert('close');
+      }, 5000);
+      
+      // If the original function exists, call it too (for backwards compatibility)
+      if (typeof originalShowBidAlert === 'function') {
+        originalShowBidAlert(message, type);
+      }
+    };
+  });
+</script>
 {% endblock %}
-  

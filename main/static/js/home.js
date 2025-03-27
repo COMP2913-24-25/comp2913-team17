@@ -20,21 +20,25 @@ $(document).ready(function() {
     });
   }, 60000);
   
-  // Function to apply all filters
-  function applyFilters() {
+  // Function to apply filters and sorting
+  function applyFiltersAndSort() {
     const searchTerm = $('#search-bar').val().toLowerCase().trim();
     const categoryFilter = $('#category-filter').val();
     const typeFilter = $('#type-filter').val();
     const authenticatedOnly = $('#authenticated-only').is(':checked');
+    const sortOption = $('#sort-filter').val();
     
+    let items = $('.auction-grid-wrapper').get(); // Get all items as an array
     let visibleItems = 0;
     
-    $('.auction-grid-wrapper').each(function() {
-      const title = $(this).data('title').toLowerCase();
-      const category = $(this).find('.category').data('category');
-      const auctionEndElement = $(this).find('.countdown');
+    // Filter items
+    items.forEach(function(item) {
+      const $item = $(item);
+      const title = $item.data('title').toLowerCase();
+      const category = $item.find('.category').data('category');
+      const auctionEndElement = $item.find('.countdown');
       const isEnded = auctionEndElement.hasClass('countdown-ended');
-      const authStatus = $(this).find('.authentication-status').data('authentication');
+      const authStatus = $item.find('.authentication-status').data('authentication');
       
       // Type filter: 1 = Live Auctions, 2 = Ended Auctions
       let passesTypeFilter = true;
@@ -64,12 +68,64 @@ $(document).ready(function() {
       
       // Show/hide based on all filters
       if (passesTypeFilter && passesCategoryFilter && passesAuthFilter && passesSearchFilter) {
-        $(this).show();
+        $item.show();
         visibleItems++;
       } else {
-        $(this).hide();
+        $item.hide();
       }
     });
+    
+    // Sort visible items
+    items.sort(function(a, b) {
+      const $a = $(a);
+      const $b = $(b);
+      const isAVisible = $a.is(':visible');
+      const isBVisible = $b.is(':visible');
+      
+      // Prioritize visible items
+      if (isAVisible && !isBVisible) return -1;
+      if (!isAVisible && isBVisible) return 1;
+      if (!isAVisible && !isBVisible) return 0;
+      
+      // Both visible, apply sorting
+      switch (sortOption) {
+        case 'price-low-high':
+          return parseFloat($a.data('price')) - parseFloat($b.data('price'));
+        case 'price-high-low':
+          return parseFloat($b.data('price')) - parseFloat($a.data('price'));
+        case 'ending-soonest':
+          const isAEnded = $a.find('.countdown').hasClass('countdown-ended');
+          const isBEnded = $b.find('.countdown').hasClass('countdown-ended');
+          // If one is ended and the other isn't, ended goes to the bottom
+          if (isAEnded && !isBEnded) return 1;
+          if (!isAEnded && isBEnded) return -1;
+          // Both active or both ended, sort by end time ascending
+          return new Date($a.data('end')) - new Date($b.data('end'));
+        case 'ending-latest':
+          return new Date($b.data('end')) - new Date($a.data('end'));
+        case 'title-a-z':
+          return $a.data('title').localeCompare($b.data('title'));
+        default:
+          return 0; // Fallback, no sorting
+      }
+    });
+    
+    // Re-append sorted items to container with animation reset
+    const $container = $('#auction-container');
+    $container.empty();
+    items.forEach(function(item, index) {
+      const $item = $(item);
+      // Reset AOS attributes and classes for re-animation
+      $item.removeClass('aos-init aos-animate')
+           .attr('data-aos', 'fade-up')
+           .attr('data-aos-delay', index * 50);
+      $container.append($item);
+    });
+    
+    // Use a slight delay to ensure DOM updates before triggering animations
+    setTimeout(function() {
+      AOS.refreshHard(); // Force re-animation of all items
+    }, 50);
     
     // Show or hide the "no results" message
     if (visibleItems === 0) {
@@ -79,24 +135,15 @@ $(document).ready(function() {
     }
   }
   
-  // Event listeners for filters
-  $('#search-bar').on('input', function() {
-    applyFilters();
-  });
+  // Event listeners for filters and sorting
+  $('#search-bar').on('input', applyFiltersAndSort);
+  $('#category-filter').on('change', applyFiltersAndSort);
+  $('#type-filter').on('change', applyFiltersAndSort);
+  $('#authenticated-only').on('change', applyFiltersAndSort);
+  $('#sort-filter').on('change', applyFiltersAndSort);
   
-  $('#category-filter').on('change', function() {
-    applyFilters();
-  });
-  
-  $('#type-filter').on('change', function() {
-    $('#auction-type').text($(this).find('option:selected').text());
-    sessionStorage.setItem('lastType', $(this).val());
-    applyFilters();
-  });
-  
-  $('#authenticated-only').on('change', function() {
-    applyFilters();
-  });
+  // Initial application of filters and sorting
+  applyFiltersAndSort();
   
   function updateCountdown(element) {
     const endTime = element.data('end');
@@ -226,7 +273,7 @@ $(document).ready(function() {
 
   // Initialize AOS Animations
   AOS.init({
-    once: true,
+    once: false, // Allow re-animation
     disable: 'mobile',
     duration: 800
   });
