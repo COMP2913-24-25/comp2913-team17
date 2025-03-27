@@ -122,7 +122,7 @@
         <div class="row">
           <div class="col">
             <div>
-              <a href='#' class="bid-count" data-bs-toggle="modal" data-bs-target=".bid-history-modal">{{ bids|length }} bids</a>
+              <button href='#' class="bid-count btn btn-primary" data-bs-toggle="modal" data-bs-target=".bid-history-modal">{{ bids|length }} bids</button>
               {% if not is_auction_over %}
               <span class="countdown-label">Ends in:</span> 
               {% endif %}
