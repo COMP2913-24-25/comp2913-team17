@@ -94,6 +94,12 @@ $(document).ready(function() {
         case 'price-high-low':
           return parseFloat($b.data('price')) - parseFloat($a.data('price'));
         case 'ending-soonest':
+          const isAEnded = $a.find('.countdown').hasClass('countdown-ended');
+          const isBEnded = $b.find('.countdown').hasClass('countdown-ended');
+          // If one is ended and the other isn't, ended goes to the bottom
+          if (isAEnded && !isBEnded) return 1;
+          if (!isAEnded && isBEnded) return -1;
+          // Both active or both ended, sort by end time ascending
           return new Date($a.data('end')) - new Date($b.data('end'));
         case 'ending-latest':
           return new Date($b.data('end')) - new Date($a.data('end'));
@@ -110,7 +116,7 @@ $(document).ready(function() {
     items.forEach(function(item, index) {
       const $item = $(item);
       // Reset AOS attributes and classes for re-animation
-      $item.removeClass('aos-init aos-animate') // Clear AOS state
+      $item.removeClass('aos-init aos-animate')
            .attr('data-aos', 'fade-up')
            .attr('data-aos-delay', index * 50);
       $container.append($item);
