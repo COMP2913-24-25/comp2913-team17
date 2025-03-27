@@ -13,7 +13,7 @@
     {{ form.csrf_token }}
     <!-- Title -->
     <div class="form-group">
-      <label for="enter-title" class="form-label">Title</label>
+      <label for="enter-title" class="form-label">Title*</label>
       {{ form.title(class_="form-control required-field", placeholder="Enter item title", id_="enter-title", maxlength_="256") }}
       {% for error in form.title.errors %}
       <div class="alert alert-danger" role="alert">{{ error }}</div>
@@ -21,7 +21,7 @@
     </div>
     <!-- Category -->
     <div class="form-group">
-      <label for="select-category" class="form-label">Category</label>
+      <label for="select-category" class="form-label">Category*</label>
       <select id="{{ form.category_id.id }}" name="{{ form.category_id.name }}" class="form-control" required>
         <option value="">Select a category</option>
         {% for value, text in form.category_id.choices %}
@@ -44,7 +44,7 @@
     </div>
     <!-- Description -->
     <div class="form-group">
-      <label for="enter-description" class="form-label">Description</label>
+      <label for="enter-description" class="form-label">Description*</label>
       {{ form.description(class_="form-control required-field", placeholder="Enter item description", id_="enter-description", rows="5") }}
       {% for error in form.description.errors %}
       <div class="alert alert-danger" role="alert">{{ error }}</div>
@@ -52,10 +52,10 @@
     </div>
     <!-- Auction End Time -->
 <div class="form-group">
-  <label for="enter-end-time" class="form-label">Auction End Time</label>
+  <label for="enter-end-time" class="form-label">Auction End Time*</label>
   {{ form.auction_end(class_="form-control required-field", id_="enter-end-time", type="datetime-local") }}
   <!-- Countdown Display -->
-  <div id="countdown" class="mt-2 text-muted">Auction duration: <span id="timer">Select a date to see the countdown</span></div>
+  <div id="countdown" class="mt-2 text-muted mb-4">Auction duration: <span id="timer">Select a date to see the countdown</span></div>
   {% for error in form.auction_end.errors %}
   <div class="alert alert-danger" role="alert">{{ error }}</div>
   {% endfor %}
@@ -72,7 +72,7 @@
     <div class="form-group">
       <label for="upload-image" class="form-label">Item Images</label>
       {{ form.images(class_="form-control", id_="upload-images", accept="image/*") }}
-      <small class="form-text text-muted">Accepted formats: JPG, JPEG, PNG. Maximum size: 1MB</small>
+      <small class="form-text text-muted">Accepted formats: JPG, JPEG, PNG. Max size: 1MB. Max 5 images.</small>
 
       <!-- List of image file names -->
       <ul id="image-list" class="list-unstyled"></ul>
