@@ -242,100 +242,110 @@
           <span><i class="fas fa-chart-simple me-2"></i> Platform Statistics</span>
         </div>
         <div class="card-body p-4">
-          <div class="row">
-            <div class="col-md-3">
-              <div class="card text-center">
-                <div class="card-body">
-                  <h5 class="card-title">Projected Revenue</h5>
-                  <p class="card-text">£{{ "%.2f" | format(manager['projected_revenue']) }}</p>
+          <div class="row stats-cards">
+            <div class="col-sm-6 col-md-4 col-lg-4 mb-4">
+              <div class="stat-card">
+                <h3 class="stat-title">PROJECTED REVENUE</h3>
+                <div class="stat-value" title="£{{ "%.2f" | format(manager['projected_revenue']) }}">
+                  £{{ "%.2f" | format(manager['projected_revenue']) }}
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
-              <div class="card text-center">
-                <div class="card-body">
-                  <h5 class="card-title">Paid Revenue</h5>
-                  <p class="card-text">£{{ "%.2f" | format(manager['paid_revenue']) }}</p>
+            <div class="col-sm-6 col-md-4 col-lg-4 mb-4">
+              <div class="stat-card">
+                <h3 class="stat-title">PAID REVENUE</h3>
+                <div class="stat-value" title="£{{ "%.2f" | format(manager['paid_revenue']) }}">
+                  £{{ "%.2f" | format(manager['paid_revenue']) }}
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
-              <div class="card text-center">
-                <div class="card-body">
-                  <h5 class="card-title">Commission Income ({{ "%.2f" | format(manager['commission_percentage']) }}%)</h5>
-                  <p class="card-text">£{{ "%.2f" | format(manager['commission_income']) }}</p>
+            <div class="col-sm-6 col-md-4 col-lg-4 mb-4">
+              <div class="stat-card">
+                <h3 class="stat-title">COMMISSION INCOME ({{ "%.2f" | format(manager['commission_percentage']) }}%)</h3>
+                <div class="stat-value" title="£{{ "%.2f" | format(manager['commission_income']) }}">
+                  £{{ "%.2f" | format(manager['commission_income']) }}
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
-              <div class="card text-center">
-                <div class="card-body">
-                  <h5 class="card-title">Active Auctions</h5>
-                  <p class="card-text">{{ manager['active_auctions'] }}</p>
+            <div class="col-sm-6 col-md-4 col-lg-4 mb-4">
+              <div class="stat-card">
+                <h3 class="stat-title">ACTIVE AUCTIONS</h3>
+                <div class="stat-value" title="{{ manager['active_auctions'] }} active auctions">
+                  {{ manager['active_auctions'] }}
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-4 mb-4">
+              <div class="stat-card">
+                <h3 class="stat-title">TOTAL USERS</h3>
+                <div class="stat-value" title="{{ manager['user_count'] }} total users">
+                  {{ manager['user_count'] }}
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-4 mb-4">
+              <div class="stat-card">
+                <h3 class="stat-title">PAID AUCTIONS</h3>
+                <div class="stat-value" title="{{ manager['paid_auctions_count'] }} out of {{ manager['total_completed_auctions'] }} auctions paid">
+                  {{ manager['paid_auctions_count'] }} / {{ manager['total_completed_auctions'] }}
                 </div>
               </div>
             </div>
           </div>
-          <div class="row mt-4">
-            <div class="col-md-3">
-              <div class="card text-center">
-                <div class="card-body">
-                  <h5 class="card-title">Total Users</h5>
-                  <p class="card-text">{{ manager['user_count'] }}</p>
+          <!-- Graph -->
+          <div class="mt-2">
+            <h5 class="mb-3">Revenue Over Time</h5>
+            <div class="mb-4">
+              <div class="row">
+                <!-- Controls -->
+                <div class="col-md-6 mb-3">
+                  <label class="mb-2 d-block fw-bold">Time Period:</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <div class="form-check form-check-inline mb-2">
+                      <input class="form-check-input time-toggle" type="radio" name="timePeriod" id="weekToggle" value="week">
+                      <label class="form-check-label" for="weekToggle">1 Week</label>
+                    </div>
+                    <div class="form-check form-check-inline mb-2">
+                      <input class="form-check-input time-toggle" type="radio" name="timePeriod" id="monthToggle" value="month">
+                      <label class="form-check-label" for="monthToggle">1 Month</label>
+                    </div>
+                    <div class="form-check form-check-inline mb-2">
+                      <input class="form-check-input time-toggle" type="radio" name="timePeriod" id="sixMonthsToggle" value="six_months" checked>
+                      <label class="form-check-label" for="sixMonthsToggle">6 Months</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="mb-2 d-block fw-bold">Revenue Type:</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <div class="form-check form-check-inline mb-2">
+                      <input class="form-check-input revenue-toggle" type="radio" name="revenueType" id="projectedToggle" value="projected" checked>
+                      <label class="form-check-label" for="projectedToggle">Projected</label>
+                    </div>
+                    <div class="form-check form-check-inline mb-2">
+                      <input class="form-check-input revenue-toggle" type="radio" name="revenueType" id="paidToggle" value="paid">
+                      <label class="form-check-label" for="paidToggle">Paid</label>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
-              <div class="card text-center">
-                <div class="card-body">
-                  <h5 class="card-title">Paid Auctions</h5>
-                  <p class="card-text">{{ manager['paid_auctions_count'] }} / {{ manager['total_completed_auctions'] }}</p>
-                </div>
-              </div>
+            <div class="chart-container" style="position: relative; height: 400px; margin-bottom: 2rem;">
+              <canvas id="revenueChart"
+                data-week-projected-labels='{{ manager["revenue_data"]["week"]["projected"]["labels"]|tojson|safe }}'
+                data-week-projected-values='{{ manager["revenue_data"]["week"]["projected"]["values"]|tojson|safe }}'
+                data-week-paid-labels='{{ manager["revenue_data"]["week"]["paid"]["labels"]|tojson|safe }}'
+                data-week-paid-values='{{ manager["revenue_data"]["week"]["paid"]["values"]|tojson|safe }}'
+                data-month-projected-labels='{{ manager["revenue_data"]["month"]["projected"]["labels"]|tojson|safe }}'
+                data-month-projected-values='{{ manager["revenue_data"]["month"]["projected"]["values"]|tojson|safe }}'
+                data-month-paid-labels='{{ manager["revenue_data"]["month"]["paid"]["labels"]|tojson|safe }}'
+                data-month-paid-values='{{ manager["revenue_data"]["month"]["paid"]["values"]|tojson|safe }}'
+                data-six-months-projected-labels='{{ manager["revenue_data"]["six_months"]["projected"]["labels"]|tojson|safe }}'
+                data-six-months-projected-values='{{ manager["revenue_data"]["six_months"]["projected"]["values"]|tojson|safe }}'
+                data-six-months-paid-labels='{{ manager["revenue_data"]["six_months"]["paid"]["labels"]|tojson|safe }}'
+                data-six-months-paid-values='{{ manager["revenue_data"]["six_months"]["paid"]["values"]|tojson|safe }}'>
+              </canvas>
             </div>
-          </div>
-          <div class="mt-4">
-            <h5>Revenue Over Time</h5>
-            <div class="mb-3">
-              <label class="me-3">Time Period:</label>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input time-toggle" type="radio" name="timePeriod" id="weekToggle" value="week">
-                <label class="form-check-label" for="weekToggle">1 Week</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input time-toggle" type="radio" name="timePeriod" id="monthToggle" value="month">
-                <label class="form-check-label" for="monthToggle">1 Month</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input time-toggle" type="radio" name="timePeriod" id="sixMonthsToggle" value="six_months" checked>
-                <label class="form-check-label" for="sixMonthsToggle">6 Months</label>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="me-3">Revenue Type:</label>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input revenue-toggle" type="radio" name="revenueType" id="projectedToggle" value="projected" checked>
-                <label class="form-check-label" for="projectedToggle">Projected</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input revenue-toggle" type="radio" name="revenueType" id="paidToggle" value="paid">
-                <label class="form-check-label" for="paidToggle">Paid</label>
-              </div>
-            </div>
-            <canvas id="revenueChart" width="400" height="200"
-              data-week-projected-labels='{{ manager["revenue_data"]["week"]["projected"]["labels"]|tojson|safe }}'
-              data-week-projected-values='{{ manager["revenue_data"]["week"]["projected"]["values"]|tojson|safe }}'
-              data-week-paid-labels='{{ manager["revenue_data"]["week"]["paid"]["labels"]|tojson|safe }}'
-              data-week-paid-values='{{ manager["revenue_data"]["week"]["paid"]["values"]|tojson|safe }}'
-              data-month-projected-labels='{{ manager["revenue_data"]["month"]["projected"]["labels"]|tojson|safe }}'
-              data-month-projected-values='{{ manager["revenue_data"]["month"]["projected"]["values"]|tojson|safe }}'
-              data-month-paid-labels='{{ manager["revenue_data"]["month"]["paid"]["labels"]|tojson|safe }}'
-              data-month-paid-values='{{ manager["revenue_data"]["month"]["paid"]["values"]|tojson|safe }}'
-              data-six-months-projected-labels='{{ manager["revenue_data"]["six_months"]["projected"]["labels"]|tojson|safe }}'
-              data-six-months-projected-values='{{ manager["revenue_data"]["six_months"]["projected"]["values"]|tojson|safe }}'
-              data-six-months-paid-labels='{{ manager["revenue_data"]["six_months"]["paid"]["labels"]|tojson|safe }}'
-              data-six-months-paid-values='{{ manager["revenue_data"]["six_months"]["paid"]["values"]|tojson|safe }}'
-            ></canvas>
           </div>
         </div>
       </div>

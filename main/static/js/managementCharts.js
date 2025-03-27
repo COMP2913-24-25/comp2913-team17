@@ -3,7 +3,11 @@
 document.addEventListener('DOMContentLoaded', function () {
   const ctx = document.getElementById('revenueChart');
   if (ctx) {
-    // Get all data from data attributes
+    const style = getComputedStyle(document.documentElement);
+    const primaryColor = style.getPropertyValue('--primary-color') || '#000';
+    const accentColor = style.getPropertyValue('--accent-color') || '#ff9d00';
+    const secondaryColor = style.getPropertyValue('--secondary-color') || '#fff';
+    
     const data = {
       week: {
         projected: {
@@ -37,6 +41,10 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     };
 
+    // Set responsive options for the chart
+    ctx.style.maxHeight = '400px';
+    ctx.parentElement.style.position = 'relative';
+    
     // Initialise chart with 6 months projected revenue as default
     const revenueChart = new Chart(ctx.getContext('2d'), {
       type: 'line',
@@ -44,25 +52,111 @@ document.addEventListener('DOMContentLoaded', function () {
         labels: data.six_months.projected.labels,
         datasets: [{
           label: 'Projected Revenue (£)',
-          backgroundColor: 'rgba(255, 157, 0, 0.2)',
-          borderColor: 'rgba(255, 157, 0, 1)',
-          borderWidth: 1,
-          data: data.six_months.projected.values
+          backgroundColor: `${accentColor}`,
+          borderColor: accentColor,
+          borderWidth: 2,
+          pointBackgroundColor: accentColor,
+          pointBorderColor: secondaryColor,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          data: data.six_months.projected.values,
+          tension: 0.2
         }]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            align: 'start',
+            labels: {
+              boxWidth: 15,
+              usePointStyle: true,
+              pointStyle: 'circle',
+              font: {
+                family: "'Inter', sans-serif",
+                size: function() {
+                  return window.innerWidth < 768 ? 10 : 12;
+                }
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: primaryColor,
+            titleFont: {
+              family: "monospace, sans-serif",
+              size: 14,
+              weight: 'bold'
+            },
+            bodyFont: {
+              family: "'Inter', sans-serif",
+              size: 13
+            },
+            padding: 10,
+            cornerRadius: 0,
+            displayColors: false,
+            callbacks: {
+              label: function(context) {
+                return `£${context.parsed.y.toFixed(2)}`;
+              }
+            }
+          }
+        },
         scales: {
           y: {
             beginAtZero: true,
+            grid: {
+              color: `${primaryColor}`,
+              drawBorder: false
+            },
+            ticks: {
+              font: {
+                family: "monospace, sans-serif",
+                size: function() {
+                  return window.innerWidth < 768 ? 9 : 11;
+                }
+              },
+              callback: function(value) {
+                return '£' + value;
+              }
+            },
             title: {
               display: true,
-              text: 'Revenue (£)'
+              text: 'Revenue (£)',
+              font: {
+                family: "monospace, sans-serif",
+                size: function() {
+                  return window.innerWidth < 768 ? 10 : 12;
+                },
+                weight: 'bold'
+              }
             }
           },
           x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45,
+              font: {
+                family: "monospace, sans-serif",
+                size: function() {
+                  return window.innerWidth < 768 ? 8 : 10;
+                }
+              }
+            },
             title: {
               display: true,
-              text: 'Time'
+              text: 'Time',
+              font: {
+                family: "monospace, sans-serif",
+                size: function() {
+                  return window.innerWidth < 768 ? 10 : 12;
+                },
+                weight: 'bold'
+              }
             }
           }
         }
@@ -73,7 +167,19 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateChart(period, revenueType) {
       revenueChart.data.labels = data[period][revenueType].labels;
       revenueChart.data.datasets[0].data = data[period][revenueType].values;
-      revenueChart.data.datasets[0].label = revenueType === 'projected' ? 'Projected Revenue (£)' : 'Paid Revenue (£)';
+      
+      if (revenueType === 'projected') {
+        revenueChart.data.datasets[0].label = 'Projected Revenue (£)';
+        revenueChart.data.datasets[0].borderColor = accentColor;
+        revenueChart.data.datasets[0].backgroundColor = `${accentColor}33`;
+        revenueChart.data.datasets[0].pointBackgroundColor = accentColor;
+      } else {
+        revenueChart.data.datasets[0].label = 'Paid Revenue (£)';
+        revenueChart.data.datasets[0].borderColor = '#28a745';
+        revenueChart.data.datasets[0].backgroundColor = '#28a74533';
+        revenueChart.data.datasets[0].pointBackgroundColor = '#28a745';
+      }
+      
       revenueChart.update();
     }
 
