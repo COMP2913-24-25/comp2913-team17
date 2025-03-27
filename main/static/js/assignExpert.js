@@ -1,3 +1,5 @@
+// Assigning experts to authentication requests
+
 $(document).ready(function() {
   // Update availability text when an expert is selected
   $('.expert-select').on('change', function() {
@@ -28,6 +30,13 @@ $(document).ready(function() {
     const requestId = row.data('request-id');
     const expert = row.find('.expert-select').val();
 
+    // Change assign button to spinner
+    $(this).html(`
+      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 
+      Assigning...
+    `);
+    $(this).prop('disabled', true);
+
     try {
       const response = await csrfFetch(`/dashboard/api/assign-expert/${requestId}`, {
         method: 'POST',
@@ -47,10 +56,18 @@ $(document).ready(function() {
       } else {
         // Show error and do not remove the row
         alert(data.error || "Error assigning expert.");
+
+        // Reset the button
+        $(this).html(`<i class="fas fa-user-check me-1"></i> Assign`);
+        $(this).prop('disabled', false);
       }
     } catch (error) {
       console.log('Error:', error);
       alert("Error assigning expert.");
+
+      // Reset the button
+      $(this).html(`<i class="fas fa-user-check me-1"></i> Assign`);
+      $(this).prop('disabled', false);
     }
   });
 
@@ -60,29 +77,39 @@ $(document).ready(function() {
     const requestId = row.data('request-id');
     const expertId = $(this).data('expert-id');
 
+    // Change Auto-Assign button to spinner
+    $(this).html(`
+      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 
+      Assigning...
+    `);
+    $(this).prop('disabled', true);
+
     try {
       const response = await csrfFetch(`/dashboard/api/auto-assign-expert/${requestId}`, {
         method: 'POST',
-        body: JSON.stringify({}) // No body needed, but keeping it consistent
+        body: JSON.stringify({'recommendation': parseInt(expertId)})
       });
       const data = await response.json();
       
       if (response.ok) {
         // Show success message
         alert('Expert auto-assigned successfully');
-
-        // Remove the row with animation
-        row.fadeOut(300, function() {
-          $(this).remove();
-          checkEmptyTable();
-        });
+        window.location.reload();
       } else {
         // Show error and do not remove the row
         alert(data.error || "Error auto-assigning expert.");
+
+        // Reset the button
+        $(this).html(`<i class="fas fa-user-check me-1"></i> Auto-Assign`);
+        $(this).prop('disabled', false);
       }
     } catch (error) {
       console.log('Error:', error);
       alert("Error auto-assigning expert.");
+
+      // Reset the button
+      $(this).html(`<i class="fas fa-user-check me-1"></i> Auto-Assign`);
+      $(this).prop('disabled', false);
     }
   });
 
@@ -99,6 +126,13 @@ $(document).ready(function() {
       return;
     }
 
+    // Change button to spinner
+    $(this).html(`
+      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 
+      Assigning...
+    `);
+    $(this).prop('disabled', true);
+
     const requestIds = selectedRows.map(function() {
       return $(this).data('request-id');
     }).get();
@@ -113,19 +147,22 @@ $(document).ready(function() {
       if (response.ok) {
         // Show success message
         alert('Bulk auto-assignment successful: ' + data.assignments.length + ' requests assigned.');
-
-        // Remove assigned rows with animation
-        selectedRows.fadeOut(300, function() {
-          $(this).remove();
-          checkEmptyTable();
-        });
+        window.location.reload();
       } else {
         // Show error and do not remove rows
         alert(data.error || "Error during bulk auto-assignment.");
+
+        // Reset the button
+        $(this).html('Bulk Auto-Assign');
+        $(this).prop('disabled', false);
       }
     } catch (error) {
       console.log('Error:', error);
       alert("Error during bulk auto-assignment.");
+
+      // Reset the button
+      $(this).html('Bulk Auto-Assign');
+      $(this).prop('disabled', false);
     }
   });
 

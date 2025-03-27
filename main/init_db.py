@@ -17,27 +17,6 @@ def populate_db(app):
 
         now = datetime.now()
 
-        # Manager Config first to set platform fees
-        configs = [
-            ManagerConfig(
-                config_key='base_platform_fee',
-                config_value='1.00',
-                description='Base platform fee percentage for standard items'
-            ),
-            ManagerConfig(
-                config_key='authenticated_platform_fee',
-                config_value='5.00',
-                description='Platform fee percentage for authenticated items'
-            ),
-            ManagerConfig(
-                config_key='max_auction_duration',
-                config_value='5',
-                description='Maximum auction duration in days'
-            )
-        ]
-        db.session.add_all(configs)
-        db.session.commit()
-
         # Regular Users
         user1 = User(username='alice', email='alice@example.com', role=1)
         user1.set_password('Alice@123')
@@ -103,6 +82,27 @@ def populate_db(app):
 
         # Add them to the session along with the previous users:
         db.session.add_all([user11, user12, user13, user14, user15, user16, user17, user18])
+        db.session.commit()
+
+        # Manager Config early to set platform fees
+        configs = [
+            ManagerConfig(
+                config_key='base_platform_fee',
+                config_value='1.00',
+                description='Base platform fee percentage for standard items'
+            ),
+            ManagerConfig(
+                config_key='authenticated_platform_fee',
+                config_value='5.00',
+                description='Platform fee percentage for authenticated items'
+            ),
+            ManagerConfig(
+                config_key='max_auction_duration',
+                config_value='5',
+                description='Maximum auction duration in days'
+            )
+        ]
+        db.session.add_all(configs)
         db.session.commit()
 
         # Categories
