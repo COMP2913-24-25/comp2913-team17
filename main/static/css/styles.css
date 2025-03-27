@@ -1229,5 +1229,11 @@ h1, h2, h3, h4, h5 {
   .update-details-wrapper {
     width: 100%;
   }
+}
 
+ /* Prevent iOS zoom on inputs */
+ @media screen and (-webkit-min-device-pixel-ratio:0) { 
+  input[type="number"] {
+    font-size: 16px !important;
+  }
 }
