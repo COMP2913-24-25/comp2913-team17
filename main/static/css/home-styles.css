@@ -270,6 +270,12 @@
   font-family: var(--font-mono);
 }
 
+@media (max-width: 992px) {
+  .filter-dropdown:last-child {
+    border-top: 1.5px solid var(--primary-color) !important;
+  }
+}
+
 /* Auction titles shown with ellipses on small screens */
 @media (max-width: 576px) {
   .auction-title {
