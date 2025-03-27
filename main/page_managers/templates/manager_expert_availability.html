@@ -75,15 +75,15 @@
                     {% set slot_str = slot.strftime('%H:%M') %}
                     {% if slot_str == current_slot.strftime('%H:%M') %}
                       {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
-                        <td class="bg-dark-turquoise text-white text-center">Now</td>
+                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-dark-turquoise text-white text-center">Now</td>
                       {% else %}
-                        <td class="bg-dark-orange text-white text-center">Now</td>
+                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-dark-orange text-white text-center">Now</td>
                       {% endif %}
                     {% else %}
                       {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
-                        <td class="bg-success text-white text-center">A</td>
+                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-success text-white text-center">A</td>
                       {% else %}
-                        <td class="bg-danger text-white text-center">-</td>
+                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-danger text-white text-center">-</td>
                       {% endif %}
                     {% endif %}
                   {% endfor %}
