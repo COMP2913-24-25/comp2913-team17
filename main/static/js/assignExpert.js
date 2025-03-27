@@ -116,6 +116,12 @@ $(document).ready(function() {
   // Toggle all checkboxes when "Select All" is clicked
   $('#select-all-requests').on('change', function() {
     $('.request-checkbox').prop('checked', this.checked);
+    $('#mobile-select-all-requests').prop('checked', this.checked);
+  });
+
+  $('#mobile-select-all-requests').on('change', function() {
+    $('.request-checkbox').prop('checked', this.checked);
+    $('#select-all-requests').prop('checked', this.checked);
   });
 
   // Bulk auto-assign selected requests

@@ -213,6 +213,13 @@
   margin-right: 0.5rem;
 }
 
+/* Mobile select all checkbox initially hidden on desktop */
+.mobile-select-all {
+  display: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
 /* Mobile adjustments */
 @media (max-width: 996px) {
   .dashboard-tabs .nav-link {
@@ -345,6 +352,15 @@
 
   .auth-table tr td:last-child {
     border-bottom: none;
+  }
+
+  /* Show mobile select all checkbox */
+  .mobile-select-all {
+    display: block;
+  }
+
+  .bulk-auto-assign-btn {
+    padding: 0.2rem;
   }
 }
 

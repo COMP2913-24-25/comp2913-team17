@@ -126,7 +126,14 @@
       {% if manager['requests'] %}
         <div class="auth-card" id="auth-requests-card">
           <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-clipboard-check me-2"></i> Pending Authentication Requests</span>
+            <span><i class="fas fa-clipboard-check mx-2"></i> Pending Requests</span>
+            <!-- Mobile-only select all container -->
+            <div class="mobile-select-all me-3">
+              <label class="d-flex align-items-center">
+                <input type="checkbox" id="mobile-select-all-requests" title="Select all requests" class="me-2">
+                <span>Select All</span>
+              </label>
+            </div>
             <button class="btn btn-primary bulk-auto-assign-btn">Bulk Auto-Assign</button>
           </div>
           <div class="card-body p-0">
@@ -134,7 +141,7 @@
               <table class="auth-table">
                 <thead>
                   <tr>
-                    <th><input type="checkbox" id="select-all-requests"></th>
+                    <th><input type="checkbox" id="select-all-requests" title="Select all requests"></th>
                     <th>Requester</th>
                     <th>Item</th>
                     <th>Category</th>
@@ -189,7 +196,7 @@
                             </select>
                             <span class="expertise-text badge p-3" title="Expertise"></span>
                           </div>
-                          <div class="d-flex align-items-center justify-content-between gap-4 expert-assign-container">
+                          <div class="d-flex align-items-center justify-content-between text-center expert-assign-container">
                             <span class="availability-text seller-name"></span>
                             <button class="btn btn-card assign-expert-btn">
                               <i class="fas fa-user-check me-1"></i> Assign

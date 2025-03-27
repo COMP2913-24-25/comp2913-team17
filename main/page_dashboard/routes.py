@@ -158,7 +158,7 @@ def manager_authentications(manager, now):
                 ~User.expert_assignments.any(
                     ExpertAssignment.request_id == req.request_id
                 )
-            )).all()
+            )).order_by(User.username.asc()).all()
         # Calculate AI expert recommendation for eligible experts
         if eligible_experts:
             scores = [(expert, calculate_expert_suitability(expert, req, all_experts_assignments, now)) 
@@ -681,6 +681,7 @@ def auto_assign_expert(request_id):
     max_score = max(score for _, score in scores)
     best_experts = [expert for expert, score in scores if score == max_score]
     best_expert_ids = set(expert.id for expert in best_experts)
+    print(best_expert_ids)
 
     # Preferentially pick the expert displayed in the recommendation
     if request.is_json and request.json.get('recommendation') and request.json.get('recommendation') in best_expert_ids:
