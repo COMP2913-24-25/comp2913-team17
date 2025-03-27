@@ -19,17 +19,20 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--secondary-color);
   color: var(--primary-color);
-  overflow-x: hidden;
+  position: relative;
 }
 
 h1, h2, h3, h4, h5 {
   font-family: var(--font-display);
   text-transform: uppercase;
-  overflow-x: hidden;
 }
 
 .mono {
