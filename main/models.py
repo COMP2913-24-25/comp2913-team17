@@ -80,7 +80,7 @@ class User(UserMixin, db.Model):
         # Increment failed login attempts and lock account if threshold reached
         self.failed_login_attempts += 1
         # Lock after 5 failed attempts
-        if self.failed_login_attempts >= 2:
+        if self.failed_login_attempts >= 5:
             # Lock for 15 minutes
             self.locked_until = datetime.now() + timedelta(minutes=15)
     

@@ -93,10 +93,10 @@ def populate_db(app):
         user15.set_password('Cristiano@123')
 
         user16 = User(username='sandeep', email='sandeep@example.com', role=2)
-        user16.set_password('sandeep@123')
+        user16.set_password('Sandeep@123')
 
         user17 = User(username='jamal', email='jamal@example.com', role=2)
-        user17.set_password('jamal@123')
+        user17.set_password('Jamal@123')
 
         user18 = User(username='yusuf', email='cheeseman@example.com', role=2)
         user18.set_password('Cheeseman@123')
