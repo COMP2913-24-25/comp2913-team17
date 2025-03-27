@@ -325,38 +325,50 @@ class Item(db.Model):
     def notify_payment(self):
         if not self.winning_bid:
             return
-            
-        # Notify the seller
-        notification = Notification(
-            user_id=self.seller_id,
-            message=f"Payment received! {self.winning_bid.bidder.username} has paid £{self.winning_bid.bid_amount} for '{self.title}'.",
-            item_url=self.url,
-            item_title=self.title,
-            notification_type=7
-        )
-        db.session.add(notification)
-        db.session.commit()
-        
-        # Send real-time notification
+
         try:
-            from app import socketio
-            socketio.emit('new_notification', {
-                'id': notification.id,
-                'message': notification.message,
-                'item_url': notification.item_url,
-                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
-            }, room=f'user_{self.seller.secret_key}')
-        except Exception as e:
-            logger.error(f"Failed to send payment notification: {e}")
+            seller = User.query.get(self.seller_id)
+            if not seller:
+                logger.error(f"Failed to find seller with ID {self.seller_id} for payment notification")
+                return
+                
+            # Create notification
+            notification = Notification(
+                user_id=seller.id,
+                message=f"Payment received! {self.winning_bid.bidder.username} has paid £{self.winning_bid.bid_amount} for '{self.title}'.",
+                item_url=self.url,
+                item_title=self.title,
+                notification_type=7
+            )
+            db.session.add(notification)
+            db.session.commit()
             
-        # Send email notification
-        send_notification_email(self.seller, notification)
+            # Send real-time notification
+            try:
+                from app import socketio
+                socketio.emit('new_notification', {
+                    'id': notification.id,
+                    'message': notification.message,
+                    'item_url': notification.item_url,
+                    'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+                }, room=f'user_{seller.secret_key}')
+                logger.info(f"Sent payment notification to seller {seller.username} (ID: {seller.id})")
+            except Exception as e:
+                logger.error(f"Failed to send real-time payment notification to seller: {e}")
+                
+            # Send email notification
+            try:
+                send_notification_email(seller, notification)
+                logger.info(f"Sent payment email to seller {seller.username} (ID: {seller.id})")
+            except Exception as e:
+                logger.error(f"Failed to send payment email to seller: {e}")
+        except Exception as e:
+            logger.error(f"Error in notify_payment for seller: {e}")
         
-        # Also notify the buyer (auction winner)
+        # Notify the buyer
         self.notify_payment_buyer()
 
     def notify_payment_buyer(self):
-        """Notify the buyer (auction winner) about successful payment"""
         if not self.winning_bid:
             return
             
@@ -366,7 +378,7 @@ class Item(db.Model):
             message=f"Payment successful! You have paid £{self.winning_bid.bid_amount} for '{self.title}'.",
             item_url=self.url,
             item_title=self.title,
-            notification_type=8  # New notification type for buyer payment confirmation
+            notification_type=8
         )
         db.session.add(notification)
         db.session.commit()
@@ -383,7 +395,7 @@ class Item(db.Model):
         except Exception as e:
             logger.error(f"Failed to send buyer payment notification: {e}")
             
-        # Send email notification
+        # Send email
         send_notification_email(buyer, notification)
 
     # Count the number of users watching an auction
