@@ -1,13 +1,7 @@
 $(document).ready(function() {
-    console.log("Watch auction script loaded");
-    
-    // Initialize properly based on server state
-    // This ensures consistency between client and server state
+    // Initialise properly based on server state
     const initialButton = $('#watch-btn, #unwatch-btn');
-    if (initialButton.length) {
-        console.log("Initial button state:", initialButton.attr('id'));
-    }
-    
+
     // Use event delegation for all watch/unwatch buttons
     $(document).on('click', '#watch-btn, #unwatch-btn', function(e) {
         e.preventDefault();
@@ -17,8 +11,6 @@ $(document).ready(function() {
         const itemUrl = button.data('item-url');
         const isWatching = button.attr('id') === 'unwatch-btn';
         
-        console.log("Button clicked:", button.attr('id'), "isWatching:", isWatching);
-        
         if (isWatching) {
             showUnwatchConfirmation(button, itemUrl);
         } else {
@@ -26,9 +18,7 @@ $(document).ready(function() {
         }
     });
     
-    function watchAuction(button, itemUrl) {
-        console.log("Attempting to watch auction:", itemUrl);
-        
+    function watchAuction(button, itemUrl) {   
         // Disable the button
         button.prop('disabled', true);
         
@@ -37,7 +27,6 @@ $(document).ready(function() {
         })
         .then(response => response.json())
         .then(data => {
-            console.log("Watch success data:", data);
             if (data.status === 'success') {
                 // Replace with the unwatch button - add btn-lg to make it the same size
                 const newButton = $(`
@@ -68,8 +57,6 @@ $(document).ready(function() {
     }
     
     function showUnwatchConfirmation(button, itemUrl) {
-        console.log("Showing unwatch confirmation for:", itemUrl);
-        
         // Create and show the modal
         if ($('#unwatchConfirmationModal').length === 0) {
             $('body').append(`
@@ -103,8 +90,6 @@ $(document).ready(function() {
     }
     
     function unwatchAuction(button, itemUrl) {
-        console.log("Attempting to unwatch auction:", itemUrl);
-        
         // Disable button
         button.prop('disabled', true);
         
@@ -113,7 +98,6 @@ $(document).ready(function() {
         })
         .then(response => response.json())
         .then(data => {
-            console.log("Unwatch success data:", data);
             if (data.status === 'success') {
                 // Replace with watch button - ensure consistent btn-lg class
                 const newButton = $(`

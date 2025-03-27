@@ -15,7 +15,6 @@ $('#create-auction-form').on('submit', (e) => {
 
 $(document).ready(function() {
   $('#upload-images').on('change', function() {
-    console.log("Image upload changes");
     let images = this.files;
     let imageList = $('#image-list');
     imageList.empty();

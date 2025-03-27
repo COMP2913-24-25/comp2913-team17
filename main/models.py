@@ -80,7 +80,7 @@ class User(UserMixin, db.Model):
         # Increment failed login attempts and lock account if threshold reached
         self.failed_login_attempts += 1
         # Lock after 5 failed attempts
-        if self.failed_login_attempts >= 2:
+        if self.failed_login_attempts >= 5:
             # Lock for 15 minutes
             self.locked_until = datetime.now() + timedelta(minutes=15)
     
@@ -126,6 +126,9 @@ class Item(db.Model):
     status = db.Column(db.Integer, nullable=False, default=1)
     # ensures all images are deleted
     images = db.relationship('Image', back_populates='item', cascade='all, delete-orphan')
+    # Store the fee per item
+    base_fee = db.Column(db.Numeric(10, 2), nullable=False, default=1.00)
+    auth_fee = db.Column(db.Numeric(10, 2), nullable=False, default=5.00)
 
     winning_bid_id = db.Column(
         db.Integer, 
@@ -146,6 +149,29 @@ class Item(db.Model):
         primaryjoin="Item.item_id==Bid.item_id"
     )
     authentication_requests = db.relationship('AuthenticationRequest', backref='item', lazy=True)
+
+    def __init__(self, **kwargs):
+        """Initialise the item and set the fees"""
+        super().__init__(**kwargs)
+        self.set_fees()
+
+    def set_fees(self):
+        """Set fees from the ManagerConfig if available"""
+        from .models import ManagerConfig
+
+        # Set unathenticated item fee
+        base_config = ManagerConfig.query.filter_by(config_key=ManagerConfig.BASE_FEE_KEY).first()
+        if base_config:
+            self.base_fee = float(base_config.config_value)
+        else:
+            self.base_fee = 1.00
+            
+        # Set authenticated item fee
+        auth_config = ManagerConfig.query.filter_by(config_key=ManagerConfig.AUTHENTICATED_FEE_KEY).first()
+        if auth_config:
+            self.auth_fee = float(auth_config.config_value)
+        else:
+            self.auth_fee = 5.00
     
     def __repr__(self):
         return f"<Item {self.title} (ID: {self.item_id})>"
@@ -205,12 +231,15 @@ class Item(db.Model):
         db.session.commit()
         
         # Send real-time notification
-        from app import socketio
-        socketio.emit('new_notification', {
-            'message': notification.message,
-            'item_url': notification.item_url,
-            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
-        }, room=f'user_{winner.secret_key}')
+        try:
+            from app import socketio
+            socketio.emit('new_notification', {
+                'message': notification.message,
+                'item_url': notification.item_url,
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{winner.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send notification: {e}")
         
         # Send email
         send_notification_email(winner, notification)
@@ -239,12 +268,15 @@ class Item(db.Model):
             db.session.commit()
             
             # Send real-time notification
-            from app import socketio
-            socketio.emit('new_notification', {
-                'message': notification.message,
-                'item_url': notification.item_url,
-                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
-            }, room=f'user_{bidder.secret_key}')
+            try:
+                from app import socketio
+                socketio.emit('new_notification', {
+                    'message': notification.message,
+                    'item_url': notification.item_url,
+                    'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+                }, room=f'user_{bidder.secret_key}')
+            except Exception as e:
+                logger.error(f"Failed to send notification: {e}")
 
     # Set the winning bid and notify users about the auction outcome
     def finalise_auction(self):
@@ -281,13 +313,16 @@ class Item(db.Model):
         db.session.commit()
         
         # Send real-time notification
-        from app import socketio
-        socketio.emit('new_notification', {
-            'message': notification.message,
-            'item_url': notification.item_url,
-            'id': notification.id,
-            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
-        }, room=f'user_{self.seller.secret_key}')
+        try:
+            from app import socketio
+            socketio.emit('new_notification', {
+                'message': notification.message,
+                'item_url': notification.item_url,
+                'id': notification.id,
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{self.seller.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send notification: {e}")
 
         send_notification_email(self.seller, notification)
 
@@ -330,7 +365,6 @@ class AuthenticationRequest(db.Model):
     item_id = db.Column(db.Integer, db.ForeignKey('items.item_id'), nullable=False)
     requester_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     request_date = db.Column(db.DateTime, default=datetime.now())
-    fee_percent = db.Column(db.Numeric(4, 2), nullable=False, default=5.00)
     # Request status: 1 = Pending, 2 = Approved, 3 = Declined, 4 = Cancelled
     status = db.Column(
         db.Integer,
@@ -455,15 +489,6 @@ class ManagerConfig(db.Model):
     BASE_FEE_KEY = 'base_platform_fee'
     AUTHENTICATED_FEE_KEY = 'authenticated_platform_fee'
     MAX_DURATION_KEY = 'max_auction_duration'
-
-    @classmethod
-    def get_fee_percentage(cls, is_authenticated=False):
-        """Get the appropriate fee percentage based on item authentication status."""
-        if is_authenticated:
-            fee = cls.query.filter_by(config_key=cls.AUTHENTICATED_FEE_KEY).first()
-            return float(fee.config_value if fee else 5.0)
-        fee = cls.query.filter_by(config_key=cls.BASE_FEE_KEY).first()
-        return float(fee.config_value if fee else 1.0)
 
     def __repr__(self):
         return f"<ManagerConfig {self.config_key}>"
