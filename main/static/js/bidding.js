@@ -146,11 +146,13 @@ if (bidForm.length) {
           
       const data = await response.json();
       if (response.status !== 200) {
-        throw data;
+        // Display the specific error message from the server
+        alert(data.error || 'Error placing bid. Please try again.');
+        return;
       }
     } catch (error) {
       console.log('Error:', error);
-      alert(`Error placing bid. Please try again.`);
+      alert('An unexpected error occurred. Please try again.');
     }
   });
 }
