@@ -1,5 +1,4 @@
 // Check if the user wants to authenticate the item before submitting the form
-
 const authFee = $('meta[name="auth-fee"]').attr('content');
 
 $('#create-auction-form').on('submit', (e) => {
@@ -22,12 +21,12 @@ $(document).ready(function() {
 
     if (images.length > 5) {
       // Error message when user uploads more than 5 images
-      window.alert("Please select up to 5 images maximum")
+      window.alert("Please select up to 5 images maximum");
       // Clear the uploaded files from the file selector
       this.value = "";
     } else if (images.length > 0) {
       // Render a list of the filenames with each name in its own div
-      // Each div is given its own index id for targetting
+      // Each div is given its own index id for targeting
       let imageNames = Array.from(images).map((image, index) => 
         `<div class="image-${index} image-item">
           <i class="delete-btn fa-solid fa-square-minus" data-index="${index}"></i>
@@ -36,9 +35,7 @@ $(document).ready(function() {
       imageList.append(imageNames);
     }
   });
-});
 
-$(document).ready(function() {
   /*
    * Delete buttons are not rendered until user selects images
    * attach event to parent window and target delete buttons
@@ -68,6 +65,59 @@ $(document).ready(function() {
       $(element).addClass(`image-${newIndex} image-item`);
       // Update the data index of each delete button
       $(element).find('.delete-btn').data('index', newIndex);
-    })
-  })
-})
+    });
+  });
+
+  // Function to calculate and display the countdown
+  function updateCountdown() {
+    const endTimeInput = $('#enter-end-time').val();
+    const timerElement = $('#timer');
+
+    if (!endTimeInput) {
+      timerElement.text("Select a date to see the countdown");
+      timerElement.removeClass('text-danger');
+      return;
+    }
+
+    const endTime = new Date(endTimeInput);
+
+    // Check if the date is invalid
+    if (isNaN(endTime.getTime())) {
+      timerElement.text("Invalid date format");
+      timerElement.addClass('text-danger');
+      return;
+    }
+
+    const now = new Date();
+
+    if (endTime <= now) {
+      timerElement.text("Auction end must be in the future");
+      timerElement.addClass('text-danger');
+      return;
+    }
+
+    const timeDiff = endTime - now;
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+    timerElement.text(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+
+    // Apply red text if less than 24 hours (24 * 60 * 60 * 1000 milliseconds)
+    if (timeDiff < 24 * 60 * 60 * 1000) {
+      timerElement.addClass('text-danger');
+    } else {
+      timerElement.removeClass('text-danger');
+    }
+  }
+
+  // Event listener for changes to the auction end time input
+  $('#enter-end-time').on('input', updateCountdown);
+
+  // Update the countdown every second
+  setInterval(updateCountdown, 1000);
+
+  // Initial call to set the countdown based on the default value
+  updateCountdown();
+});

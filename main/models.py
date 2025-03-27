@@ -102,6 +102,34 @@ class User(UserMixin, db.Model):
         for item in finished_items:
             item.finalise_auction()
 
+    # Send a welcome notification to a new user
+    def send_welcome_notification(self):
+        notification = Notification(
+            user_id=self.id,
+            message=f"Welcome to Vintage Vault, {self.username}! Get started by browsing auctions or creating your own.",
+            notification_type=0
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Send welcome notification
+        try:
+            from app import socketio
+            socketio.emit('new_notification', {
+                'id': notification.id,
+                'message': notification.message,
+                'created_at': datetime.now().strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{self.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send welcome notification: {e}")
+            
+        # Send welcome email
+        try:
+            send_notification_email(self, notification)
+        except Exception as e:
+            logger.error(f"Failed to send welcome email: {e}")
+        
+        return notification
 
 # Item Model
 class Item(db.Model):
@@ -178,6 +206,7 @@ class Item(db.Model):
         try:
             from app import socketio
             socketio.emit('new_notification', {
+                'id': notification.id,
                 'message': notification.message,
                 'item_url': notification.item_url, 
                 'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
@@ -207,6 +236,7 @@ class Item(db.Model):
         # Send real-time notification
         from app import socketio
         socketio.emit('new_notification', {
+            'id': notification.id,
             'message': notification.message,
             'item_url': notification.item_url,
             'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
@@ -241,6 +271,7 @@ class Item(db.Model):
             # Send real-time notification
             from app import socketio
             socketio.emit('new_notification', {
+                'id': notification.id,
                 'message': notification.message,
                 'item_url': notification.item_url,
                 'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
@@ -290,6 +321,82 @@ class Item(db.Model):
         }, room=f'user_{self.seller.secret_key}')
 
         send_notification_email(self.seller, notification)
+
+    def notify_payment(self):
+        if not self.winning_bid:
+            return
+
+        try:
+            seller = User.query.get(self.seller_id)
+            if not seller:
+                logger.error(f"Failed to find seller with ID {self.seller_id} for payment notification")
+                return
+                
+            # Create notification
+            notification = Notification(
+                user_id=seller.id,
+                message=f"Payment received! {self.winning_bid.bidder.username} has paid £{self.winning_bid.bid_amount} for '{self.title}'.",
+                item_url=self.url,
+                item_title=self.title,
+                notification_type=7
+            )
+            db.session.add(notification)
+            db.session.commit()
+            
+            # Send real-time notification
+            try:
+                from app import socketio
+                socketio.emit('new_notification', {
+                    'id': notification.id,
+                    'message': notification.message,
+                    'item_url': notification.item_url,
+                    'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+                }, room=f'user_{seller.secret_key}')
+                logger.info(f"Sent payment notification to seller {seller.username} (ID: {seller.id})")
+            except Exception as e:
+                logger.error(f"Failed to send real-time payment notification to seller: {e}")
+                
+            # Send email notification
+            try:
+                send_notification_email(seller, notification)
+                logger.info(f"Sent payment email to seller {seller.username} (ID: {seller.id})")
+            except Exception as e:
+                logger.error(f"Failed to send payment email to seller: {e}")
+        except Exception as e:
+            logger.error(f"Error in notify_payment for seller: {e}")
+        
+        # Notify the buyer
+        self.notify_payment_buyer()
+
+    def notify_payment_buyer(self):
+        if not self.winning_bid:
+            return
+            
+        buyer = User.query.get(self.winning_bid.bidder_id)
+        notification = Notification(
+            user_id=buyer.id,
+            message=f"Payment successful! You have paid £{self.winning_bid.bid_amount} for '{self.title}'.",
+            item_url=self.url,
+            item_title=self.title,
+            notification_type=8
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Send real-time notification
+        try:
+            from app import socketio
+            socketio.emit('new_notification', {
+                'id': notification.id,
+                'message': notification.message,
+                'item_url': notification.item_url,
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
+            }, room=f'user_{buyer.secret_key}')
+        except Exception as e:
+            logger.error(f"Failed to send buyer payment notification: {e}")
+            
+        # Send email
+        send_notification_email(buyer, notification)
 
     # Count the number of users watching an auction
     def watcher_count(self):
@@ -436,6 +543,7 @@ class Notification(db.Model):
     item_url = db.Column(db.String(32), nullable=True)
     item_title = db.Column(db.String(256), nullable=True)
     # Notification type: 0 = Default, 1 = Outbid, 2 = Winner, 3 = Loser, 4 = Authentication Update
+    # 5 = Auction Ended (Sold), 6 = Auction Ended (Unsold)
     notification_type = db.Column(db.Integer, nullable=True, default=0)
 
 
