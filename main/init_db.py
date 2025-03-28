@@ -392,13 +392,13 @@ def populate_db(app):
             item_id=auction11.item_id,
             bidder_id=user2.id,
             bid_amount=51000.00,
-            bid_time=now
+            bid_time=now - timedelta(days=2)
         )
         bid2 = Bid(
             item_id=auction11.item_id,
             bidder_id=user3.id,
             bid_amount=51700.00,
-            bid_time=now
+            bid_time=now - timedelta(days=1, hours=2)
         )
         db.session.add_all([bid1, bid2])
         db.session.commit()
