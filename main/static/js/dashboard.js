@@ -42,7 +42,6 @@ $(document).ready(function() {
                 <p class="fw-bold" id="auction-title"></p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" id="confirm-unwatch-btn">Yes, Unwatch</button>
               </div>
             </div>

@@ -1,5 +1,6 @@
-$(document).ready(function() {
+// Script for the user update forms
 
+$(document).ready(function() {
   function showForm(formId) {
     // When the document is loaded, hide all the forms
     $('#username-form').hide();
@@ -51,5 +52,4 @@ $(document).ready(function() {
   // Render the form the user was last on, or username by default
   let form = localStorage.getItem('activeForm') || 'username';
   showForm(form)
-
 });
