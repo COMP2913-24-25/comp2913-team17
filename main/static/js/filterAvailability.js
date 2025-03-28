@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const weeklyTable = document.getElementById('weeklyTable');
   const dailyTbody = dailyTable.querySelector('tbody');
   const weeklyTbody = weeklyTable ? weeklyTable.querySelector('tbody') : null;
-  const categoryFilter = document.getElementById('categoryFilter');
+  const categoryFilter = document.getElementById('expert-category-filter');
   
   // Read the current timeslot from the data attribute
   const currentSlotStr = dailyTable.getAttribute('data-current-slot');
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Expert table filter on username search
 function filterExperts() {
   const searchTerm = $('#expert-search').val().toLowerCase().trim();
-  const selectedCategory = $('#categoryFilter').val(); // '' means All Categories
+  const selectedCategory = $('#expert-category-filter').val(); // '' means All Categories
 
   $('#dailyTable tbody tr, #weeklyTable tbody tr').each(function() {
     const row = $(this);
@@ -113,5 +113,5 @@ function filterExperts() {
 
 $(document).ready(function() {
   $('#expert-search').on('input', filterExperts);
-  $('#categoryFilter').on('change', filterExperts);
+  $('#expert-category-filter').on('change', filterExperts);
 });
