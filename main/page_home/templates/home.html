@@ -11,9 +11,11 @@
     <div class="row">
       <div class="col-md-8 col-lg-6" data-aos="fade-right" data-aos-duration="1000">
         <h1 class="hero-title">
-          DISCOVER TIMELESS<br> <span id="rotating-word-container"><span id="rotating-word">TREASURES.</span><span class="blinking-cursor">|</span></span>
+          DISCOVER TIMELESS<br> <span id="rotating-word-container"><span id="rotating-word">TREASURES.</span><span
+              class="blinking-cursor">|</span></span>
         </h1>
-        <p class="hero-subtitle">Bid on unique vintage items from around the world. Each piece has a story, each auction a chance to own history.</p>
+        <p class="hero-subtitle">Bid on unique vintage items from around the world. Each piece has a story, each auction
+          a chance to own history.</p>
         {% if not current_user.is_authenticated %}
         <a href="{{ url_for('auth_page.register') }}" class="btn hero-button">JOIN THE VAULT TODAY</a>
         {% elif current_user.role == 1 %}
@@ -66,75 +68,79 @@
   <div class="mb-4 reveal">
     <h2 class="section-title" id="auction-type">LIVE AUCTIONS</h2>
     {% if items %}
-      <div class="d-flex flex-wrap justify-content-center" id="auction-container">
-        {% for item in items %}
-        <div class="auction-grid-wrapper" data-item-id="{{ item.item_id }}" data-title="{{ item.title | lower }}" data-end="{{ item.auction_end.isoformat() }}" data-price="{{ item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price }}" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
-          <a href="{{ url_for('item_page.index', url=item.url) }}" style="text-decoration: none; color: inherit; display: block;">
-            <div class="auction-item">
-              <div class="auction-image-container">
-                {% if item.images %}
-                <img class="auction-image img-fluid"
-                  src="{{ item.images[0].url }}"
-                  alt="Image of {{ item.title }}"
-                  loading="lazy"
-                >
-                {% else %}
-                <div class="placeholder-image">
-                  <i class="fas fa-image fa-3x"></i>
-                  <p class="placeholder-text">No image available</p>
-                </div>
-                {% endif %}
+    <div class="d-flex flex-wrap justify-content-center" id="auction-container">
+      {% for item in items %}
+      <div class="auction-grid-wrapper" data-item-id="{{ item.item_id }}" data-title="{{ item.title | lower }}"
+        data-end="{{ item.auction_end.isoformat() }}"
+        data-price="{{ item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price }}"
+        data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+        <a href="{{ url_for('item_page.index', url=item.url) }}"
+          style="text-decoration: none; color: inherit; display: block;">
+          <div class="auction-item">
+            <div class="auction-image-container">
+              {% if item.images %}
+              <img class="auction-image img-fluid" src="{{ item.images[0].url }}" alt="Image of {{ item.title }}"
+                loading="lazy">
+              {% else %}
+              <div class="placeholder-image">
+                <i class="fas fa-image fa-3x"></i>
+                <p class="placeholder-text">No image available</p>
               </div>
-              <div class="auction-info">
-                <div class="badges">
-                  <div class="badge {% if not item.authentication_requests or item.authentication_requests[0].status == 4 %}bg-secondary
+              {% endif %}
+            </div>
+            <div class="auction-info">
+              <div class="badges">
+                <div class="badge {% if not item.authentication_requests or item.authentication_requests[0].status == 4 %}bg-secondary
                   {% elif item.authentication_requests[0].status == 2 %}bg-success
                   {% elif item.authentication_requests[0].status == 3 %}bg-danger
-                  {% else %}bg-warning{% endif %} authentication-status" 
-                  data-authentication="{{ 0 if not item.authentication_requests else item.authentication_requests[0].status }}" title="Authentication Status">
+                  {% else %}bg-warning{% endif %} authentication-status"
+                  data-authentication="{{ 0 if not item.authentication_requests else item.authentication_requests[0].status }}"
+                  title="Authentication Status">
                   {% if not item.authentication_requests or item.authentication_requests[0].status == 4 %}
-                      <i class="fas fa-question-circle me-1"></i> NOT AUTHENTICATED
+                  <i class="fas fa-question-circle me-1"></i> NOT AUTHENTICATED
                   {% elif item.authentication_requests[0].status == 2 %}
-                      <i class="fas fa-check-circle me-1"></i> AUTHENTICATED
+                  <i class="fas fa-check-circle me-1"></i> AUTHENTICATED
                   {% elif item.authentication_requests[0].status == 3 %}
-                      <i class="fas fa-times-circle me-1"></i> DECLINED
+                  <i class="fas fa-times-circle me-1"></i> DECLINED
                   {% else %}
-                      <i class="fas fa-clock me-1"></i> AUTHENTICATION PENDING
+                  <i class="fas fa-clock me-1"></i> AUTHENTICATION PENDING
                   {% endif %}
-                  </div>
-                  
-                  <span class="badge bg-info category" data-category="{{ item.category.id }}" {% if item.category.description %}title="{{ item.category.description }}"{% endif %}>
-                    <i class="fas fa-tag me-1"></i> {{ item.category.name }}
+                </div>
+
+                <span class="badge bg-info category" data-category="{{ item.category.id }}" {% if
+                  item.category.description %}title="{{ item.category.description }}" {% endif %}>
+                  <i class="fas fa-tag me-1"></i> {{ item.category.name }}
+                </span>
+              </div>
+              <h3 class="auction-title" title="{{ item.title }}">{{ item.title }}</h3>
+              <div class="bid-info">
+                <div class="d-flex justify-content-between">
+                  {% set highest_bid = item.highest_bid() %}
+                  {% set minimum_price = item.minimum_price %}
+                  <span class="auction-price">
+                    £{{ highest_bid.bid_amount if highest_bid else minimum_price }}
+                  </span>
+                  <span class="bid-count">
+                    <i class="fas fa-gavel ms-1"></i> {{ item.bids|length }} bid{{ "s" if item.bids|length != 1 }}
                   </span>
                 </div>
-                <h3 class="auction-title" title="{{ item.title }}">{{ item.title }}</h3>
-                <div class="bid-info">
-                  <div class="d-flex justify-content-between">
-                    {% set highest_bid = item.highest_bid() %}
-                    {% set minimum_price = item.minimum_price %}
-                    <span class="auction-price">
-                      £{{ highest_bid.bid_amount if highest_bid else minimum_price }}
-                    </span>
-                    <span class="bid-count">
-                      <i class="fas fa-gavel ms-1"></i> {{ item.bids|length }} bid{{ "s" if item.bids|length != 1 }}
-                    </span>
-                  </div>
-                  <div class="auction-end-date">
-                    <i class="far fa-clock me-1"></i>
-                    <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">{{ item.auction_end.strftime('%y-%m-%d %H:%M') }}</span>
-                  </div>
+                <div class="auction-end-date">
+                  <i class="far fa-clock me-1"></i>
+                  <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">{{
+                    item.auction_end.strftime('%y-%m-%d %H:%M') }}</span>
                 </div>
               </div>
             </div>
-          </a>
-        </div>
-        {% endfor %}
+          </div>
+        </a>
       </div>
-      <div id="no-results" class="mt-4 d-none text-center p-5">
-        <i class="fas fa-search fa-3x mb-3 text-muted"></i>
-        <p class="lead mono">No auctions matching your search criteria.</p>
-        <p class="mono">Try adjusting your filters or search terms.</p>
-      </div>
+      {% endfor %}
+    </div>
+    <div id="no-results" class="mt-4 d-none text-center p-5">
+      <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+      <p class="lead mono">No auctions matching your search criteria.</p>
+      <p class="mono">Try adjusting your filters or search terms.</p>
+    </div>
     {% else %}
     <div class="text-center p-5">
       <i class="fas fa-box-open fa-3x mb-3 text-muted"></i>
@@ -142,7 +148,8 @@
       {% if current_user.is_authenticated and current_user.role == 1 %}
       <a href="{{ url_for('create_page.index') }}" class="btn btn-primary mt-2">CREATE AN AUCTION</a>
       {% else %}
-      <p class="mono">Check back soon or <a href="{{ url_for('auth_page.register') }}" style="color: var(--accent-color); text-decoration: none;">register</a> to create your own auctions.</p>
+      <p class="mono">Check back soon or <a href="{{ url_for('auth_page.register') }}"
+          style="color: var(--accent-color); text-decoration: none;">register</a> to create your own auctions.</p>
       {% endif %}
     </div>
     {% endif %}
@@ -156,7 +163,8 @@
       <!-- About Us Image -->
       <div class="col-12 col-md-4 mb-4 mb-md-0">
         <div class="about-image-container">
-          <img src="{{ url_for('static', filename='images/about-us.jpeg') }}" alt="About Vintage Vault" class="img-fluid rounded shadow-lg">
+          <img src="{{ url_for('static', filename='images/about-us.jpeg') }}" alt="About Vintage Vault"
+            class="img-fluid rounded shadow-lg">
         </div>
       </div>
       <!-- About Us Text -->
@@ -165,15 +173,22 @@
           <div class="col-12">
             <h2 class="fw-bold">Thinking Of Selling?</h2>
             <h2>Let Us Handle The Details.</h2>
-            <p class="mt-4">Welcome to VINTAGE VAULT, where we connect sellers with authentic items to passionate collectors worldwide. Our mission is to provide a secure, transparent, and enjoyable auction experience.</p>
-            <p>What sets us apart is our rigorous authentication process, ensuring that every item marked as "Authenticated" has been verified by our team of experts.</p>
-            <p>Whether you're a seasoned collector or new to auctions, our platform offers an intuitive experience with detailed item descriptions, secure payment processing, and responsive customer service.</p>
+            <p class="mt-4">Welcome to VINTAGE VAULT, where we connect sellers with authentic items to passionate
+              collectors worldwide. Our mission is to provide a secure, transparent, and enjoyable auction experience.
+            </p>
+            <p>What sets us apart is our rigorous authentication process, ensuring that every item marked as
+              "Authenticated" has been verified by our team of experts.</p>
+            <p>Whether you're a seasoned collector or new to auctions, our platform offers an intuitive experience with
+              detailed item descriptions, secure payment processing, and responsive customer service.</p>
             {% if not current_user.is_authenticated %}
-            <a href="{{ url_for('auth_page.register') }}" class="btn btn-accent mt-3 fw-bold">JOIN US <i class="bi bi-arrow-right"></i></a>
+            <a href="{{ url_for('auth_page.register') }}" class="btn btn-accent mt-3 fw-bold">JOIN US <i
+                class="bi bi-arrow-right"></i></a>
             {% elif current_user.role == 1 %}
-            <a href="{{ url_for('create_page.index') }}" class="btn btn-accent mt-3 fw-bold">CREATE AN AUCTION <i class="bi bi-arrow-right"></i></a>
+            <a href="{{ url_for('create_page.index') }}" class="btn btn-accent mt-3 fw-bold">CREATE AN AUCTION <i
+                class="bi bi-arrow-right"></i></a>
             {% else %}
-            <a href="{{ url_for('dashboard_page.index') }}" class="btn hero-button">GO TO DASHBOARD <i class="bi bi-arrow-right"></i></a>
+            <a href="{{ url_for('dashboard_page.index') }}" class="btn hero-button">GO TO DASHBOARD <i
+                class="bi bi-arrow-right"></i></a>
             {% endif %}
           </div>
         </div>
