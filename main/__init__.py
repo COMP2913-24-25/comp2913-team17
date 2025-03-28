@@ -182,13 +182,13 @@ def create_app(testing=False, database_path='database.db'):
     @login_manager.user_loader
     def load_user(user_id):
         from .models import User
-        return db.session.query(User).get(int(user_id))
+        return db.session.get(User, int(user_id))
     
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('404.html'), 404
 
-    # Initialize rate limiter
+    # Initialise rate limiter
     configure_limiter(app)
 
     return app
