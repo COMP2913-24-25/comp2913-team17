@@ -40,7 +40,7 @@ def get_expertise(expert, item):
         for cat in expert.expert_categories:
             if cat.category_id == item.category_id:
                 return 'Expert'
-    return 'Not Expert'
+    return 'No Expertise'
 
 def calculate_expert_suitability(expert, request, all_experts_assignments, now):
     # Calculate an expert's suitability score for a request.
