@@ -345,10 +345,10 @@ def populate_db(app):
             seller_id=user1.id,
             title='Ferrari',
             description='A vintage sports car in pristine condition.',
-            upload_date=now - timedelta(days=10),
-            auction_start=now - timedelta(days=10),
-            auction_end=now - timedelta(days=1),
-            minimum_price=90000.00,
+            upload_date=now - timedelta(days=1),
+            auction_start=now - timedelta(days=1),
+            auction_end=now + timedelta(days=3),
+            minimum_price=50000.00,
             category_id=cat9.id
         )
         image19 = Image(
@@ -391,13 +391,13 @@ def populate_db(app):
         bid1 = Bid(
             item_id=auction11.item_id,
             bidder_id=user2.id,
-            bid_amount=94000.00,
+            bid_amount=51700.00,
             bid_time=now
         )
         bid2 = Bid(
             item_id=auction11.item_id,
             bidder_id=user1.id,
-            bid_amount=92000.00,
+            bid_amount=50000.00,
             bid_time=now
         )
         db.session.add_all([bid1, bid2])
