@@ -25,7 +25,6 @@ def on_join(data):
     elif room:
         join_room(f'user_{room}')
 
-
 # Apply stricter rate limits to login route
 @auth_page.route('/login', methods=['GET', 'POST'])
 @limiter.limit("100 per minute", methods=["POST"], error_message="Too many login attempts. Please try again later.")
@@ -82,7 +81,6 @@ def login():
                 flash('Your account has been locked due to multiple failed login attempts. Try again in 15 minutes.', 'danger')
 
     return render_template('login.html', form=form)
-
 
 # Apply rate limits to registration
 @auth_page.route('/register', methods=['GET', 'POST'])
@@ -230,7 +228,6 @@ def logout():
         logout_user()
     return redirect(url_for('home_page.index'))
 
-
 # Apply rate limits to OAuth2 authorization
 @auth_page.route('/authorize/<provider>')
 @limiter.limit("10 per hour")
@@ -259,7 +256,6 @@ def oauth2_authorise(provider):
 
     # Redirect the user to the OAuth2 provider authorisation URL
     return redirect(provider_data['authorize_url'] + "?" + qs)
-
 
 # Apply rate limits to OAuth2 callback
 @auth_page.route('/callback/<provider>')
@@ -325,6 +321,8 @@ def oauth2_callback(provider):
         flash(f'Account is temporarily locked. Try again in {int(remaining_time)} minutes.', 'danger')
         return render_template('login.html', form=form)
 
-    # Log the user in
+    # Log the user in and reset their login attempts
+    user.reset_login_attempts()
+    db.session.commit()
     login_user(user)
     return redirect(url_for('home_page.index'))
