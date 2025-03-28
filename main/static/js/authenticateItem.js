@@ -31,7 +31,6 @@ $(document).ready(function() {
                 <p><strong>Warning:</strong> This action cannot be undone.</p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-success" id="confirm-authenticate-btn">Yes, Authenticate</button>
               </div>
             </div>
@@ -64,7 +63,6 @@ $(document).ready(function() {
                 <p><strong>Warning:</strong> This action cannot be undone.</p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" id="confirm-decline-btn">Yes, Decline</button>
               </div>
             </div>
@@ -97,7 +95,6 @@ $(document).ready(function() {
                 <p><strong>Warning:</strong> This action cannot be undone.</p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="confirm-reassign-btn">Yes, Reassign</button>
               </div>
             </div>

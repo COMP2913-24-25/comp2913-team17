@@ -1,3 +1,5 @@
+// Payment processing script
+
 // Retrieve the CSRF token from the meta tag
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -79,7 +81,6 @@ function showPaymentConfirmation(itemData, callback) {
             <p>You will be redirected to Stripe's secure payment page.</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-primary" id="confirm-payment-btn">Proceed to Payment</button>
           </div>
         </div>

@@ -35,11 +35,7 @@ $(document).ready(function() {
     }
   });
 
-  /*
-   * Delete buttons are not rendered until user selects images
-   * attach event to parent window and target delete buttons
-   * to attach the click events 
-   */
+  // Delete buttons are not rendered until user selects images
   $(document).on('click', '.delete-btn', function() {
     // Target the image element using its index
     let index = $(this).data('index');

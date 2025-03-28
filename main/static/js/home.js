@@ -161,9 +161,9 @@ $(document).ready(function() {
       const authStatusElement = element.closest('.auction-info').find('.authentication-status');
       
       if (authStatusElement.data('authentication') == 1) {
-          authStatusElement.attr('data-authentication', '4');
-          authStatusElement.removeClass('bg-warning').addClass('bg-secondary');
-          authStatusElement.html('<i class="fas fa-question-circle me-1"></i> NOT AUTHENTICATED');
+        authStatusElement.attr('data-authentication', '4');
+        authStatusElement.removeClass('bg-warning').addClass('bg-secondary');
+        authStatusElement.html('<i class="fas fa-question-circle me-1"></i> NOT AUTHENTICATED');
       }
       return;
     }
