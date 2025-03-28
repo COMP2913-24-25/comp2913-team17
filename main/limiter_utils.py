@@ -14,15 +14,15 @@ limiter = Limiter(
 def configure_limiter(app):
     """Configure the rate limiter with the Flask app."""
     limiter.init_app(app)
-    
+
     # Set default limits for all routes
     limiter.default_limits = ["1000 per minutes"]
-    
+
     # Add exempt paths for static files
     @limiter.request_filter
     def exempt_static_paths():
         return request.path.startswith('/static')
-    
+
     return limiter
 
 def get_limiter():
