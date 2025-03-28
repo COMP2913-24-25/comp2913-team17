@@ -70,66 +70,68 @@ $(document).ready(function() {
       
       // Show/hide based on all filters
       if (passesTypeFilter && passesCategoryFilter && passesAuthFilter && passesSearchFilter) {
-        $item.show();
+        $item.css('display', '');
         visibleItems++;
       } else {
-        $item.hide();
+        $item.css('display', 'none');
       }
     });
     
-    // Sort visible items
-    items.sort(function(a, b) {
-      const $a = $(a);
-      const $b = $(b);
-      const isAVisible = $a.is(':visible');
-      const isBVisible = $b.is(':visible');
+    // Only sort and rearrange if there are items to show
+    if (visibleItems > 0) {
+      // Sort visible items
+      items.sort(function(a, b) {
+        const $a = $(a);
+        const $b = $(b);
+        const isAVisible = $a.css('display') !== 'none';
+        const isBVisible = $b.css('display') !== 'none';
+        
+        // Prioritize visible items
+        if (isAVisible && !isBVisible) return -1;
+        if (!isAVisible && isBVisible) return 1;
+        if (!isAVisible && !isBVisible) return 0;
+        
+        // Both visible, apply sorting
+        switch (sortOption) {
+          case 'price-low-high':
+            return parseFloat($a.data('price')) - parseFloat($b.data('price'));
+          case 'price-high-low':
+            return parseFloat($b.data('price')) - parseFloat($a.data('price'));
+          case 'ending-soonest':
+            const isAEnded = $a.find('.countdown').hasClass('countdown-ended');
+            const isBEnded = $b.find('.countdown').hasClass('countdown-ended');
+            // If one is ended and the other isn't, ended goes to the bottom
+            if (isAEnded && !isBEnded) return 1;
+            if (!isAEnded && isBEnded) return -1;
+            // Both active or both ended, sort by end time ascending
+            return new Date($a.data('end')) - new Date($b.data('end'));
+          case 'ending-latest':
+            return new Date($b.data('end')) - new Date($a.data('end'));
+          case 'title-a-z':
+            return $a.data('title').localeCompare($b.data('title'));
+          default:
+            return 0;
+        }
+      });
       
-      // Prioritize visible items
-      if (isAVisible && !isBVisible) return -1;
-      if (!isAVisible && isBVisible) return 1;
-      if (!isAVisible && !isBVisible) return 0;
+      // Re-append sorted items to container without affecting animation
+      const $container = $('#auction-container');
+      // Store the current scroll position
+      const scrollTop = $(window).scrollTop();
       
-      // Both visible, apply sorting
-      switch (sortOption) {
-        case 'price-low-high':
-          return parseFloat($a.data('price')) - parseFloat($b.data('price'));
-        case 'price-high-low':
-          return parseFloat($b.data('price')) - parseFloat($a.data('price'));
-        case 'ending-soonest':
-          const isAEnded = $a.find('.countdown').hasClass('countdown-ended');
-          const isBEnded = $b.find('.countdown').hasClass('countdown-ended');
-          // If one is ended and the other isn't, ended goes to the bottom
-          if (isAEnded && !isBEnded) return 1;
-          if (!isAEnded && isBEnded) return -1;
-          // Both active or both ended, sort by end time ascending
-          return new Date($a.data('end')) - new Date($b.data('end'));
-        case 'ending-latest':
-          return new Date($b.data('end')) - new Date($a.data('end'));
-        case 'title-a-z':
-          return $a.data('title').localeCompare($b.data('title'));
-        default:
-          return 0; // Fallback, no sorting
-      }
-    });
+      // Detach all items
+      const $items = $('.auction-grid-wrapper').detach();
+      
+      // Re-append in sorted order
+      items.forEach(function(item) {
+        $container.append(item);
+      });
+      
+      // Restore scroll position to prevent jumps
+      $(window).scrollTop(scrollTop);
+    }
     
-    // Re-append sorted items to container with animation reset
-    const $container = $('#auction-container');
-    $container.empty();
-    items.forEach(function(item, index) {
-      const $item = $(item);
-      // Reset AOS attributes and classes for re-animation
-      $item.removeClass('aos-init aos-animate')
-           .attr('data-aos', 'fade-up')
-           .attr('data-aos-delay', index * 50);
-      $container.append($item);
-    });
-    
-    // Use a slight delay to ensure DOM updates before triggering animations
-    setTimeout(function() {
-      AOS.refreshHard(); // Force re-animation of all items
-    }, 50);
-    
-    // Show or hide the "no results" message
+    // Display "no results" message as appropriate
     if (visibleItems === 0) {
       $('#no-results').removeClass('d-none');
     } else {
@@ -143,9 +145,6 @@ $(document).ready(function() {
   $('#type-filter').on('change', applyFiltersAndSort);
   $('#authenticated-only').on('change', applyFiltersAndSort);
   $('#sort-filter').on('change', applyFiltersAndSort);
-  
-  // Initial application of filters and sorting
-  applyFiltersAndSort();
   
   function updateCountdown(element) {
     const endTime = element.data('end');
@@ -273,19 +272,34 @@ $(document).ready(function() {
     setTimeout(typeEffect, 1500);
   }
 
-  // Initialize AOS Animations
   AOS.init({
-    once: false, // Allow re-animation
-    disable: 'mobile',
-    duration: 800
+    once: false,
+    disable: false,
+    duration: 800,
+    startEvent: 'DOMContentLoaded',
+    offset: 50
+  });
+  
+  // Make sure AOS is initialised properly after all content is loaded
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      AOS.refresh();
+    }, 500);
+  });
+  
+  // Refresh AOS when changing orientation
+  window.addEventListener('orientationchange', function() {
+    setTimeout(function() {
+      AOS.refresh();
+    }, 300);
   });
   
   // Reveal animations on scroll
   function reveal() {
     const reveals = document.querySelectorAll('.reveal');
+    const windowHeight = window.innerHeight;
     
     for (let i = 0; i < reveals.length; i++) {
-      const windowHeight = window.innerHeight;
       const revealTop = reveals[i].getBoundingClientRect().top;
       const revealPoint = 150;
       
@@ -301,4 +315,5 @@ $(document).ready(function() {
   // Set default to live auctions
   $('#type-filter').val('1');
   $('#auction-type').text('Live Auctions');
+  applyFiltersAndSort();
 });

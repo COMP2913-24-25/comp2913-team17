@@ -60,7 +60,7 @@ $(document).ready(function() {
         // Create and show the modal
         if ($('#unwatchConfirmationModal').length === 0) {
             $('body').append(`
-                <div class="modal fade" id="unwatchConfirmationModal" tabindex="-1" aria-labelledby="unwatchConfirmationModalLabel" aria-hidden="true">
+                <div class="modal fade" id="unwatchConfirmationModal" tabindex="-1" aria-labelledby="unwatchConfirmationModalLabel">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">

@@ -17,8 +17,6 @@ $(document).ready(function() {
   });
 
   function showAuthenticateConfirmation() {
-    console.log("Showing authenticate confirmation");
-
     if ($('#authenticateConfirmationModal').length === 0) {
       $('body').append(`
         <div class="modal fade" id="authenticateConfirmationModal" tabindex="-1" aria-labelledby="authenticateConfirmationModalLabel" aria-hidden="true">
@@ -52,8 +50,6 @@ $(document).ready(function() {
   }
 
   function showDeclineConfirmation() {
-    console.log("Showing decline confirmation");
-  
     if ($('#declineConfirmationModal').length === 0) {
       $('body').append(`
         <div class="modal fade" id="declineConfirmationModal" tabindex="-1" aria-labelledby="declineConfirmationModalLabel" aria-hidden="true">
@@ -87,8 +83,6 @@ $(document).ready(function() {
   }
 
   function showReassignConfirmation() {
-    console.log("Showing reassign confirmation");
-    
     if ($('#reassignConfirmationModal').length === 0) {
       $('body').append(`
         <div class="modal fade" id="reassignConfirmationModal" tabindex="-1" aria-labelledby="reassignConfirmationModalLabel" aria-hidden="true">

@@ -19,7 +19,7 @@ socketio = SocketIO()
 scheduler = None
 mail = Mail()
 
-def create_app(testing=False):
+def create_app(testing=False, database_path='database.db'):
     """Creates and configures the Flask app."""
     global scheduler
 
@@ -51,10 +51,12 @@ def create_app(testing=False):
             'poolclass': NullPool,
             'connect_args': {}
         }
-    else:
+    elif not testing:
         # Local SQLite database
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
-
+    else:
+        # Testing SQLite database
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, database_path)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialise security features
