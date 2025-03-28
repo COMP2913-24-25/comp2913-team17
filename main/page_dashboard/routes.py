@@ -40,7 +40,7 @@ def get_expertise(expert, item):
         for cat in expert.expert_categories:
             if cat.category_id == item.category_id:
                 return 'Expert'
-    return 'Not Expert'
+    return 'No Expertise'
 
 def calculate_expert_suitability(expert, request, all_experts_assignments, now):
     # Calculate an expert's suitability score for a request.
@@ -842,9 +842,9 @@ def bulk_auto_assign_experts():
 
     # Send notifications
     for assignment in assignments_made:
-        expert = User.query.get(assignment['expert_id'])
-        auth_request = AuthenticationRequest.query.get(assignment['request_id'])
-
+        expert = db.session.get(User, assignment['expert_id'])
+        auth_request = db.session.get(AuthenticationRequest, assignment['request_id'])
+        
         try:
             socketio.emit('new_notification', {
                 'message': f'You have been assigned to authenticate {auth_request.item.title}',
@@ -972,7 +972,7 @@ def update_dur():
 
     new_dur = request.json.get('days')
     if not isinstance(new_dur, int):
-        return jsonify({'error': 'Invalid fee'}), 400
+        return jsonify({'error': 'Invalid duration'}), 400
 
     if new_dur < 1:
         return jsonify({'error': 'Duration cannot be less than 1 day'}), 400

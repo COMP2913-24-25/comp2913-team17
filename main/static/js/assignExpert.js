@@ -277,7 +277,6 @@ $(document).ready(function() {
               ${body}
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
               <button type="button" class="btn btn-primary" id="confirm-assign-btn">${confirmBtnText}</button>
             </div>
           </div>

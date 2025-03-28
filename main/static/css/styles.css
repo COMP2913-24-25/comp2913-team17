@@ -285,10 +285,15 @@ h1, h2, h3, h4, h5 {
   font-family: var(--font-mono);
 }
 
+.alert-error {
+  background-color: var(--accent-color);
+}
+
 .alert-danger,
 .alert-success,
 .alert-info,
-.alert-warning {
+.alert-warning,
+.alert-error {
   color: black;
 }
 

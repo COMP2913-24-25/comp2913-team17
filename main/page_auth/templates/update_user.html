@@ -37,8 +37,8 @@
               <i class="fas fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
                 title="Usernames can be between 2 and 16 characters">
               </i>
-              {{ update_username_form.new_username(class_="form-control required-field", placeholder="Enter a new
-              username", id_="new-username", maxlength_="16", autocomplete="username") }}
+              {{ update_username_form.new_username(class_="form-control required-field", placeholder="Enter a new username", 
+              id_="new-username", maxlength_="16", autocomplete="username") }}
               {% for error in update_username_form.new_username.errors %}
               <div class="form-warning" role="alert">
                 {{ error }}
@@ -49,8 +49,8 @@
               <label for="current-password" class="form-label">
                 Password
               </label>
-              {{ update_username_form.current_password(class_="form-control required-field", placeholder="Enter your
-              password", id_="current-password", autocomplete="current-password") }}
+              {{ update_username_form.current_password(class_="form-control required-field", placeholder="Enter your password",
+              id_="current-password", autocomplete="current-password") }}
               {% for error in update_username_form.current_password.errors %}
               <div class="form-warning" role="alert">
                 {{ error }}
@@ -88,8 +88,8 @@
               <label for="current-password-email" class="form-label">
                 Password
               </label>
-              {{ update_email_form.current_password(class_="form-control required-field", placeholder="Enter your
-              password", id_="current-password-email", autocomplete="current-password") }}
+              {{ update_email_form.current_password(class_="form-control required-field", placeholder="Enter your password",
+              id_="current-password-email", autocomplete="current-password") }}
               {% for error in update_email_form.current_password.errors %}
               <div class="form-warning" role="alert">
                 {{ error }}
@@ -112,8 +112,8 @@
               <label for="current-password-password" class="form-label">
                 Current Password
               </label>
-              {{ update_password_form.current_password(class_="form-control required-field", placeholder="Enter your
-              current password", id_="current-password-password", autocomplete="current-password") }}
+              {{ update_password_form.current_password(class_="form-control required-field", placeholder="Enter your current password",
+              id_="current-password-password", autocomplete="current-password") }}
               {% for error in update_password_form.current_password.errors %}
               <div class="form-warning" role="alert">
                 {{ error }}
@@ -131,8 +131,8 @@
 - Contain at least one number
 - Contain at least one special character (e.g. %*!&)">
               </i>
-              {{ update_password_form.new_password(class_="form-control required-field", placeholder="Enter a new
-              password", id_="new-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
+              {{ update_password_form.new_password(class_="form-control required-field", placeholder="Enter a new password",
+              id_="new-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
               {% for error in update_password_form.new_password.errors %}
               <div class="form-warning" role="alert">
                 {{ error }}
@@ -143,8 +143,8 @@
               <label for="confirm-password" class="form-label">
                 Confirm New Password
               </label>
-              {{ update_password_form.confirm_password(class_="form-control required-field", placeholder="Confirm your
-              new password", id_="confirm-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
+              {{ update_password_form.confirm_password(class_="form-control required-field", placeholder="Confirm your new password",
+              id_="confirm-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
               {% for error in update_password_form.confirm_password.errors %}
               <div class="form-warning" role="alert">
                 {{ error }}

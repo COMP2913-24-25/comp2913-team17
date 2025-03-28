@@ -56,7 +56,6 @@ $(document).ready(function() {
       }
       setTimeout(footerTypeEffect, typingSpeed);
     }
-    
     setTimeout(footerTypeEffect, 3000);
   }
 });

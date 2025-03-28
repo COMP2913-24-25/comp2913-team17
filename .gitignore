@@ -197,3 +197,5 @@ Thumbs.db
 
 # DB
 database.db
+database.db.backup
+database_test.db

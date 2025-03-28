@@ -18,7 +18,7 @@ socketio = SocketIO()
 scheduler = None
 mail = Mail()
 
-def create_app(testing=False):
+def create_app(testing=False, database_path='database.db'):
     """Creates and configures the Flask app."""
     global scheduler
 
@@ -38,7 +38,10 @@ def create_app(testing=False):
     app.config['STRIPE_WEBHOOK_SECRET'] = os.environ.get('STRIPE_WEBHOOK_SECRET')
 
     # Configure the database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+    if not testing:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, database_path)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialise security features
@@ -72,17 +75,17 @@ def create_app(testing=False):
 
     # Configure email settings for Flask-Mail
     app.config.update(
-        MAIL_SERVER='smtp.gmail.com',
-        MAIL_PORT=587,
-        MAIL_USE_TLS=True,
-        MAIL_USERNAME=os.environ.get('EMAIL_USER'),
-        MAIL_PASSWORD=os.environ.get('EMAIL_PASSWORD'),
-        MAIL_DEFAULT_SENDER=os.environ.get('EMAIL_USER')
+        MAIL_SERVER = 'smtp.gmail.com',
+        MAIL_PORT = 587,
+        MAIL_USE_TLS = True,
+        MAIL_USERNAME = os.environ.get('EMAIL_USER'),
+        MAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD'),
+        MAIL_DEFAULT_SENDER = os.environ.get('EMAIL_USER')
     )
-
+    
     # Add BASE_URL for generating links in emails
     app.config['BASE_URL'] = os.environ.get('BASE_URL', '127.0.0.1:5000')
-
+    
     # Initialize Mail
     mail.init_app(app)
 
@@ -158,8 +161,8 @@ def create_app(testing=False):
     @login_manager.user_loader
     def load_user(user_id):
         from .models import User
-        return db.session.query(User).get(int(user_id))
-
+        return db.session.get(User, int(user_id))
+    
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('404.html'), 404

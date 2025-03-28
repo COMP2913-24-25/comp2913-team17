@@ -1,0 +1,59 @@
+/* Manager Expert View page styling */
+
+.expert-search-container {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+  
+.expert-search-wrapper {
+    display: flex;
+    border: 1.5px solid var(--primary-color);
+    background-color: #fff;
+    overflow: hidden;
+    border-radius: 0;
+}
+  
+.expert-search-input,
+.expert-filter-dropdown {
+    height: 48px;
+    box-sizing: border-box;
+}
+  
+.expert-search-input {
+    flex: 1;
+    padding: 0.8rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    border: none;
+    border-right: 1.5px solid var(--primary-color);
+    border-radius: 0;
+    width: 100%;
+}
+  
+.expert-search-input:focus {
+    outline: none;
+    box-shadow: none;
+}
+  
+.expert-filter-dropdown {
+    width: 180px;
+    padding: 0.8rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    background-color: var(--tertiary-color);
+    border: none;
+    cursor: pointer;
+}
+  
+.expert-filter-dropdown:focus {
+    outline: none;
+    box-shadow: none;
+}
+  
+.green-now {
+    background-color: #0c5935 !important;
+}
+
+.red-now {
+    background-color: #ad2330 !important;
+}
