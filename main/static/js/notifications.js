@@ -1,3 +1,5 @@
+// Sitewide notification script
+
 $(document).ready(function() {
   const userKey = $('meta[name="user-key"]').attr('content');
   if (!userKey) return;

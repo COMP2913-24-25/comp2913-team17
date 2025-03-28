@@ -1,3 +1,5 @@
+// Newletter subscription script
+
 $(document).ready(function() {
   const emailInput = $('#newsletter-email');
   const subscribeBtn = $('#newsletter-subscribe');
