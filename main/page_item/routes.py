@@ -56,7 +56,7 @@ def index(url):
     
     bids = item.bids[::-1]
     suggested_bid = (item.highest_bid().bid_amount + decimal.Decimal('0.01')
-                     if item.highest_bid() else item.minimum_price + decimal.Decimal('0.01'))
+                     if item.highest_bid() else item.minimum_price)
     
     is_auction_over = datetime.now() >= item.auction_end
     is_winner = False
@@ -138,8 +138,14 @@ def place_bid(url):
         if bid_amount > 999999.00:
             return jsonify({'error': 'Bid amount cannot exceed £999,999.'}), 400
 
-        if current_highest and bid_amount <= current_highest.bid_amount:
-            return jsonify({'error': 'Your bid must be higher than the current bid.'}), 400
+        if current_highest is None:
+            # No bids yet: bid must be at least the minimum price
+            if bid_amount < item.minimum_price:
+                return jsonify({'error': 'Your bid must be at least the minimum price.'}), 400
+        else:
+            # Current bid: new bid must be strictly greater than the current bid
+            if bid_amount <= current_highest.bid_amount:
+                return jsonify({'error': 'Your bid must be higher than the current bid.'}), 400
 
         if bid_amount < item.minimum_price:
             return jsonify({'error': 'Your bid must be at least the minimum price.'}), 400
