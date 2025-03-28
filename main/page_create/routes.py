@@ -22,7 +22,7 @@ def index():
         base_fee = float(
             ManagerConfig.query.filter_by(config_key='base_platform_fee').first().config_value
         )
-        
+
     except (ValueError, AttributeError):
         base_fee = 1.00
 
@@ -57,7 +57,7 @@ def index():
         # checks that the user has uploaded an image and skips db entry if not
         for image in images:
             if image.filename == '':
-              continue
+                continue
             filename = secure_filename(image.filename)
             image_filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{filename}'
             image_url = upload_s3(image, image_filename, folder='auction_items')

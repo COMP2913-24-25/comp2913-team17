@@ -44,24 +44,24 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        
+
         # Check if user exists
         if not user:
             flash('This user account does not exist. Please create a new account.', 'warning')
             return render_template('login.html', form=form)
-        
+
         # Check if account is locked
         if user.is_account_locked():
             remaining_time = (user.locked_until - datetime.now()).total_seconds() / 60
             flash(f'Account is temporarily locked. Try again in {int(remaining_time)} minutes.', 'danger')
             return render_template('login.html', form=form)
-        
+
         # Validate password
         if user.check_password(form.password.data):
             # Reset failed attempts on successful login
             user.reset_login_attempts()
             db.session.commit()
-            
+
             login_user(user)
             flash('Successfully logged in!', 'success')
             next_page = request.args.get('next')
@@ -70,16 +70,17 @@ def login():
             # Increment failed attempts on unsuccessful login
             user.increment_login_attempts()
             db.session.commit()
-            
+
             # Calculate and display remaining attempts
             max_attempts = 5
             remaining_attempts = max_attempts - user.failed_login_attempts
-            
+
             if remaining_attempts > 0:
-                flash(f'Failed login. {remaining_attempts} {"attempt" if remaining_attempts == 1 else "attempts"} remaining before your account is locked.', 'danger')
+                flash(
+                    f'Failed login. {remaining_attempts} {"attempt" if remaining_attempts == 1 else "attempts"} remaining before your account is locked.', 'danger')
             else:
                 flash('Your account has been locked due to multiple failed login attempts. Try again in 15 minutes.', 'danger')
-    
+
     return render_template('login.html', form=form)
 
 
@@ -112,7 +113,7 @@ def register():
 
             db.session.add(user)
             db.session.commit()
-            
+
             # Initialise welcome notificaition to a new user
             user.send_welcome_notification()
 
@@ -131,14 +132,13 @@ def update_user():
     update_email_form = UpdateEmailForm()
     update_password_form = UpdatePasswordForm()
 
-
     # Mask current email before rendering the template
     email = current_user.email
     mask_start, domain = email.split('@')
     if len(mask_start) > 2:
-      masked_email = mask_start[0] + '*' * (len(mask_start) - 2) + mask_start[-1] + '@' + domain
+        masked_email = mask_start[0] + '*' * (len(mask_start) - 2) + mask_start[-1] + '@' + domain
     else:
-      masked_email = '*' * (len(mask_start)) + '@' + domain  
+        masked_email = '*' * (len(mask_start)) + '@' + domain
 
     ### Username Change ###
     # Check 1: Username isn't already taken
@@ -147,7 +147,7 @@ def update_user():
     if update_username_form.validate_on_submit():
         current_password = update_username_form.current_password.data
         new_username = update_username_form.new_username.data
-        
+
         # Check 2
         if not current_user.check_password(current_password):
             flash("Incorrect current password", "danger")
@@ -170,7 +170,7 @@ def update_user():
     elif update_email_form.validate_on_submit():
         current_password = update_email_form.current_password.data
         new_email = update_email_form.new_email.data
-        
+
         # Check 2
         if not current_user.check_password(current_password):
             flash("Incorrect current password", "danger")
@@ -195,7 +195,7 @@ def update_user():
         current_password = update_password_form.current_password.data
         new_password = update_password_form.new_password.data
         confirm_password = update_password_form.confirm_password.data
-        
+
         # Check 1
         if not current_user.check_password(current_password):
             flash("Incorrect current password", "danger")
@@ -217,7 +217,7 @@ def update_user():
             return redirect(url_for('auth_page.login'))
 
     return render_template(
-        'update_user.html', 
+        'update_user.html',
         update_username_form=update_username_form,
         update_email_form=update_email_form,
         update_password_form=update_password_form,
@@ -317,7 +317,7 @@ def oauth2_callback(provider):
     if user is None:
         flash('You must register before using Google login')
         return redirect(url_for('auth_page.register', email=email))
-    
+
     # Check if account is locked
     if user.is_account_locked():
         form = LoginForm()

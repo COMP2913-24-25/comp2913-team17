@@ -1,8 +1,8 @@
 from datetime import date, datetime, timedelta
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash
 from flask_login import current_user, login_required
 from ..models import User, ExpertAvailability, Category
-from . import manager_page 
+from . import manager_page
 
 @manager_page.route('/expert_availability')
 @login_required
@@ -11,9 +11,9 @@ def expert_availability():
     if current_user.role != 3:
         flash("You are not authorized to access this page.", "error")
         return redirect(url_for("index"))
-    
+
     today = date.today()
-    
+
     # Build daily time slots (every hour from 08:00 to 20:00)
     time_slots = []
     slot_interval = 60  # minutes
@@ -22,20 +22,20 @@ def expert_availability():
     while current_slot_dt < end_time_dt:
         time_slots.append(current_slot_dt.time())
         current_slot_dt += timedelta(minutes=slot_interval)
-    
+
     # Compute the current timeslot (floor current time to the hour)
     current_time = datetime.now().time()
     current_slot = current_time.replace(minute=0, second=0, microsecond=0)
-    
+
     # Get all experts (users with role 2)
     experts = User.query.filter_by(role=2).order_by(User.username.asc()).all()
-    
+
     # For daily view: get each expert's availability for today
     daily_availability = {}
     for expert in experts:
         record = ExpertAvailability.query.filter_by(expert_id=expert.id, day=today).first()
         daily_availability[expert.id] = record
-    
+
     # For weekly view: list of days from today to today+6 days
     days = [today + timedelta(days=i) for i in range(7)]
     weekly_availability = {}
@@ -44,7 +44,7 @@ def expert_availability():
         for d in days:
             rec = ExpertAvailability.query.filter_by(expert_id=expert.id, day=d).first()
             weekly_availability[expert.id][d] = rec.status if rec else False
-    
+
     categories = Category.query.all()
 
     return render_template(

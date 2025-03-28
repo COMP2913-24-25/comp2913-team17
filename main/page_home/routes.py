@@ -6,7 +6,8 @@ from ..models import Item, Category
 def index():
     items = Item.query.order_by(Item.auction_completed.asc(), Item.auction_end.asc()).all()
     categories = Category.query.order_by(Category.name).all()
-    category_names = [category.name.upper() for category in categories if category.name != 'Miscellaneous'] + ['TREASURES']
+    category_names = [category.name.upper() for category in categories if category.name
+                      != 'Miscellaneous'] + ['TREASURES']
 
     return render_template('home.html', items=items, categories=categories, category_names=category_names)
 

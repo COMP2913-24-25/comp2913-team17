@@ -43,7 +43,7 @@
   margin-bottom: 0.5rem;
   background-color: var(--tertiary-color);
   color: var(--primary-color);
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
 }
 
@@ -108,7 +108,7 @@
 
 .empty-state i {
   font-size: 3rem;
-  color: rgba(0,0,0,0.3);
+  color: rgba(0, 0, 0, 0.3);
   margin-bottom: 1rem;
 }
 
@@ -140,7 +140,7 @@
 
 .auth-table td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
 }
 
@@ -276,7 +276,7 @@
   .dashboard-tabs {
     gap: 4px;
   }
-  
+
   .dashboard-tabs .nav-link i {
     font-size: 1rem;
     margin-bottom: 4px;
@@ -402,11 +402,12 @@
 }
 
 @media (max-width: 768px) {
+
   /* Mobile tabs become buttons */
   .dashboard-tabs-container {
     margin-bottom: 1.5rem;
   }
-  
+
   .dashboard-tabs {
     display: flex;
     flex-direction: row;
@@ -414,15 +415,15 @@
     border-bottom: none;
     padding-bottom: 8px;
   }
-  
+
   .dashboard-tabs-divider {
     display: none;
   }
-  
+
   .dashboard-tabs .nav-item {
     flex: 1;
   }
-  
+
   .dashboard-tabs .nav-link {
     display: flex;
     flex-direction: column;
@@ -439,14 +440,14 @@
     width: 100%;
     line-height: 1.2;
   }
-  
+
   .dashboard-tabs .nav-link i {
     margin-right: 0;
     margin-bottom: 6px;
     font-size: 1.2rem;
     display: block;
   }
-  
+
   .dashboard-tabs .nav-link.active {
     background-color: var(--primary-color);
     color: var(--secondary-color);
@@ -454,26 +455,31 @@
     border-bottom: 2px solid var(--accent-color);
     transform: translateY(0);
   }
-  
+
   .dashboard-tabs .nav-link.active::after {
     display: none;
   }
-  
+
   .dashboard-tabs .nav-link:hover:not(.active) {
     background-color: #e0e0e0;
     transform: translateY(-3px);
   }
-  
+
   /* Table responsive adjustments */
-  .auth-table, .auth-table thead, .auth-table tbody, .auth-table th, .auth-table td, .auth-table tr { 
+  .auth-table,
+  .auth-table thead,
+  .auth-table tbody,
+  .auth-table th,
+  .auth-table td,
+  .auth-table tr {
     display: block;
   }
-  
-  .auth-table thead tr { 
+
+  .auth-table thead tr {
     display: none;
   }
-  
-  .auth-table tr { 
+
+  .auth-table tr {
     border-bottom: 1.5px solid var(--primary-color);
     margin-bottom: 1rem;
   }
@@ -481,21 +487,21 @@
   .auth-table tr:last-child {
     border-bottom: none;
   }
-  
-  .auth-table td { 
+
+  .auth-table td {
     border: none;
-    border-bottom: 1px solid #eee; 
+    border-bottom: 1px solid #eee;
     position: relative;
-    padding-left: 50%; 
+    padding-left: 50%;
     text-align: right;
   }
-  
-  .auth-table td:before { 
+
+  .auth-table td:before {
     position: absolute;
     top: 1rem;
     left: 1rem;
-    width: 45%; 
-    padding-right: 10px; 
+    width: 45%;
+    padding-right: 10px;
     white-space: nowrap;
     text-align: left;
     font-weight: bold;
@@ -523,15 +529,15 @@
     padding: 0.75rem;
     height: 350px !important;
   }
-  
+
   .chart-controls {
     padding: 0.75rem;
   }
-  
+
   .chart-controls label {
     font-size: 0.8rem;
   }
-  
+
   .chart-controls .form-check-label {
     font-size: 0.75rem;
   }
@@ -540,40 +546,41 @@
     min-height: 130px;
     padding: 1rem;
   }
-  
+
   .stat-title {
     font-size: 0.9rem;
     margin-bottom: 0.8rem;
   }
-  
+
   .stat-value {
     font-size: 1.3rem;
   }
 }
 
 @media (max-width: 576px) {
+
   /* Chart container */
   .chart-container {
     height: 300px !important;
   }
-  
+
   /* Stat cards for smaller screens */
   .col-sm-6.col-md-4.col-lg-4.mb-4 {
     padding-left: 6px;
     padding-right: 6px;
   }
-  
+
   .stat-card {
     min-height: 110px;
     padding: 0.8rem;
   }
-  
+
   .stat-title {
     font-size: 0.8rem;
     min-height: 2rem;
     margin-bottom: 0.5rem;
   }
-  
+
   .stat-value {
     font-size: 1.1rem;
   }
