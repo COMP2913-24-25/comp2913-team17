@@ -20,47 +20,43 @@
   <div class="row">
     <!-- Image Column -->
     <div class="col-md-6 mb-4">
-      {% if item.images %} 
+      {% if item.images %}
 
-        <!-- Focused Image -->
-        <div id="focused-image-container" class="mb-3">
-          <div style="position: relative;">
-            <img 
-              id="focused-image" 
-              src="{{ item.images[0].url }}" 
-              alt="{{ item.title }}" 
-              class="rounded focused-image" 
-              loading="lazy"
-              onclick="imagePopup(event)"
-            >
-            <!-- Watch Count -->
-            <span id="watch-counter" class="ms-2 badge bg-secondary">
-              <i class="fas fa-user-friends"></i> {{ item.watcher_count() }} {% if item.watcher_count() == 1 %}watcher{% else %}watchers{% endif %}
-            </span>
+      <!-- Focused Image -->
+      <div id="focused-image-container" class="mb-3">
+        <div style="position: relative;">
+          <img id="focused-image" src="{{ item.images[0].url }}" alt="{{ item.title }}" class="rounded focused-image"
+            loading="lazy" onclick="imagePopup(event)">
+          <!-- Watch Count -->
+          <span id="watch-counter" class="ms-2 badge bg-secondary">
+            <i class="fas fa-user-friends"></i> {{ item.watcher_count() }} {% if item.watcher_count() == 1 %}watcher{%
+            else %}watchers{% endif %}
+          </span>
+        </div>
+
+        <div class="modal fade image-modal">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <button type="button" class="btn-close close-image-modal" data-bs-dismiss="modal"></button>
+              <div class="modal-body image-modal-body">
+                <img class="modal-image img-fluid" src="" alt="Pop up image">
+              </div>
+            </div>
           </div>
-
-           <div class="modal fade image-modal">
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                  <button type="button" class="btn-close close-image-modal" data-bs-dismiss="modal"></button>
-                  <div class="modal-body image-modal-body">
-                    <img class="modal-image img-fluid" src="" alt="Pop up image">
-                  </div>
-                </div>
-              </div>
-           </div>
         </div>
+      </div>
 
-        <!-- Tile Images -->
-        <div id="tile-images-container" class="d-flex flex-wrap">
-          {% for image in item.images %}
-            {% if image.url %}
-              <div class="tile-container">
-                <img class="tile img-fluid rounded" src="{{ image.url }}" alt="{{ item.title }}" onclick="focusImage('{{ image.url }}')">
-              </div>
-            {% endif %}
-          {% endfor %}
+      <!-- Tile Images -->
+      <div id="tile-images-container" class="d-flex flex-wrap">
+        {% for image in item.images %}
+        {% if image.url %}
+        <div class="tile-container">
+          <img class="tile img-fluid rounded" src="{{ image.url }}" alt="{{ item.title }}"
+            onclick="focusImage('{{ image.url }}')">
         </div>
+        {% endif %}
+        {% endfor %}
+      </div>
       {% else %}
       <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px">
         <p class="text-muted">No image(s) available</p>
@@ -68,43 +64,45 @@
       {% endif %}
     </div>
 
-      <!-- Details Column -->
-      <div class="col-md-6">
-        <h1 class="mb-2 auction-page-title">{{ item.title | capitalize }}</h1>
+    <!-- Details Column -->
+    <div class="col-md-6">
+      <h1 class="mb-2 auction-page-title">{{ item.title | capitalize }}</h1>
 
       <!-- Auction Status   -->
       <div class="mb-4">
         <div class="d-flex gap-2">
           <!-- Category Badge  -->
-          <span class="badge bg-info p-2" {% if item.category.description %}title="{{ item.category.description }}"{% endif %}>
+          <span class="badge bg-info p-2" {% if item.category.description %}title="{{ item.category.description }}" {%
+            endif %}>
             <i class="fas fa-tag"></i> {{ item.category.name }}
           </span>
           {% if is_allowed %}
-            <a href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}"
-              title="View authentication request"
-              class="badge mx-2 {% if item.authentication_requests[0].status == 1 and not is_auction_over %}bg-warning{% elif item.authentication_requests[0].status == 2 %}bg-success{% elif item.authentication_requests[0].status == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
-              {% if item.authentication_requests[0].status == 1 and not is_auction_over %}
-                Authentication Pending
-              {% elif item.authentication_requests[0].status == 2 %}
-                Authenticated
-              {% elif item.authentication_requests[0].status == 3 %}
-                Authentication Declined
-              {% else %}
-                Not Authenticated
-              {% endif %}
-            </a>
+          <a href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}"
+            title="View authentication request"
+            class="badge mx-2 {% if item.authentication_requests[0].status == 1 and not is_auction_over %}bg-warning{% elif item.authentication_requests[0].status == 2 %}bg-success{% elif item.authentication_requests[0].status == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
+            {% if item.authentication_requests[0].status == 1 and not is_auction_over %}
+            Authentication Pending
+            {% elif item.authentication_requests[0].status == 2 %}
+            Authenticated
+            {% elif item.authentication_requests[0].status == 3 %}
+            Authentication Declined
+            {% else %}
+            Not Authenticated
+            {% endif %}
+          </a>
           {% else %}
-            <span class="badge {% if authentication == 1 and not is_auction_over %}bg-warning{% elif authentication == 2 %}bg-success{% elif authentication == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
-              {% if authentication == 1 and not is_auction_over %}
-                Authentication Pending
-              {% elif authentication == 2 %}
-                Authenticated
-              {% elif authentication == 3 %}
-                Authentication Declined
-              {% else %}
-                Not Authenticated
-              {% endif %}
-            </span>
+          <span
+            class="badge {% if authentication == 1 and not is_auction_over %}bg-warning{% elif authentication == 2 %}bg-success{% elif authentication == 3 %}bg-danger{% else %}bg-secondary{% endif %} p-2">
+            {% if authentication == 1 and not is_auction_over %}
+            Authentication Pending
+            {% elif authentication == 2 %}
+            Authenticated
+            {% elif authentication == 3 %}
+            Authentication Declined
+            {% else %}
+            Not Authenticated
+            {% endif %}
+          </span>
           {% endif %}
         </div>
       </div>
@@ -134,9 +132,10 @@
         <div class="row">
           <div class="col">
             <div>
-              <button href='#' class="bid-count btn btn-primary" data-bs-toggle="modal" data-bs-target=".bid-history-modal">{{ bids|length }} bids</button>
+              <button href='#' class="bid-count btn btn-primary" data-bs-toggle="modal"
+                data-bs-target=".bid-history-modal">{{ bids|length }} bids</button>
               {% if not is_auction_over %}
-              <span class="countdown-label">Ends in:</span> 
+              <span class="countdown-label">Ends in:</span>
               {% endif %}
               {% if not is_auction_over %}
               <span class="countdown" data-end="{{ item.auction_end.isoformat() }}">
@@ -188,14 +187,11 @@
 
       <!-- Bidding modal -->
       <div class="d-grid gap-2">
-        {% if current_user.is_authenticated 
-          and current_user.id != item.seller.id
-          and current_user.role not in [2, 3]
-          and not is_auction_over%}
-        <button 
-          type="button" 
-          class="place-bid btn btn-primary btn-lg" 
-          data-bs-toggle="modal" 
+        {% if current_user.is_authenticated
+        and current_user.id != item.seller.id
+        and current_user.role not in [2, 3]
+        and not is_auction_over%}
+        <button type="button" class="place-bid btn btn-primary btn-lg" data-bs-toggle="modal"
           data-bs-target=".place-bid-modal">
           New Bid
         </button>
@@ -206,54 +202,48 @@
           <div class="modal-content">
             <div class="modal-header">
               <div class="modal-title place-bid-modal-title">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" ></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
               </div>
             </div>
             <div class="modal-body">
 
               <!-- Action Buttons -->
               {% if current_user.is_authenticated %}
-                {% if current_user.id != item.seller.id %}
-                  <form action="{{ url_for('item_page.place_bid', url=item.url) }}" method="POST" class="bid-form">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="mb-3">
-                      <label for="bid_amount" class="form-label">Your Bid Amount</label>
-                      <div class="input-group">
-                        <span class="input-group-text">£</span>
-                        <input 
-                          type="number"
-                          class="form-control"
-                          id="bid_amount"
-                          name="bid_amount"
-                          step="0.01"
-                          min="{{ suggested_bid }}"
-                          value="{{ suggested_bid }}"
-                          required
-                        >
-                        
-                      </div>
-                      <div class="form-text" id="bid-amount-help">
-                        {% if item.highest_bid() %}
-                          Current highest bid: £<span class="max-bid">{{ "%.2f"|format(item.highest_bid().bid_amount) }}</span>
-                        {% else %}
-                          Minimum bid: £{{ "%.2f"|format(item.minimum_price) }}
-                        {% endif %}
-                      </div>
-                    </div>
-                    <div class="d-grid gap-2">
-                      <button type="submit btn-close" class="btn btn-primary btn-lg" data-bs-dismiss="modal">Submit Bid</button>
-                    </div>
-                  </form>
-                {% else %}
-                  <div class="alert alert-info">
-                    You are the seller of this auction so you cannot bid on it.
+              {% if current_user.id != item.seller.id %}
+              <form action="{{ url_for('item_page.place_bid', url=item.url) }}" method="POST" class="bid-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                  <label for="bid_amount" class="form-label">Your Bid Amount</label>
+                  <div class="input-group">
+                    <span class="input-group-text">£</span>
+                    <input type="number" class="form-control" id="bid_amount" name="bid_amount" step="0.01"
+                      min="{{ suggested_bid }}" value="{{ suggested_bid }}" required>
+
                   </div>
-                {% endif %}
-            {% else %}
+                  <div class="form-text" id="bid-amount-help">
+                    {% if item.highest_bid() %}
+                    Current highest bid: £<span class="max-bid">{{ "%.2f"|format(item.highest_bid().bid_amount)
+                      }}</span>
+                    {% else %}
+                    Minimum bid: £{{ "%.2f"|format(item.minimum_price) }}
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="d-grid gap-2">
+                  <button type="submit btn-close" class="btn btn-primary btn-lg" data-bs-dismiss="modal">Submit
+                    Bid</button>
+                </div>
+              </form>
+              {% else %}
+              <div class="alert alert-info">
+                You are the seller of this auction so you cannot bid on it.
+              </div>
+              {% endif %}
+              {% else %}
               <div class="d-grid gap-2">
                 <a href="{{ url_for('auth_page.login') }}" class="btn btn-primary btn-lg">Login to Place Bid</a>
               </div>
-            {% endif %}
+              {% endif %}
             </div>
           </div>
         </div>
@@ -263,61 +253,65 @@
       {% if show_payment %}
       <div id="payment-section">
         <h3>Payment</h3>
-        <p>Your winning bid: £{{ "%.2f"|format(item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) }}</p>
+        <p>Your winning bid: £{{ "%.2f"|format(item.highest_bid().bid_amount if item.highest_bid() else
+          item.minimum_price) }}</p>
         <button class="checkout-button btn btn-primary mb-2" data-item-url="{{ item.url }}">Make Payment</button>
       </div>
       {% endif %}
-      
+
       <!-- Item watchers -->
       <div class="d-grid gap-2">
         {% if not is_auction_over and current_user.id != item.seller.id %}
-          <div class="d-grid gap-2" style="margin-top: 10px;">
-            {% if is_watching %}
-              <button id="unwatch-btn" class="btn btn-success btn-lg" data-item-url="{{ item.url }}">
-                <i class="fas fa-check"></i> Watched
-              </button>
-            {% elif current_user.is_authenticated and current_user.role == 1 %}
-              <button id="watch-btn" class="btn btn-outline-dark btn-lg" data-item-url="{{ item.url }}">
-                <i class="fas fa-eye"></i> Add to Watchlist
-              </button>
-            {% endif %}
-          </div>
+        <div class="d-grid gap-2" style="margin-top: 10px;">
+          {% if is_watching %}
+          <button id="unwatch-btn" class="btn btn-success btn-lg" data-item-url="{{ item.url }}">
+            <i class="fas fa-check"></i> Watched
+          </button>
+          {% elif current_user.is_authenticated and current_user.role == 1 %}
+          <button id="watch-btn" class="btn btn-outline-dark btn-lg" data-item-url="{{ item.url }}">
+            <i class="fas fa-eye"></i> Add to Watchlist
+          </button>
+          {% endif %}
+        </div>
         {% endif %}
       </div>
 
       <!-- Auction end date -->
-        <div class="mt-1">
-          {% if not is_auction_over %}
-            <p class="text-muted small-end">
-              Auction ends: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
-            </p>
-            {% if not current_user.is_authenticated %}
-              <a class="alert alert-warning mt-2 text-center authentication-alert" href="{{ url_for('auth_page.login') }}">Login to bid</a>
-            {% endif %}
-          {% endif %}
+      <div class="mt-1">
+        {% if not is_auction_over %}
+        <p class="text-muted small-end">
+          Auction ends: {{ item.auction_end.strftime('%B %d, %Y at %I:%M %p') }}
+        </p>
+        {% if not current_user.is_authenticated %}
+        <a class="alert alert-warning mt-2 text-center authentication-alert"
+          href="{{ url_for('auth_page.login') }}">Login to bid</a>
+        {% endif %}
+        {% endif %}
         {% if item.highest_bid() and item.highest_bid().bidder_id == current_user.id and not show_payment %}
-          {% if item.winning_bid.bidder_id == current_user.id %}
-            <div class="alert alert-success mt-2 max-bid-alert">
-              You have paid for this item!
-            </div>
-          {% else %}
-            <div class="alert alert-info mt-2 max-bid-alert">
-              You currently have the highest bid!
-            </div>
-          {% endif %}
+        {% if item.winning_bid.bidder_id == current_user.id %}
+        <div class="alert alert-success mt-2 max-bid-alert">
+          You have paid for this item!
+        </div>
+        {% else %}
+        <div class="alert alert-info mt-2 max-bid-alert">
+          You currently have the highest bid!
+        </div>
+        {% endif %}
         {% endif %}
         {% if is_allowed %}
-          <a class="alert alert-info mt-2 text-center authentication-alert" href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}">Click to view authentication request</a>
+        <a class="alert alert-info mt-2 text-center authentication-alert"
+          href="{{ url_for('authenticate_item_page.index', url=item.authentication_requests[0].url) }}">Click to view
+          authentication request</a>
         {% endif %}
       </div>
-  </div>
-  <hr>
+    </div>
+    <hr>
 
-  <!-- Description -->
-  <div class="mb-4">
-    <h5>Description</h5>
-    <div class="text-break">{{ item.description }}</div>
-  </div>
+    <!-- Description -->
+    <div class="mb-4">
+      <h5>Description</h5>
+      <div class="text-break">{{ item.description }}</div>
+    </div>
   </div>
 </div>
 
@@ -327,34 +321,34 @@
 <script src="{{ url_for('static', filename='js/focusImage.js') }}"></script>
 <script src="{{ url_for('static', filename='js/imagePopup.js') }}"></script>
 {% if show_payment %}
-  <script src="https://js.stripe.com/v3/"></script>
-  <script>
-    window.stripePublishableKey = "{{ stripe_publishable_key }}";
-    
-    // Check for payment status directly in HTML to ensure it runs early
-    document.addEventListener('DOMContentLoaded', function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const paymentStatus = urlParams.get('payment_status');
-      
-      if (paymentStatus === 'canceled') {
-        document.getElementById('payment-status-alert').style.display = 'block';
-        
-        // Auto-hide after 10 seconds
-        setTimeout(() => {
-          const alert = document.getElementById('payment-status-alert');
-          if (alert) {
-            const bsAlert = new bootstrap.Alert(alert.querySelector('.alert'));
-            bsAlert.close();
-          }
-        }, 10000);
-        
-        // Remove the parameter from the URL to prevent showing the message on refresh
-        const url = new URL(window.location);
-        url.searchParams.delete('payment_status');
-        window.history.replaceState({}, '', url);
-      }
-    });
-  </script>
-  <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  window.stripePublishableKey = "{{ stripe_publishable_key }}";
+
+  // Check for payment status directly in HTML to ensure it runs early
+  document.addEventListener('DOMContentLoaded', function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment_status');
+
+    if (paymentStatus === 'canceled') {
+      document.getElementById('payment-status-alert').style.display = 'block';
+
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        const alert = document.getElementById('payment-status-alert');
+        if (alert) {
+          const bsAlert = new bootstrap.Alert(alert.querySelector('.alert'));
+          bsAlert.close();
+        }
+      }, 10000);
+
+      // Remove the parameter from the URL to prevent showing the message on refresh
+      const url = new URL(window.location);
+      url.searchParams.delete('payment_status');
+      window.history.replaceState({}, '', url);
+    }
+  });
+</script>
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 {% endif %}
 {% endblock %}

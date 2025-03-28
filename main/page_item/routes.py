@@ -50,14 +50,14 @@ def index(url):
             or (expert and expert.expert_id == current_user.id and expert.status != 3)
             or authentication.requester_id == current_user.id
         )
-        
+
         # Fix is_watching check by using the relationship directly
         is_watching = item in current_user.watched_items.all()
-    
+
     bids = item.bids[::-1]
     suggested_bid = (item.highest_bid().bid_amount + decimal.Decimal('0.01')
                      if item.highest_bid() else item.minimum_price)
-    
+
     is_auction_over = datetime.now() >= item.auction_end
     is_winner = False
     if current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id:
@@ -66,7 +66,7 @@ def index(url):
     show_payment = is_auction_over and is_winner and (item.status != 3)
 
     return render_template('item.html', item=item, authentication=status, is_allowed=is_allowed,
-                           suggested_bid=suggested_bid, bids=bids, show_payment=show_payment, 
+                           suggested_bid=suggested_bid, bids=bids, show_payment=show_payment,
                            is_auction_over=is_auction_over, stripe_publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY'), is_watching=is_watching)
 
 # Update the watch/unwatch routes to use a more reliable method for checking the relationship
@@ -75,10 +75,10 @@ def index(url):
 def watch_item(url):
     if current_user.role != 1:
         return jsonify({'error': 'Only general users can watch auctions'}), 403
-    
+
     try:
         item = Item.query.filter_by(url=url).first_or_404()
-        
+
         # Check if the item is being watched
         if item in current_user.watched_items.all():
             return jsonify({'error': 'Already watching this auction'}), 400
@@ -95,10 +95,10 @@ def watch_item(url):
 def unwatch_item(url):
     if current_user.role != 1:
         return jsonify({'error': 'Only general users can watch auctions'}), 403
-    
+
     try:
         item = Item.query.filter_by(url=url).first_or_404()
-        
+
         # Check if the item is being watched
         if item not in current_user.watched_items.all():
             return jsonify({'error': 'Not watching this auction'}), 400
@@ -114,7 +114,7 @@ def unwatch_item(url):
 @login_required
 def place_bid(url):
     item = Item.query.filter_by(url=url).first_or_404()
-    
+
     # Prevent the seller from bidding on their own auction.
     if current_user.id == item.seller_id:
         return jsonify({'error': 'You cannot bid on your own auction.'}), 403
@@ -193,26 +193,26 @@ def notify_outbid(self, user):
     )
     db.session.add(notification)
     db.session.commit()
-    
+
     # Send real-time notification
     try:
         from app import socketio
         socketio.emit('new_notification', {
             'id': notification.id,
             'message': notification.message,
-            'item_url': notification.item_url, 
+            'item_url': notification.item_url,
             'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
         }, room=f'user_{user.secret_key}')
     except Exception as e:
         logger.error(f"Failed to send notification: {e}")
-        
+
     # Send email
     send_notification_email(user, notification)
 
 def notify_winner(self):
     if not self.winning_bid:
         return
-    
+
     winner = User.query.get(self.winning_bid.bidder_id)
     notification = Notification(
         user_id=winner.id,
@@ -223,7 +223,7 @@ def notify_winner(self):
     )
     db.session.add(notification)
     db.session.commit()
-    
+
     # Send real-time notification
     from app import socketio
     socketio.emit('new_notification', {
@@ -232,20 +232,20 @@ def notify_winner(self):
         'item_url': notification.item_url,
         'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
     }, room=f'user_{winner.secret_key}')
-    
+
     # Send email
     send_notification_email(winner, notification)
 
 def notify_losers(self):
     if not self.winning_bid:
         return
-        
+
     # Get unique bidders excluding winner
     bidders = set()
     for bid in self.bids:
         if bid.bidder_id != self.winning_bid.bidder_id:
             bidders.add(bid.bidder_id)
-    
+
     for bidder_id in bidders:
         bidder = User.query.get(bidder_id)
         notification = Notification(
@@ -257,7 +257,7 @@ def notify_losers(self):
         )
         db.session.add(notification)
         db.session.commit()
-        
+
         # Send real-time notification
         from app import socketio
         socketio.emit('new_notification', {
@@ -274,7 +274,7 @@ def notify_seller(self):
     else:
         message = f"Your auction for '{self.title}' has ended without any bids."
         notification_type = 6
-    
+
     # Create and save the notification
     notification = Notification(
         user_id=self.seller_id,
@@ -285,7 +285,7 @@ def notify_seller(self):
     )
     db.session.add(notification)
     db.session.commit()
-    
+
     # Send real-time notification
     from app import socketio
     socketio.emit('new_notification', {
@@ -298,7 +298,7 @@ def notify_seller(self):
     send_notification_email(self.seller, notification)
 
 def check_ended_auctions():
-    """Check for auctions that have ended but don't have a winner yet."""
+    # Check for auctions that have ended but don't have a winner yet.
     finished_items = Item.query.filter(
         Item.auction_end <= datetime.now(),
         Item.winning_bid_id.is_(None),
@@ -341,7 +341,7 @@ def check_ended_auctions():
 
                 # Update the authentication room
                 try:
-                    socketio.emit('force_reload', { 'status': 'Auction ended' }, room=item.authentication_requests[0].url)
+                    socketio.emit('force_reload', {'status': 'Auction ended'}, room=item.authentication_requests[0].url)
                 except Exception as e:
                     logger.error(f"Error sending force reload: {str(e)}")
 
@@ -358,7 +358,7 @@ def check_ended_auctions():
                     )
                     db.session.add(notification_expert)
                     db.session.commit()
-                    
+
                     try:
                         socketio.emit('new_notification', {
                             'message': notification_expert.message,
@@ -367,10 +367,10 @@ def check_ended_auctions():
                         }, room=f'user_{item.authentication_requests[0].expert_assignments[-1].expert.secret_key}')
                     except Exception as e:
                         logger.error(f"Error sending new notification: {str(e)}")
-        
-            
+
                     # Send email
-                    send_notification_email(item.authentication_requests[0].expert_assignments[-1].expert, notification_expert)
+                    send_notification_email(
+                        item.authentication_requests[0].expert_assignments[-1].expert, notification_expert)
 
             # Notify the auction room of the auction ending
             if highest_bid:
@@ -409,7 +409,7 @@ def mark_notifications_read():
     except Exception as e:
         logger.error(f"Error marking specific notifications as read: {str(e)}")
         return jsonify({'error': 'Failed to mark notifications as read'}), 500
-    
+
 @item_page.route('/api/notifications/clear-all', methods=['POST'])
 @login_required
 def clear_all_notifications():
@@ -429,7 +429,7 @@ def create_payment_intent(url):
     stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
     item = Item.query.filter_by(url=url).first_or_404()
     amount = int(((item.highest_bid().bid_amount if item.highest_bid() else item.minimum_price) * 100))
-    
+
     is_auction_over = datetime.now() >= item.auction_end
     is_winner = current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id
     if not is_auction_over or not is_winner:
@@ -439,7 +439,7 @@ def create_payment_intent(url):
     # Ensure the current user has an associated Stripe Customer
     if not current_user.stripe_customer_id:
         create_stripe_customer(current_user)
-    
+
     try:
         '''
         # Create a PaymentIntent that:
@@ -474,12 +474,12 @@ def mark_won(url):
     if not item.highest_bid() or item.highest_bid().bidder_id != current_user.id:
         return jsonify({'error': 'You are not the winning bidder'}), 403
     item.locked = True
-    item.status = 3  # paid
+    item.status = 3
     db.session.commit()
 
     # Notify the seller once the payment is successful
     item.notify_payment()
-    
+
     return jsonify({'status': 'success'})
 
 @item_page.route('/<url>/redirect-after-payment')
@@ -513,7 +513,7 @@ def set_default_payment_method(url):
         return jsonify({'status': 'success'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
 @item_page.route('/<url>/create-checkout-session', methods=['POST'])
 @login_required
 def create_checkout_session(url):
@@ -529,16 +529,16 @@ def create_checkout_session(url):
     # Get return URL from request data if available
     data = request.get_json() or {}
     return_url = data.get('returnUrl')
-    
+
     # Ensure the customer has an associated Stripe Customer
     if not current_user.stripe_customer_id:
         create_stripe_customer(current_user)
-    
+
     try:
         # Set default success and cancel URLs
         success_url = url_for('item_page.redirect_after_payment', url=item.url, _external=True, _scheme='http')
         cancel_url = url_for('item_page.index', url=item.url, _external=True, _scheme='http')
-        
+
         # Override with return URL if provided
         if return_url:
             success_url = f"{return_url}{'&' if '?' in return_url else '?'}payment_status=success"
@@ -600,10 +600,9 @@ def stripe_webhook():
             item = Item.query.filter_by(item_id=item_id).first()
             if item:
                 item.locked = True
-                item.status = 3  # paid
+                item.status = 3
                 db.session.commit()
                 # Notify seller about successful payment
                 item.notify_payment()
                 current_app.logger.info(f"Item {item.title} marked as paid via webhook.")
     return "", 200
-    # FUNCTION contains loggers, remove in final version
