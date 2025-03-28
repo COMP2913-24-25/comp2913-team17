@@ -146,7 +146,7 @@ class Item(db.Model):
     upload_date = db.Column(db.DateTime, default=datetime.now())
     auction_start = db.Column(db.DateTime, nullable=False)
     auction_end = db.Column(db.DateTime, nullable=False)
-    minimum_price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    minimum_price = db.Column(db.Numeric(10, 2), nullable=False, default=0.01)
     locked = db.Column(db.Boolean, default=False)
     # Allow for items to end without a winner
     auction_completed = db.Column(db.Boolean, default=False)
