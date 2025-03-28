@@ -7,14 +7,13 @@ This project implements an online auction platform specialised for antiques and 
 For more detailed documentation, please visit the [Wiki](https://github.com/COMP2913-24-25/comp2913-team17/wiki).
 
 ## Table of Contents
-1. [Description](#description)
+1. [Description](#project-description)
 2. [Technology Stack](#technology-stack)
 3. [Installation](#installation)
 4. [Usage](#usage)
 5. [Credits](#credits)
-6. [License](#license)
-7. [How to Contribute](#how-to-contribute)
-8. [Testing](#tests)
+6. [How to Contribute](#how-to-contribute)
+7. [Tests](#tests)
 
 ## Technology Stack
 ### **Frontend**
@@ -83,6 +82,7 @@ pip install -r requirements.txt
 ```bash
 flask run --debug
 ```
+
 By default, the application will use an existing SQLite database file named `database.db` in the main directory. If this file is not present, the application will create a new database file populated with dummy data. To run the application with no initial data, use the following command:
 
 ```bash
