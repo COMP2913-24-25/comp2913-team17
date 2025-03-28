@@ -5,7 +5,7 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/availability-styles.css') }}">
 
-<h1 class="mt-5 mb-4 text-center availability-heading">Update Weekly Availability</h1>
+<h1 class="mt-5 mb-4 text-center availability-heading" style="color: black;">Update Weekly Availability</h1>
 <div id="availability-form" class="container">
   <!-- Week Navigation -->
   {% set prev_week = week_start - timedelta(days=7) %}
