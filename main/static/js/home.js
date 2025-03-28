@@ -119,7 +119,7 @@ $(document).ready(function() {
       // Store the current scroll position
       const scrollTop = $(window).scrollTop();
       
-      // Detach all items (keeps jQuery data intact)
+      // Detach all items
       const $items = $('.auction-grid-wrapper').detach();
       
       // Re-append in sorted order
@@ -131,7 +131,7 @@ $(document).ready(function() {
       $(window).scrollTop(scrollTop);
     }
     
-    // Show or hide the "no results" message
+    // Display "no results" message as appropriate
     if (visibleItems === 0) {
       $('#no-results').removeClass('d-none');
     } else {
@@ -145,9 +145,6 @@ $(document).ready(function() {
   $('#type-filter').on('change', applyFiltersAndSort);
   $('#authenticated-only').on('change', applyFiltersAndSort);
   $('#sort-filter').on('change', applyFiltersAndSort);
-  
-  // Initial application of filters and sorting
-  applyFiltersAndSort();
   
   function updateCountdown(element) {
     const endTime = element.data('end');
