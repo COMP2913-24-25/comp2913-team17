@@ -43,7 +43,7 @@ def get_expertise(expert, item):
     return 'Not Expert'
 
 def calculate_expert_suitability(expert, request, all_experts_assignments, now):
-    """Calculate an expert's suitability score for a request."""
+    # Calculate an expert's suitability score for a request.
     # Availability Score (40%)
     today = date.today()
     auction_end = request.item.auction_end.date()
@@ -101,21 +101,24 @@ def handle_manager(now):
     manager['max_duration'] = ManagerConfig.query.filter_by(config_key='max_auction_duration').first()
 
     if not manager['base_fee']:
-        base_fee = ManagerConfig(config_key='base_platform_fee', config_value='1.00', description='Base platform fee percentage for standard items')
+        base_fee = ManagerConfig(config_key='base_platform_fee', config_value='1.00',
+                                 description='Base platform fee percentage for standard items')
         db.session.add(base_fee)
         manager['base_fee'] = base_fee.config_value
     else:
         manager['base_fee'] = float(manager['base_fee'].config_value)
 
     if not manager['authenticated_fee']:
-        authenticated_fee = ManagerConfig(config_key='authenticated_platform_fee', config_value='5.00', description='Platform fee percentage for authenticated items')
+        authenticated_fee = ManagerConfig(config_key='authenticated_platform_fee',
+                                          config_value='5.00', description='Platform fee percentage for authenticated items')
         db.session.add(authenticated_fee)
         manager['authenticated_fee'] = authenticated_fee.config_value
     else:
         manager['authenticated_fee'] = float(manager['authenticated_fee'].config_value)
 
     if not manager['max_duration']:
-        max_duration = ManagerConfig(config_key='max_auction_duration', config_value='5', description='Maximum auction duration in days')
+        max_duration = ManagerConfig(config_key='max_auction_duration', config_value='5',
+                                     description='Maximum auction duration in days')
         db.session.add(max_duration)
         manager['max_duration'] = max_duration.config_value
     else:
@@ -124,7 +127,8 @@ def handle_manager(now):
     db.session.commit()
 
     # Get all user roles except managers ordered by role and username
-    manager['users'] = db.session.query(User).filter(User.role != 3).order_by(User.role.desc(), User.username.asc()).all()
+    manager['users'] = db.session.query(User).filter(
+        User.role != 3).order_by(User.role.desc(), User.username.asc()).all()
 
     # Pending authentication requests
     manager_authentications(manager, now)
@@ -144,12 +148,12 @@ def manager_authentications(manager, now):
                 ~AuthenticationRequest.expert_assignments.any(ExpertAssignment.status != 3)
             )
         )).all()
-    
+
     requests = []
     all_experts_assignments = dict(db.session.query(
         ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
     ).filter(ExpertAssignment.status.in_([1, 2])).group_by(ExpertAssignment.expert_id).all())
-    
+
     for req in pending_requests:
         eligible_experts = User.query\
             .filter(and_(
@@ -161,8 +165,8 @@ def manager_authentications(manager, now):
             )).order_by(User.username.asc()).all()
         # Calculate AI expert recommendation for eligible experts
         if eligible_experts:
-            scores = [(expert, calculate_expert_suitability(expert, req, all_experts_assignments, now)) 
-                     for expert in eligible_experts]
+            scores = [(expert, calculate_expert_suitability(expert, req, all_experts_assignments, now))
+                      for expert in eligible_experts]
             max_score = max(score for _, score in scores) if scores else 0
             best_experts = [expert for expert, score in scores if score == max_score]
             # Pick randomly in case of tie
@@ -198,7 +202,7 @@ def manager_stats(manager, now):
         .join(AuthenticationRequest, AuthenticationRequest.item_id == paid_auctions.c.item_id)\
         .filter(AuthenticationRequest.status == 2)\
         .subquery()
-    
+
     # Get authenticated item commission
     authenticated_commission = db.session.query(func.sum(paid_auctions.c.highest_bid * Item.auth_fee / 100))\
         .select_from(paid_auctions)\
@@ -207,7 +211,7 @@ def manager_stats(manager, now):
             db.session.query(authenticated_items.c.item_id)
         ))\
         .scalar() or 0.0
-    
+
     # Get unauthenticated item commission
     unauthenticated_commission = db.session.query(func.sum(paid_auctions.c.highest_bid * Item.base_fee / 100))\
         .select_from(paid_auctions)\
@@ -216,7 +220,7 @@ def manager_stats(manager, now):
             db.session.query(authenticated_items.c.item_id)
         ))\
         .scalar() or 0.0
-    
+
     paid_revenue = float(paid_revenue)
     authenticated_commission = float(authenticated_commission)
     unauthenticated_commission = float(unauthenticated_commission)
@@ -246,7 +250,7 @@ def manager_stats(manager, now):
     for i in range(6, -1, -1):
         start_date = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = start_date + timedelta(days=1)
-        
+
         # Projected (all completed auctions)
         daily_projected_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
@@ -259,7 +263,7 @@ def manager_stats(manager, now):
             .subquery()
         daily_projected_revenue = db.session.query(func.sum(daily_projected_auctions.c.highest_bid)).scalar() or 0.0
         daily_projected_revenue = float(daily_projected_revenue)
-        
+
         # Paid (status == 3)
         daily_paid_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
@@ -273,7 +277,7 @@ def manager_stats(manager, now):
             .subquery()
         daily_paid_revenue = db.session.query(func.sum(daily_paid_auctions.c.highest_bid)).scalar() or 0.0
         daily_paid_revenue = float(daily_paid_revenue)
-        
+
         manager['revenue_data']['week']['projected']['values'].append(daily_projected_revenue)
         manager['revenue_data']['week']['paid']['values'].append(daily_paid_revenue)
         manager['revenue_data']['week']['projected']['labels'].append(start_date.strftime('%a'))
@@ -283,7 +287,7 @@ def manager_stats(manager, now):
     for i in range(3, -1, -1):
         start_date = (now - timedelta(days=i * 7)).replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = start_date + timedelta(days=7)
-        
+
         # Projected (all completed auctions)
         weekly_projected_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
@@ -296,7 +300,7 @@ def manager_stats(manager, now):
             .subquery()
         weekly_projected_revenue = db.session.query(func.sum(weekly_projected_auctions.c.highest_bid)).scalar() or 0.0
         weekly_projected_revenue = float(weekly_projected_revenue)
-        
+
         # Paid (status == 3)
         weekly_paid_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
@@ -310,7 +314,7 @@ def manager_stats(manager, now):
             .subquery()
         weekly_paid_revenue = db.session.query(func.sum(weekly_paid_auctions.c.highest_bid)).scalar() or 0.0
         weekly_paid_revenue = float(weekly_paid_revenue)
-        
+
         manager['revenue_data']['month']['projected']['values'].append(weekly_projected_revenue)
         manager['revenue_data']['month']['paid']['values'].append(weekly_paid_revenue)
         manager['revenue_data']['month']['projected']['labels'].append(f"Week {4 - i}")
@@ -320,7 +324,7 @@ def manager_stats(manager, now):
     for i in range(5, -1, -1):
         start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i * 30)
         end_date = start_date + timedelta(days=30)
-        
+
         # Projected (all completed auctions)
         monthly_projected_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
@@ -333,7 +337,7 @@ def manager_stats(manager, now):
             .subquery()
         monthly_projected_revenue = db.session.query(func.sum(monthly_projected_auctions.c.highest_bid)).scalar() or 0.0
         monthly_projected_revenue = float(monthly_projected_revenue)
-        
+
         # Paid (status == 3)
         monthly_paid_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
@@ -347,7 +351,7 @@ def manager_stats(manager, now):
             .subquery()
         monthly_paid_revenue = db.session.query(func.sum(monthly_paid_auctions.c.highest_bid)).scalar() or 0.0
         monthly_paid_revenue = float(monthly_paid_revenue)
-        
+
         manager['revenue_data']['six_months']['projected']['values'].append(monthly_projected_revenue)
         manager['revenue_data']['six_months']['paid']['values'].append(monthly_paid_revenue)
         manager['revenue_data']['six_months']['projected']['labels'].append(start_date.strftime('%b'))
@@ -366,11 +370,11 @@ def handle_expert(now):
         .all()
     expert['complete'] = ExpertAssignment.query\
         .filter(and_(ExpertAssignment.expert_id == current_user.id, ExpertAssignment.status == 2)).all()
-    
+
     # Get a list of expert's expertise as well as all categories
     expert['categories'] = Category.query.order_by(Category.name).all()
     expert['expertise'] = Category.query.join(
-        ExpertCategory, 
+        ExpertCategory,
         Category.id == ExpertCategory.category_id
     ).filter(
         ExpertCategory.expert_id == current_user.id
@@ -385,7 +389,7 @@ def handle_user(now):
 
     # General User interface, all users can see their own auctions
     user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
-    
+
     # Get auctions the user has participated in (via bidding, winning or paying)
     # Bidding: any open auction (status == 1) where the user has at least one bid.
     bidding_items = (
@@ -405,13 +409,13 @@ def handle_user(now):
         Item.query.filter(Item.status == 3, Item.winning_bid.has(bidder_id=current_user.id))
         .all()
     )
-    
+
     user['participated_auctions'] = {
         'bidding': bidding_items,
         'won': won_items,
         'paid': paid_items
     }
-    
+
     user_data = {
         'auctions': user['auctions'],
         'watched_items': current_user.watched_items.all() if hasattr(current_user, 'watched_items') else [],
@@ -464,7 +468,7 @@ def update_user_role(user_id):
     )
     db.session.add(notification)
     db.session.commit()
-        
+
     # Send real-time notification
     try:
         socketio.emit('new_notification', {
@@ -473,7 +477,7 @@ def update_user_role(user_id):
         }, room=f'user_{user.secret_key}')
     except Exception as e:
         print(f'SocketIO Error: {e}')
-        
+
     # Send email
     send_notification_email(user, notification)
 
@@ -512,9 +516,9 @@ def assign_expert(request_id):
 
     # Cannot double-assign
     if ExpertAssignment.query.filter(
-            and_(ExpertAssignment.request_id == request_id,
-                 ExpertAssignment.status != 3)
-        ).first():
+        and_(ExpertAssignment.request_id == request_id,
+             ExpertAssignment.status != 3)
+    ).first():
         return jsonify({'error': 'Request already assigned'}), 400
 
     # Cannot assign non-expert
@@ -598,12 +602,12 @@ def assign_expert(request_id):
     )
     db.session.add(notification_requester)
     db.session.commit()
-        
+
     # Send real-time notifications
     try:
         socketio.emit('new_notification', {
             'message': notification_expert.message,
-            'item_url': notification_expert.item_url, 
+            'item_url': notification_expert.item_url,
             'created_at': notification_expert.created_at.strftime('%Y-%m-%d %H:%M')
         }, room=f'user_{user.secret_key}')
     except Exception as e:
@@ -612,7 +616,7 @@ def assign_expert(request_id):
     try:
         socketio.emit('new_notification', {
             'message': notification_requester.message,
-            'item_url': notification_requester.item_url, 
+            'item_url': notification_requester.item_url,
             'created_at': notification_requester.created_at.strftime('%Y-%m-%d %H:%M')
         }, room=f'user_{authentication_request.requester.secret_key}')
     except Exception as e:
@@ -629,7 +633,7 @@ def assign_expert(request_id):
         }, room=authentication_request.url)
     except Exception as e:
         print(f'SocketIO Error: {e}')
-        
+
     # Send emails
     send_notification_email(user, notification_expert)
     send_notification_email(authentication_request.requester, notification_requester)
@@ -675,9 +679,9 @@ def auto_assign_expert(request_id):
     all_experts_assignments = dict(db.session.query(
         ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
     ).filter(ExpertAssignment.status == 1).group_by(ExpertAssignment.expert_id).all())
-    
-    scores = [(expert, calculate_expert_suitability(expert, auth_request, all_experts_assignments, now)) 
-             for expert in eligible_experts]
+
+    scores = [(expert, calculate_expert_suitability(expert, auth_request, all_experts_assignments, now))
+              for expert in eligible_experts]
     max_score = max(score for _, score in scores)
     best_experts = [expert for expert, score in scores if score == max_score]
     best_expert_ids = set(expert.id for expert in best_experts)
@@ -780,7 +784,7 @@ def bulk_auto_assign_experts():
     all_experts_assignments = dict(db.session.query(
         ExpertAssignment.expert_id, func.count(ExpertAssignment.request_id)
     ).filter(ExpertAssignment.status == 1).group_by(ExpertAssignment.expert_id).all())
-    
+
     assignments_made = []
     for request_id in request_ids:
         auth_request = db.session.query(AuthenticationRequest).filter_by(request_id=request_id).first()
@@ -797,8 +801,8 @@ def bulk_auto_assign_experts():
         if not eligible_experts:
             continue
 
-        scores = [(expert, calculate_expert_suitability(expert, auth_request, all_experts_assignments, now)) 
-                 for expert in eligible_experts]
+        scores = [(expert, calculate_expert_suitability(expert, auth_request, all_experts_assignments, now))
+                  for expert in eligible_experts]
         max_score = max(score for _, score in scores)
         best_experts = [expert for expert, score in scores if score == max_score]
         recommended_expert = choice(best_experts)
@@ -874,7 +878,7 @@ def bulk_auto_assign_experts():
         send_notification_email(expert, Notification(
             user_id=expert.id, message=f'You have been assigned to authenticate {auth_request.item.title}',
             item_url=auth_request.item.url, item_title=auth_request.item.title, notification_type=4))
-        
+
         send_notification_email(auth_request.requester, Notification(
             user_id=auth_request.requester_id, message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}',
             item_url=auth_request.item.url, item_title=auth_request.item.title, notification_type=4))
@@ -998,7 +1002,7 @@ def update_expertise(user_id):
     """Update the expertise of an expert."""
     if current_user.role != 2:
         return jsonify({'error': 'Unauthorised'}), 403
-    
+
     if current_user.id != int(user_id):
         return jsonify({'error': 'Cannot modify other user\'s expertise'}), 403
 
@@ -1009,7 +1013,7 @@ def update_expertise(user_id):
 
     if not isinstance(new_expertise, list):
         return jsonify({'error': 'Invalid expertise format'}), 400
-    
+
     # Get all categories
     categories = Category.query.all()
     category_ids = {c.id for c in categories}

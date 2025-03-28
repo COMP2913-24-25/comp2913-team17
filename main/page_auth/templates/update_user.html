@@ -12,11 +12,11 @@
     <div class="row">
       <!-- Left Sidebar with clickable items -->
       <div class="col-md-3">
-          <ul class="list-group update-list-group">
-              <li class="list-group-item" id="username-link">Username</li>
-              <li class="list-group-item" id="email-link">Email</li>
-              <li class="list-group-item" id="password-link">Password</li>
-          </ul>
+        <ul class="list-group update-list-group">
+          <li class="list-group-item" id="username-link">Username</li>
+          <li class="list-group-item" id="email-link">Email</li>
+          <li class="list-group-item" id="password-link">Password</li>
+        </ul>
       </div>
 
       <div class="col-md-9 update-form-container">
@@ -24,7 +24,8 @@
         <div id="username-form" class="form-container" style="display: block;">
           <h3>Update Username</h3>
           <!--Update Username-->
-          <form action="#" method="POST" name="UpdateUsername" id="update-username-form" action="{{ url_for('auth_page.update_user') }}">
+          <form action="#" method="POST" name="UpdateUsername" id="update-username-form"
+            action="{{ url_for('auth_page.update_user') }}">
             {{ update_username_form.csrf_token(class_="form-control", id_="csrf-token-username") }}
             <h5>
               Current username: {{ current_user.username }}
@@ -33,27 +34,27 @@
               <label for="new-username" class="form-label">
                 New Username
               </label>
-              <i class="fas fa-info-circle" 
-              data-bs-toggle="tooltip"
-              data-bs-placement="top"
-              title="Usernames can be between 2 and 16 characters">
+              <i class="fas fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Usernames can be between 2 and 16 characters">
               </i>
-              {{ update_username_form.new_username(class_="form-control required-field", placeholder="Enter a new username", id_="new-username", maxlength_="16", autocomplete="username") }}
+              {{ update_username_form.new_username(class_="form-control required-field", placeholder="Enter a new
+              username", id_="new-username", maxlength_="16", autocomplete="username") }}
               {% for error in update_username_form.new_username.errors %}
-                <div class="form-warning" role="alert">
-                  {{ error }}
-                </div>
+              <div class="form-warning" role="alert">
+                {{ error }}
+              </div>
               {% endfor %}
             </div>
             <div class="form-group">
               <label for="current-password" class="form-label">
                 Password
               </label>
-              {{ update_username_form.current_password(class_="form-control required-field", placeholder="Enter your password", id_="current-password", autocomplete="current-password") }}
+              {{ update_username_form.current_password(class_="form-control required-field", placeholder="Enter your
+              password", id_="current-password", autocomplete="current-password") }}
               {% for error in update_username_form.current_password.errors %}
-                <div class="form-warning" role="alert">
-                  {{ error }}
-                </div>
+              <div class="form-warning" role="alert">
+                {{ error }}
+              </div>
               {% endfor %}
             </div>
             <div class="form-group">
@@ -65,7 +66,8 @@
         <!--Update Email-->
         <div id="email-form" class="form-container" style="display: none;">
           <h3>Update Email</h3>
-          <form action="#" method="POST" name="UpdateEmail" id="update-email-form" action="{{ url_for('auth_page.update_user') }}">
+          <form action="#" method="POST" name="UpdateEmail" id="update-email-form"
+            action="{{ url_for('auth_page.update_user') }}">
             {{ update_email_form.csrf_token(class_="form-control", id_="csrf-token-email") }}
             <h5>
               Current email: {{ masked_email }}
@@ -74,22 +76,24 @@
               <label for="new-email" class="form-label">
                 New Email
               </label>
-              {{ update_email_form.new_email(class_="form-control required-field", placeholder="Enter your new email", id_="new-email", maxlength_="50", autocomplete="email") }}
-              {% for error in update_email_form.new_email.errors %} 
-                <div class="form-warning" role="alert">
-                  {{ error }}
-                </div>
+              {{ update_email_form.new_email(class_="form-control required-field", placeholder="Enter your new email",
+              id_="new-email", maxlength_="50", autocomplete="email") }}
+              {% for error in update_email_form.new_email.errors %}
+              <div class="form-warning" role="alert">
+                {{ error }}
+              </div>
               {% endfor %}
             </div>
             <div class="form-group">
               <label for="current-password-email" class="form-label">
                 Password
               </label>
-              {{ update_email_form.current_password(class_="form-control required-field", placeholder="Enter your password", id_="current-password-email", autocomplete="current-password") }}
-              {% for error in update_email_form.current_password.errors %} 
-                <div class="form-warning" role="alert">
-                  {{ error }}
-                </div>
+              {{ update_email_form.current_password(class_="form-control required-field", placeholder="Enter your
+              password", id_="current-password-email", autocomplete="current-password") }}
+              {% for error in update_email_form.current_password.errors %}
+              <div class="form-warning" role="alert">
+                {{ error }}
+              </div>
               {% endfor %}
             </div>
             <div class="form-group">
@@ -101,49 +105,50 @@
         <!--Update Password-->
         <div id="password-form" class="form-container" style="display: none;">
           <h3>Update Password</h3>
-          <form action="#" method="POST" name="UpdatePassword" id="update-password-form" action="{{ url_for('auth_page.update_user') }}">
+          <form action="#" method="POST" name="UpdatePassword" id="update-password-form"
+            action="{{ url_for('auth_page.update_user') }}">
             {{ update_password_form.csrf_token(class_="form-control", id_="csrf-token-password") }}
             <div class="form-group">
               <label for="current-password-password" class="form-label">
                 Current Password
               </label>
-              {{ update_password_form.current_password(class_="form-control required-field", placeholder="Enter your current password", id_="current-password-password", autocomplete="current-password") }}
-              {% for error in update_password_form.current_password.errors %} 
-                <div class="form-warning" role="alert">
-                  {{ error }}
-                </div>
+              {{ update_password_form.current_password(class_="form-control required-field", placeholder="Enter your
+              current password", id_="current-password-password", autocomplete="current-password") }}
+              {% for error in update_password_form.current_password.errors %}
+              <div class="form-warning" role="alert">
+                {{ error }}
+              </div>
               {% endfor %}
             </div>
             <div class="form-group">
               <label for="new-password" class="form-label">
                 New Password
               </label>
-              <i class="fas fa-info-circle" 
-              data-bs-toggle="tooltip"
-              data-bs-placement="top"
-              title="Password must meet the following requirements:
+              <i class="fas fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Password must meet the following requirements:
 
 - Be between 8-24 characters
 - Contain at least one uppercase letter
 - Contain at least one number
 - Contain at least one special character (e.g. %*!&)">
               </i>
-              {{ update_password_form.new_password(class_="form-control required-field", placeholder="Enter a new password", id_="new-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
-              {% for error in update_password_form.new_password.errors %} 
-                <div class="form-warning" role="alert">
-                  {{ error }}
-                </div>
+              {{ update_password_form.new_password(class_="form-control required-field", placeholder="Enter a new
+              password", id_="new-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
+              {% for error in update_password_form.new_password.errors %}
+              <div class="form-warning" role="alert">
+                {{ error }}
+              </div>
               {% endfor %}
             </div>
             <div class="form-group">
               <label for="confirm-password" class="form-label">
                 Confirm New Password
               </label>
-              {{ update_password_form.confirm_password(class_="form-control required-field", placeholder="Confirm your new password", id_="confirm-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
-              {% for error in update_password_form.confirm_password.errors %} 
-                <div class="form-warning" role="alert">
-                  {{ error }}
-                </div>
+              {{ update_password_form.confirm_password(class_="form-control required-field", placeholder="Confirm your
+              new password", id_="confirm-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
+              {% for error in update_password_form.confirm_password.errors %}
+              <div class="form-warning" role="alert">
+                {{ error }}
+              </div>
               {% endfor %}
             </div>
             <div class="form-group">

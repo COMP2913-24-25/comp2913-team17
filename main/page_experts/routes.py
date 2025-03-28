@@ -11,17 +11,17 @@ def update_availability():
     if current_user.role != 2:
         flash("You are not authorised to access this page.", "error")
         return redirect(url_for("home_page.index"))
-    
+
     today = date.today()
     # Compute current week's start (most recent Sunday)
     current_week_start = today - timedelta(days=(today.weekday() + 1) % 7)
-    
+
     # Determine week_start from GET query parameter or POST hidden field.
     if request.method == 'POST':
         week_start_str = request.form.get('week_start')
     else:
         week_start_str = request.args.get('week_start')
-    
+
     if week_start_str:
         try:
             week_start = datetime.strptime(week_start_str, '%Y-%m-%d').date()
@@ -42,7 +42,7 @@ def update_availability():
             availability = ExpertAvailability.query.filter_by(
                 expert_id=current_user.id, day=current_day
             ).first()
-            
+
             # If times are provided, update or create the record with these times and status
             if start_time_str and end_time_str:
                 try:
@@ -52,8 +52,8 @@ def update_availability():
                     flash(f"Invalid time format for {current_day}.", "error")
                     continue
                 # Validate times between 08:00 and 20:00
-                if not (start_time >= datetime.strptime("08:00", "%H:%M").time() and
-                        end_time <= datetime.strptime("20:00", "%H:%M").time()):
+                if not (start_time >= datetime.strptime("08:00", "%H:%M").time()
+                        and end_time <= datetime.strptime("20:00", "%H:%M").time()):
                     flash(f"Availability for {current_day} must be between 08:00 and 20:00.", "error")
                     continue
                 if not availability:
@@ -88,7 +88,7 @@ def update_availability():
         flash("Availability updated successfully.", "success")
         # Redirect back to the same week view
         return redirect(url_for('expert_page.update_availability', week_start=week_start.strftime('%Y-%m-%d')))
-    
+
     # For GET: Load availability for the specified week.
     week_availabilities = {week_start + timedelta(days=i): None for i in range(7)}
     availabilities = ExpertAvailability.query.filter_by(

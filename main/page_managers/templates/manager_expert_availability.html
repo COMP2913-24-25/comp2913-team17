@@ -17,12 +17,14 @@
   <div class="dashboard-tabs-container">
     <ul class="nav nav-tabs dashboard-tabs" id="expertAvailabilityTabs" role="tablist">
       <li class="nav-item" role="presentation">
-        <a class="nav-link active" id="daily-tab" data-bs-toggle="tab" href="#daily" role="tab" aria-controls="daily" aria-selected="true">
+        <a class="nav-link active" id="daily-tab" data-bs-toggle="tab" href="#daily" role="tab" aria-controls="daily"
+          aria-selected="true">
           Daily View
         </a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link" id="weekly-tab" data-bs-toggle="tab" href="#weekly" role="tab" aria-controls="weekly" aria-selected="false">
+        <a class="nav-link" id="weekly-tab" data-bs-toggle="tab" href="#weekly" role="tab" aria-controls="weekly"
+          aria-selected="false">
           Weekly View
         </a>
       </li>
@@ -39,122 +41,120 @@
       <select class="form-select" id="categoryFilter">
         <option value="">All Categories</option>
         {% for category in categories %}
-          <option value="{{ category.id }}">{{ category.name }}</option>
+        <option value="{{ category.id }}">{{ category.name }}</option>
         {% endfor %}
       </select>
     </div>
   </div>
 
   <!-- Global expert search bar for daily and weekly views -->
-<div class="input-group mb-3">
-  <span class="input-group-text"><i class="fas fa-search"></i></span>
-  <input type="text" id="expert-search" class="form-control" placeholder="Search experts...">
-</div>
-
-<div class="tab-content mt-4" id="expertAvailabilityTabsContent">
-
+  <div class="input-group mb-3">
+    <span class="input-group-text"><i class="fas fa-search"></i></span>
+    <input type="text" id="expert-search" class="form-control" placeholder="Search experts...">
+  </div>
 
   <div class="tab-content mt-4" id="expertAvailabilityTabsContent">
 
-    <!-- Daily View -->
-    <div class="tab-pane fade show active" id="daily" role="tabpanel" aria-labelledby="daily-tab">
-      <div class="auth-card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span><i class="fas fa-calendar-day me-2"></i> Daily Availability for {{ today.strftime('%A, %b %d, %Y') }}</span>
-          <button id="toggleFilter" class="btn btn-card">
-            Show Only Currently Available Experts
-          </button>
-        </div>
-        <div class="card-body table-responsive p-0">
-          <table class="auth-table table-bordered" id="dailyTable" data-current-slot="{{ current_slot.strftime('%H:%M') }}">
-            <thead>
-              <tr>
-                <th>Expert</th>
-                {% for slot in time_slots %}
+
+    <div class="tab-content mt-4" id="expertAvailabilityTabsContent">
+
+      <!-- Daily View -->
+      <div class="tab-pane fade show active" id="daily" role="tabpanel" aria-labelledby="daily-tab">
+        <div class="auth-card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-calendar-day me-2"></i> Daily Availability for {{ today.strftime('%A, %b %d, %Y')
+              }}</span>
+            <button id="toggleFilter" class="btn btn-card">
+              Show Only Currently Available Experts
+            </button>
+          </div>
+          <div class="card-body table-responsive p-0">
+            <table class="auth-table table-bordered" id="dailyTable"
+              data-current-slot="{{ current_slot.strftime('%H:%M') }}">
+              <thead>
+                <tr>
+                  <th>Expert</th>
+                  {% for slot in time_slots %}
                   <th>{{ slot.strftime('%H:%M') }}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for expert in experts %}
-                <tr data-categories="{% for ec in expert.expert_categories %}{{ ec.category.id }}{% if not loop.last %},{% endif %}{% endfor %}">
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for expert in experts %}
+                <tr
+                  data-categories="{% for ec in expert.expert_categories %}{{ ec.category.id }}{% if not loop.last %},{% endif %}{% endfor %}">
                   <td>{{ expert.username }}</td>
                   {% set avail = daily_availability[expert.id] %}
                   {% for slot in time_slots %}
                   {% set slot_str = slot.strftime('%H:%M') %}
                   {% if slot_str == current_slot.strftime('%H:%M') %}
-                    {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
-                      <td data-label="{{ slot.strftime('%H:%M') }}"
-                          class="bg-success text-white text-center"
-                          title="Available at {{ slot.strftime('%H:%M') }}">Now</td>
+                  {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %} <td
+                    data-label="{{ slot.strftime('%H:%M') }}" class="bg-success text-white text-center"
+                    title="Available at {{ slot.strftime('%H:%M') }}">Now</td>
                     {% else %}
-                      <td data-label="{{ slot.strftime('%H:%M') }}"
-                          class="bg-danger text-white text-center"
-                          title="Unavailable at {{ slot.strftime('%H:%M') }}">Now</td>
+                    <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-danger text-white text-center"
+                      title="Unavailable at {{ slot.strftime('%H:%M') }}">Now</td>
                     {% endif %}
                     {% else %}
-                    {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %}
-                      <td data-label="{{ slot.strftime('%H:%M') }}"
-                          class="bg-success text-white text-center"
-                          title="Available at {{ slot.strftime('%H:%M') }}">Available</td>
-                    {% else %}
-                      <td data-label="{{ slot.strftime('%H:%M') }}"
-                          class="bg-danger text-white text-center"
-                          title="Unavailable at {{ slot.strftime('%H:%M') }}">Unavailable</td>
-                    {% endif %}
-                  {% endif %}                  
-                  {% endfor %}
+                    {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %} <td
+                      data-label="{{ slot.strftime('%H:%M') }}" class="bg-success text-white text-center"
+                      title="Available at {{ slot.strftime('%H:%M') }}">✔</td>
+                      {% else %}
+                      <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-danger text-white text-center"
+                        title="Unavailable at {{ slot.strftime('%H:%M') }}">✘</td>
+                      {% endif %}
+                      {% endif %}
+                      {% endfor %}
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <div class="card-footer text-muted text-end px-3">
-          Current time: {{ current_time.strftime('%H:%M') }}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer text-muted text-end px-3">
+            Current time: {{ current_time.strftime('%H:%M') }}
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Weekly View -->
-    <div class="tab-pane fade" id="weekly" role="tabpanel" aria-labelledby="weekly-tab">
-      <div class="auth-card">
-        <div class="card-header">
-          <i class="fas fa-calendar-week me-2"></i> Weekly Availability (Next 7 Days)
-        </div>
-        <div class="card-body table-responsive p-0">
-          <table class="auth-table table-bordered" id="weeklyTable">
-            <thead>
-              <tr>
-                <th>Expert</th>
-                {% for day in days %}
+      <!-- Weekly View -->
+      <div class="tab-pane fade" id="weekly" role="tabpanel" aria-labelledby="weekly-tab">
+        <div class="auth-card">
+          <div class="card-header">
+            <i class="fas fa-calendar-week me-2"></i> Weekly Availability (Next 7 Days)
+          </div>
+          <div class="card-body table-responsive p-0">
+            <table class="auth-table table-bordered" id="weeklyTable">
+              <thead>
+                <tr>
+                  <th>Expert</th>
+                  {% for day in days %}
                   <th>{{ day.strftime('%a, %b %d') }}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for expert in experts %}
-                <tr data-categories="{% for ec in expert.expert_categories %}{{ ec.category.id }}{% if not loop.last %},{% endif %}{% endfor %}">
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for expert in experts %}
+                <tr
+                  data-categories="{% for ec in expert.expert_categories %}{{ ec.category.id }}{% if not loop.last %},{% endif %}{% endfor %}">
                   <td>{{ expert.username }}</td>
                   {% for day in days %}
                   {% if weekly_availability[expert.id][day] %}
-                  <td data-label="{{ day.strftime('%a, %b %d') }}"
-                      class="bg-success text-white text-center"
-                      title="Available at {{ day.strftime('%a, %b %d') }}">Available</td>
-                {% else %}
-                  <td data-label="{{ day.strftime('%a, %b %d') }}"
-                      class="bg-danger text-white text-center"
-                      title="Unavailable at {{ day.strftime('%a, %b %d') }}">Unavailable</td>
-                {% endif %}                
+                  <td data-label="{{ day.strftime('%a, %b %d') }}" class="bg-success text-white text-center"
+                    title="Available at {{ day.strftime('%a, %b %d') }}">✔</td>
+                  {% else %}
+                  <td data-label="{{ day.strftime('%a, %b %d') }}" class="bg-danger text-white text-center"
+                    title="Unavailable at {{ day.strftime('%a, %b %d') }}">✘</td>
+                  {% endif %}
                   {% endfor %}
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<script src="{{ url_for('static', filename='js/filterAvailability.js') }}"></script>
-{% endblock %}
+  <script src="{{ url_for('static', filename='js/filterAvailability.js') }}"></script>
+  {% endblock %}
