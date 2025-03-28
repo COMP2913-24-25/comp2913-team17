@@ -130,9 +130,9 @@ stripe listen --forward-to http://127.0.0.1:5000/item/stripe-webhook
 
 ### APIs
 
-- [Stripe](https://stripe.com/gb) - Secure handling of payments.
+- [Stripe](https://stripe.com/gb) - For secure handling of payments.
 
-- [Google OAuth](https://developers.google.com/identity/protocols/oauth2) - For user authentication and account creation.
+- [Google OAuth](https://developers.google.com/identity/protocols/oauth2) - For user authentication during login.
 
 - [Google Mail](https://developers.google.com/gmail/api) - For sending emails.
 
@@ -193,7 +193,7 @@ git checkout -b <issueId-issueDescription>
 
 4. Push Your Changes
 
-This project follows the conventional commit structure, please see the [coding style guide](https://github.com/COMP2913-24-25/comp2913-team17/wiki/Coding-Style-Guide) in the [wiki](https://github.com/COMP2913-24-25/comp2913-team17/wiki) for more information. Your changes might be rejected if your commit messages don't follow this structure.
+This project follows the conventional commit structure, please see the [coding style guide](https://github.com/COMP2913-24-25/comp2913-team17/wiki/Coding-Style-Guide) in the [wiki](https://github.com/COMP2913-24-25/comp2913-team17/wiki) for more information. Your changes may be rejected if your commit messages don't follow this structure.
 
 ```bash
 # To stage all changes you've made
@@ -208,7 +208,7 @@ git push
 
 5. Create a Pull Request
 
-The pull request should be linked to an issue where possible using "Closes #<id>". This ensures that when your changes are merged, it will automatically close the issue it is linked with. Pull requests should be descriptive, with markdown headings breaking up sections. Images are always welcome especially for UI changes so we can see a before and after.
+The pull request should be linked to an issue where possible using "Closes #<id>". This ensures that when your changes are merged, the PR will automatically close the issue it is linked with. Pull requests should be descriptive, with markdown headings breaking up sections. Images are always welcome, especially for UI changes so we can see a before and after.
 
 6. Await Review
 
