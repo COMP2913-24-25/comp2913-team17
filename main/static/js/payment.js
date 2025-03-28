@@ -67,7 +67,7 @@ function showPaymentConfirmation(itemData, callback) {
   }
   
   $('body').append(`
-    <div class="modal fade" id="paymentConfirmationModal" tabindex="-1" aria-labelledby="paymentConfirmationModalLabel" aria-hidden="true">
+    <div class="modal fade" id="paymentConfirmationModal" tabindex="-1" aria-labelledby="paymentConfirmationModalLabel">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
