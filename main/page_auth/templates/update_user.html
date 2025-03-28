@@ -33,9 +33,14 @@
               <label for="new-username" class="form-label">
                 New Username
               </label>
+              <i class="fas fa-info-circle" 
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              title="Usernames can be between 2 and 16 characters">
+              </i>
               {{ update_username_form.new_username(class_="form-control required-field", placeholder="Enter a new username", id_="new-username", maxlength_="16", autocomplete="username") }}
               {% for error in update_username_form.new_username.errors %}
-                <div class="alert alert-danger" role="alert">
+                <div class="form-warning" role="alert">
                   {{ error }}
                 </div>
               {% endfor %}
@@ -46,7 +51,7 @@
               </label>
               {{ update_username_form.current_password(class_="form-control required-field", placeholder="Enter your password", id_="current-password", autocomplete="current-password") }}
               {% for error in update_username_form.current_password.errors %}
-                <div class="alert alert-danger" role="alert">
+                <div class="form-warning" role="alert">
                   {{ error }}
                 </div>
               {% endfor %}
@@ -71,7 +76,7 @@
               </label>
               {{ update_email_form.new_email(class_="form-control required-field", placeholder="Enter your new email", id_="new-email", maxlength_="50", autocomplete="email") }}
               {% for error in update_email_form.new_email.errors %} 
-                <div class="alert alert-danger" role="alert">
+                <div class="form-warning" role="alert">
                   {{ error }}
                 </div>
               {% endfor %}
@@ -82,7 +87,7 @@
               </label>
               {{ update_email_form.current_password(class_="form-control required-field", placeholder="Enter your password", id_="current-password-email", autocomplete="current-password") }}
               {% for error in update_email_form.current_password.errors %} 
-                <div class="alert alert-danger" role="alert">
+                <div class="form-warning" role="alert">
                   {{ error }}
                 </div>
               {% endfor %}
@@ -104,7 +109,7 @@
               </label>
               {{ update_password_form.current_password(class_="form-control required-field", placeholder="Enter your current password", id_="current-password-password", autocomplete="current-password") }}
               {% for error in update_password_form.current_password.errors %} 
-                <div class="alert alert-danger" role="alert">
+                <div class="form-warning" role="alert">
                   {{ error }}
                 </div>
               {% endfor %}
@@ -113,9 +118,19 @@
               <label for="new-password" class="form-label">
                 New Password
               </label>
+              <i class="fas fa-info-circle" 
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              title="Password must meet the following requirements:
+
+- Be between 8-24 characters
+- Contain at least one uppercase letter
+- Contain at least one number
+- Contain at least one special character (e.g. %*!&)">
+              </i>
               {{ update_password_form.new_password(class_="form-control required-field", placeholder="Enter a new password", id_="new-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
               {% for error in update_password_form.new_password.errors %} 
-                <div class="alert alert-danger" role="alert">
+                <div class="form-warning" role="alert">
                   {{ error }}
                 </div>
               {% endfor %}
@@ -126,7 +141,7 @@
               </label>
               {{ update_password_form.confirm_password(class_="form-control required-field", placeholder="Confirm your new password", id_="confirm-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
               {% for error in update_password_form.confirm_password.errors %} 
-                <div class="alert alert-danger" role="alert">
+                <div class="form-warning" role="alert">
                   {{ error }}
                 </div>
               {% endfor %}

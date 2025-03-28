@@ -56,4 +56,19 @@ document.addEventListener('DOMContentLoaded', function() {
             $(this).val('unavailable').trigger('change');
         });
     });
+
+    // Handler for "Mark Whole Week as Available" button
+    $('#mark-week-available').on('click', function(){
+      // For each enabled status-select, set its value to "available" and trigger change
+      $('.status-select:not(:disabled)').each(function(){
+          $(this).val('available').trigger('change');
+      });
+      // For each enabled time input, set start time to 08:00 and end time to 20:00
+      $('.start-input:not(:disabled)').each(function(){
+          $(this).val('08:00');
+      });
+      $('.end-input:not(:disabled)').each(function(){
+          $(this).val('20:00');
+      });
+    });
 });

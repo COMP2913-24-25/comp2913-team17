@@ -97,4 +97,34 @@ $(document).ready(function() {
       sessionStorage.setItem('biddingSubTabActiveTab', this.id);
     });
   });
+  
+  // Check for payment status in URL and switch to the proper tab if needed
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentStatus = urlParams.get('payment_status');
+  
+  if (paymentStatus) {
+    // Activate the bidding tab and won subtab
+    const biddingTab = document.getElementById('bidding-tab');
+    if (biddingTab) {
+      const biddingTabInstance = new bootstrap.Tab(biddingTab);
+      biddingTabInstance.show();
+      
+      // Small delay to ensure tab switching works
+      setTimeout(() => {
+        const wonTab = document.getElementById('won-tab');
+        if (wonTab) {
+          const wonTabInstance = new bootstrap.Tab(wonTab);
+          wonTabInstance.show();
+        }
+      }, 100);
+    }
+    
+    // Clean URL after displaying alerts
+    const url = new URL(window.location);
+    url.searchParams.delete('payment_status');
+    // Use replaceState to not affect browser history
+    window.setTimeout(() => {
+      window.history.replaceState({}, '', url);
+    }, 300);
+  }
 });

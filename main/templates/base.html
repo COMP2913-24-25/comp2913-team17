@@ -93,29 +93,48 @@
               </span>
               {% endif %}
             </button>
-            <ul class="dropdown-menu dropdown-menu-end" style="width: 300px; max-height: 400px; overflow-y: auto;">
-              {% if current_user.notifications %}
-                {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true) %}
-                <li>
-                  {% if notification.item_url %}
-                  <a href="{{ url_for('item_page.index', url=notification.item_url) }}" 
-                     class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %} text-decoration-none notification-item"
-                     data-notification-id="{{ notification.id }}">
-                    <small class="text-muted d-block">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                    {{ notification.message }}
-                  </a>
-                  {% else %}
-                  <div class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %} notification-item"
+            <ul class="dropdown-menu dropdown-menu-end notification-dropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+              <div class="notification-header d-flex justify-content-between align-items-center p-2">
+                <h6 class="m-0">Notifications</h6>
+                {% if current_user.notifications %}
+                <button id="clear-all-notifications" class="btn btn-sm btn-outline-danger" title="Clear all">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+                {% endif %}
+              </div>
+              <div id="notification-list">
+                {% if current_user.notifications %}
+                  {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true) %}
+                  <li>
+                    {% if notification.item_url %}
+                    <a href="{{ url_for('item_page.index', url=notification.item_url) }}" 
+                       class="dropdown-item notification-item {% if not notification.is_read %}notification-unread{% endif %}"
                        data-notification-id="{{ notification.id }}">
-                    <small class="text-muted d-block">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                    {{ notification.message }}
-                  </div>
-                  {% endif %}
-                </li>
-                {% endfor %}
-              {% else %}
-                <li><div class="dropdown-item p-2 text-center">No notifications</div></li>
-              {% endif %}
+                      <div class="notification-content">
+                        <div class="notification-message">{{ notification.message }}</div>
+                        <div class="notification-time">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                      </div>
+                    </a>
+                    {% else %}
+                    <div class="dropdown-item notification-item {% if not notification.is_read %}notification-unread{% endif %}"
+                         data-notification-id="{{ notification.id }}">
+                      <div class="notification-content">
+                        <div class="notification-message">{{ notification.message }}</div>
+                        <div class="notification-time">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                      </div>
+                    </div>
+                    {% endif %}
+                  </li>
+                  {% endfor %}
+                {% else %}
+                  <li>
+                    <div class="dropdown-item notification-empty">
+                      <i class="fas fa-bell-slash mx-auto d-block text-muted my-2"></i>
+                      <p class="text-center text-muted">No new notifications</p>
+                    </div>
+                  </li>
+                {% endif %}
+              </div>
             </ul>
           </div>
           <!-- Dashboard Button -->

@@ -28,7 +28,6 @@ $(document).ready(function() {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Replace with the unwatch button - add btn-lg to make it the same size
                 const newButton = $(`
                     <button id="unwatch-btn" class="btn btn-success btn-lg" data-item-url="${itemUrl}">
                         <i class="fas fa-check"></i> Watched
@@ -56,6 +55,7 @@ $(document).ready(function() {
         });
     }
     
+    // Show the unwatch confirmation pop up
     function showUnwatchConfirmation(button, itemUrl) {
         // Create and show the modal
         if ($('#unwatchConfirmationModal').length === 0) {
@@ -99,7 +99,7 @@ $(document).ready(function() {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Replace with watch button - ensure consistent btn-lg class
+                // Replace with watch button
                 const newButton = $(`
                     <button id="watch-btn" class="btn btn-outline-dark btn-lg" data-item-url="${itemUrl}">
                         <i class="fas fa-eye"></i> Add to Watchlist
