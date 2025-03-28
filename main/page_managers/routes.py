@@ -10,7 +10,7 @@ def expert_availability():
     # Only allow managers (role 3)
     if current_user.role != 3:
         flash("You are not authorized to access this page.", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("home_page.index"))
     
     today = date.today()
     

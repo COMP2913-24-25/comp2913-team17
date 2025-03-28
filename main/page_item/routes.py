@@ -166,7 +166,7 @@ def place_bid(url):
 
         try:
             if current_highest and current_highest.bidder_id != current_user.id:
-                previous_bidder = User.query.get(current_highest.bidder_id)
+                previous_bidder = db.session.get(User, current_highest.bidder_id)
                 item.notify_outbid(previous_bidder)
         except Exception as e:
             logger.error(f"Error sending notifications: {str(e)}")
@@ -207,7 +207,7 @@ def notify_winner(self):
     if not self.winning_bid:
         return
     
-    winner = User.query.get(self.winning_bid.bidder_id)
+    winner = db.session.get(User, self.winning_bid.bidder_id)
     notification = Notification(
         user_id=winner.id,
         message=f"Congratulations! You won the auction for '{self.title}'",
@@ -241,7 +241,7 @@ def notify_losers(self):
             bidders.add(bid.bidder_id)
     
     for bidder_id in bidders:
-        bidder = User.query.get(bidder_id)
+        bidder = db.session.get(User, bidder_id)
         notification = Notification(
             user_id=bidder.id,
             message=f"The auction for '{self.title}' has ended. Unfortunately, you didn't win.",

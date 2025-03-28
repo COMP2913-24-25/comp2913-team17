@@ -838,8 +838,8 @@ def bulk_auto_assign_experts():
 
     # Send notifications
     for assignment in assignments_made:
-        expert = User.query.get(assignment['expert_id'])
-        auth_request = AuthenticationRequest.query.get(assignment['request_id'])
+        expert = db.session.get(User, assignment['expert_id'])
+        auth_request = db.session.get(AuthenticationRequest, assignment['request_id'])
         
         try:
             socketio.emit('new_notification', {

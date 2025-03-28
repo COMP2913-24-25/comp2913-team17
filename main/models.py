@@ -248,7 +248,7 @@ class Item(db.Model):
         if not self.winning_bid:
             return
         
-        winner = User.query.get(self.winning_bid.bidder_id)
+        winner = db.session.get(User, self.winning_bid.bidder_id)
         notification = Notification(
             user_id=winner.id,
             message=f"Congratulations! You won the auction for '{self.title}'",
@@ -286,7 +286,7 @@ class Item(db.Model):
                 bidders.add(bid.bidder_id)
         
         for bidder_id in bidders:
-            bidder = User.query.get(bidder_id)
+            bidder = db.session.get(User, bidder_id)
             notification = Notification(
                 user_id=bidder.id,
                 message=f"The auction for '{self.title}' has ended. Unfortunately, you didn't win.",
@@ -362,7 +362,7 @@ class Item(db.Model):
             return
 
         try:
-            seller = User.query.get(self.seller_id)
+            seller = db.session.get(User, self.seller_id)
             if not seller:
                 logger.error(f"Failed to find seller with ID {self.seller_id} for payment notification")
                 return
@@ -407,7 +407,7 @@ class Item(db.Model):
         if not self.winning_bid:
             return
             
-        buyer = User.query.get(self.winning_bid.bidder_id)
+        buyer = db.session.get(User, self.winning_bid.bidder_id)
         notification = Notification(
             user_id=buyer.id,
             message=f"Payment successful! You have paid £{self.winning_bid.bid_amount} for '{self.title}'.",
