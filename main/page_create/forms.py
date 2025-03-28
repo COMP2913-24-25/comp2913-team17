@@ -1,5 +1,6 @@
 """Contains the form input fields for creating auctions."""
 
+from decimal import Decimal
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileSize
 from wtforms import StringField, TextAreaField, DecimalField, SubmitField, BooleanField, SelectField
@@ -35,10 +36,10 @@ class CreateAuctionForm(FlaskForm):
     minimum_price = DecimalField(
         'Minimum Price (£)',
         validators=[
-            NumberRange(min=0.00, max=999998.00, message='Minimum price must be between £0.00 and £999,998.00')
+            NumberRange(min=Decimal('0.01'), max=Decimal('999998.00'), message='Minimum price must be between £0.01 and £999,998.00')
         ],
         places=2,
-        default=0.00
+        default=Decimal(0.01)
     )
 
     image = FileField('Image (optional)', validators=[

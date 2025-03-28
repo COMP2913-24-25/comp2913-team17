@@ -39,8 +39,15 @@
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 .hero-subtitle {
@@ -144,7 +151,7 @@
   justify-content: center;
   background-color: var(--tertiary-color);
   position: relative;
-  border-bottom: 1.5px solid var(--primary-color);;
+  border-bottom: 1.5px solid var(--primary-color);
 }
 
 .auction-image {
@@ -191,7 +198,7 @@
   font-size: 0.9rem;
   margin-top: auto;
   padding-top: 0.7rem;
-  border-top: 1px solid rgba(0,0,0,0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .auction-price {
@@ -282,7 +289,7 @@
     display: block !important;
     font-size: 1rem !important;
   }
-  
+
   .auction-info {
     padding: 1rem 0.8rem !important;
   }

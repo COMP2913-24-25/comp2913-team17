@@ -17,7 +17,7 @@ MAX_IMAGES = 5
 
 
 def allowed_file(filename):
-    """Check if a file is an allowed type."""
+    # Check if a file is an allowed type.
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
 
 
@@ -29,7 +29,7 @@ def on_join(data):
         return
     room = data.get('auth_url')
     authentication = AuthenticationRequest.query.filter_by(url=room).first()
-    
+
     # Check user is allowed to join this room
     expert = authentication.expert_assignments[-1] if authentication.expert_assignments else None
     is_creator = authentication.requester_id == current_user.id
@@ -38,7 +38,7 @@ def on_join(data):
 
     if not is_creator and not is_expert and not is_admin:
         return
-    
+
     if room:
         join_room(room)
 
@@ -71,7 +71,7 @@ def index(url):
     if not is_creator and not is_expert and not is_admin:
         flash('You are not authorised to view this page.', 'danger')
         return redirect(url_for('home_page.index'))
-    
+
     # Get messages with their images
     messages = Message.query.options(
         joinedload(Message.images)
@@ -92,16 +92,16 @@ def accept(url):
     authentication = AuthenticationRequest.query.filter_by(url=url).first()
     if not authentication:
         return jsonify({'error': 'Authentication request not found.'}), 404
-    
+
     if authentication.status != 1:
         return jsonify({'error': 'Authentication request is not pending.'}), 400
-    
+
     if authentication.expert_assignments and (authentication.expert_assignments[-1].expert_id != current_user.id or authentication.expert_assignments[-1].status != 1):
         return jsonify({'error': 'You are not assigned to this authentication request.'}), 403
-    
+
     if authentication.item.auction_end < datetime.now():
         return jsonify({'error': 'Auction has ended.'}), 400
-    
+
     authentication.status = 2
     authentication.expert_assignments[-1].status = 2
 
@@ -115,17 +115,17 @@ def accept(url):
     )
     db.session.add(notification)
     db.session.commit()
-        
+
     # Send real-time notifications
     try:
         socketio.emit('new_notification', {
             'message': notification.message,
-            'item_url': notification.item_url, 
+            'item_url': notification.item_url,
             'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
         }, room=f'user_{authentication.requester.secret_key}')
     except Exception as e:
         print(f'SocketIO Error: {e}')
-        
+
     # Send email
     send_notification_email(authentication.requester, notification)
 
@@ -142,19 +142,19 @@ def reject(url):
     authentication = AuthenticationRequest.query.filter_by(url=url).first()
     if not authentication:
         return jsonify({'error': 'Authentication request not found.'}), 404
-    
+
     if authentication.status != 1:
         return jsonify({'error': 'Authentication request is not pending.'}), 400
-    
+
     if authentication.expert_assignments and (authentication.expert_assignments[-1].expert_id != current_user.id or authentication.expert_assignments[-1].status != 1):
         return jsonify({'error': 'You are not assigned to this authentication request.'}), 403
-    
+
     if authentication.item.auction_end < datetime.now():
         return jsonify({'error': 'Auction has ended.'}), 400
-    
+
     authentication.status = 3
     authentication.expert_assignments[-1].status = 2
-    
+
     # Send notification to requester
     notification = Notification(
         user_id=authentication.requester_id,
@@ -165,17 +165,17 @@ def reject(url):
     )
     db.session.add(notification)
     db.session.commit()
-        
+
     # Send real-time notifications
     try:
         socketio.emit('new_notification', {
             'message': notification.message,
-            'item_url': notification.item_url, 
+            'item_url': notification.item_url,
             'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
         }, room=f'user_{authentication.requester.secret_key}')
     except Exception as e:
         print(f'SocketIO Error: {e}')
-        
+
     # Send email
     send_notification_email(authentication.requester, notification)
 
@@ -192,16 +192,16 @@ def reassign(url):
     authentication = AuthenticationRequest.query.filter_by(url=url).first()
     if not authentication:
         return jsonify({'error': 'Authentication request not found.'}), 404
-    
+
     if authentication.status != 1:
         return jsonify({'error': 'Authentication request is not pending.'}), 400
-    
+
     if authentication.expert_assignments and (authentication.expert_assignments[-1].expert_id != current_user.id or authentication.expert_assignments[-1].status != 1):
         return jsonify({'error': 'You are not assigned to this authentication request.'}), 403
-    
+
     if authentication.item.auction_end < datetime.now():
         return jsonify({'error': 'Auction has ended.'}), 400
-    
+
     authentication.expert_assignments[-1].status = 3
     db.session.commit()
 
@@ -214,13 +214,13 @@ def new_message(url):
     authentication = AuthenticationRequest.query.filter_by(url=url).first()
     if not authentication:
         return jsonify({'error': 'Authentication request not found.'}), 404
-    
+
     if authentication.status != 1:
         return jsonify({'error': 'Authentication request is not pending.'}), 400
-    
+
     if authentication.item.auction_end < datetime.now():
         return jsonify({'error': 'Auction has ended.'}), 400
-    
+
     # Check user is allowed to leave message
     expert = authentication.expert_assignments[-1] if authentication.expert_assignments else None
     is_creator = authentication.requester_id == current_user.id
@@ -228,11 +228,11 @@ def new_message(url):
 
     if not is_creator and not is_expert:
         return jsonify({'error': 'You are not authorised to leave a message.'}), 403
-    
+
     message_text = request.form.get('content')
     if not message_text:
         return jsonify({'error': 'Message content is required.'}), 400
-    
+
     # Create the message
     message = Message(
         authentication_request_id=authentication.request_id,
@@ -242,20 +242,20 @@ def new_message(url):
     )
     db.session.add(message)
     db.session.commit()
-    
+
     # Upload image if provided
     files = request.files.getlist('files[]')
     image_urls = []
 
     if len(files) > MAX_IMAGES:
         return jsonify({'error': f'Maximum {MAX_IMAGES} images allowed per message.'}), 400
-    
+
     for file in files:
         if file and file.filename:
             # Check file type and size
             if not allowed_file(file.filename):
                 return jsonify({'error': 'Invalid file type. Only jpg, jpeg, and png are allowed.'}), 400
-        
+
             if len(file.read()) > MAX_SIZE:
                 return jsonify({'error': 'Image file too large. Maximum size is 1MB.'}), 400
 
@@ -263,7 +263,7 @@ def new_message(url):
             filename = secure_filename(file.filename)
             image_filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{filename}'
             path = upload_s3(file, image_filename, folder='message_attachments', private=True)
-            
+
             # Create message image entry
             message_image = MessageImage(
                 message_id=message.message_id,
@@ -271,7 +271,7 @@ def new_message(url):
             )
             db.session.add(message_image)
             db.session.commit()
-            
+
             # Get image URL for real-time messaging
             image_url = message_image.get_url()
             image_urls.append(image_url)
@@ -305,13 +305,13 @@ def new_message(url):
         )
         db.session.add(notification)
         db.session.commit()
-            
+
         # Send real-time notifications
         try:
             socketio.emit('new_notification', {
                 'id': notification.id,
                 'message': notification.message,
-                'item_url': notification.item_url, 
+                'item_url': notification.item_url,
                 'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
             }, room=f'user_{recipient.secret_key}')
         except Exception as e:
