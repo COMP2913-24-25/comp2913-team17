@@ -1,3 +1,5 @@
+// Bidding Scripts
+
 $(document).ready(function() {
   // Disable the modal on page load
   const bidHistoryModal = document.querySelector('.bid-history-modal'); 
