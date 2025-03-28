@@ -17,19 +17,18 @@
           <!-- Username -->
           <div class="form-group login-form">
             <label for="enter-username" class="form-label">Username</label>
-            <i class="fas fa-info-circle" 
-              data-bs-toggle="tooltip"
-              data-bs-placement="top"
+            <i class="fas fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
               title="Usernames can be between 2 and 16 characters">
             </i>
             <div class="user-container">
               <i class="fa-solid fa-user"></i>
-              {{ form.username(class_="form-control required-field", placeholder="Enter a username", id_="enter-username", maxlength_="50", autocomplete="username") }}
+              {{ form.username(class_="form-control required-field", placeholder="Enter a username",
+              id_="enter-username", maxlength_="50", autocomplete="username") }}
             </div>
             <div class="req-label">
               Usernames must be at least 8 characters.
             </div>
-            {% for error in form.username.errors %} 
+            {% for error in form.username.errors %}
             <div class="form-warning" role="alert">{{ error }}</div>
             {% endfor %}
           </div>
@@ -38,7 +37,8 @@
             <label for="enter-email" class="form-label">Email</label>
             <div class="user-container">
               <i class="fas fa-envelope"></i>
-              {{ form.email(class_="form-control required-field", placeholder="Enter your email", id_="enter-email",minlength_="5", maxlength_="100", autcomplete="email") }}
+              {{ form.email(class_="form-control required-field", placeholder="Enter your email",
+              id_="enter-email",minlength_="5", maxlength_="100", autcomplete="email") }}
             </div>
             {% for error in form.email.errors %}
             <div class="form-warning" role="alert">{{ error }}</div>
@@ -48,10 +48,7 @@
           <div class="form-group login-form">
             <label for="enter-password" class="form-label">Password</label>
             <!-- Indentation is replicated in the tooltip -->
-            <i class="fas fa-info-circle" 
-              data-bs-toggle="tooltip"
-              data-bs-placement="top"
-              title="Password must meet the following requirements:
+            <i class="fas fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Password must meet the following requirements:
 
 - Be between 8-24 characters
 - Contain at least one uppercase letter
@@ -60,7 +57,8 @@
             </i>
             <div class="pass-container">
               <i class="fas fa-lock"></i>
-              {{ form.password(class_="form-control required-field", placeholder="Enter a password", id_="enter-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
+              {{ form.password(class_="form-control required-field", placeholder="Enter a password",
+              id_="enter-password", minlength_="8", maxlength_="24", autocomplete="new-password") }}
             </div>
             {% for error in form.password.errors %}
             <div class="form-warning" role="alert">{{ error }}</div>
@@ -71,7 +69,8 @@
             <label for="enter-confirm" class="form-label">Confirm Password</label>
             <div class="pass-container">
               <i class="fas fa-lock"></i>
-              {{ form.confirm_password(class_="form-control required-field", placeholder="Confirm your password", id_="enter-confirm", minlength_="8", maxlength_="24", autocomplete="new-password") }}
+              {{ form.confirm_password(class_="form-control required-field", placeholder="Confirm your password",
+              id_="enter-confirm", minlength_="8", maxlength_="24", autocomplete="new-password") }}
             </div>
             {% for error in form.confirm_password.errors %}
             <div class="form-warning" role="alert">{{ error }}</div>
@@ -79,9 +78,11 @@
           </div>
           <!-- Submit -->
           <div class="form-group login-form">
-            {{ form.submit(class_="form-control required-field btn btn-primary", placeholder="Register", id_="submit-register") }}
+            {{ form.submit(class_="form-control required-field btn btn-primary", placeholder="Register",
+            id_="submit-register") }}
           </div>
-          <p class="text-end option-text">Already have an account?&nbsp; <a href="{{ url_for('auth_page.login') }}">Login</a></p>
+          <p class="text-end option-text">Already have an account?&nbsp; <a
+              href="{{ url_for('auth_page.login') }}">Login</a></p>
       </div>
       <!-- Form -->
     </div>
@@ -90,7 +91,7 @@
   <div class="login-graphic">
     <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Vintage Vault Logo" class="login-logo">
   </div>
-  
+
 </div>
 
 <!-- Scripts -->
