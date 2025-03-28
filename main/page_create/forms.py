@@ -73,6 +73,8 @@ class CreateAuctionForm(FlaskForm):
         }
 
     def validate_auction_end(self, field):
+        now = datetime.now()
+
         try:
             days = ManagerConfig.query.filter_by(config_key='max_auction_duration').first()
             maximum_duration = timedelta(days=int(days.config_value))
@@ -80,9 +82,9 @@ class CreateAuctionForm(FlaskForm):
             maximum_duration = timedelta(days=5)
 
         minimum_duration = timedelta(hours=1)
-        req_duration = self.auction_end.data - datetime.now()
+        req_duration = self.auction_end.data - now
 
-        if self.auction_end.data <= datetime.now():
+        if self.auction_end.data <= now:
             raise ValidationError("Auction end must occur after auction start time.")
         elif req_duration > maximum_duration:
             raise ValidationError(f"Auction duration cannot be longer than {maximum_duration.days} days.")
