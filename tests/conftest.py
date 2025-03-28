@@ -45,6 +45,7 @@ def app():
     with app.app_context():
         db.session.remove()
         db.drop_all()
+        db.engine.dispose()
 
     # Remove the test database file
     if os.path.exists(test_db_file):

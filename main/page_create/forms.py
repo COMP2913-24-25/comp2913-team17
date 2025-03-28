@@ -30,7 +30,7 @@ class CreateAuctionForm(FlaskForm):
         'Auction End Time',
         validators=[DataRequired()],
         format='%Y-%m-%dT%H:%M',
-        default=lambda: datetime.now() + timedelta(hours=1)  # Default to 1 hour from now
+        default=lambda: datetime.now() + timedelta(days=1)
     )
 
     minimum_price = DecimalField(
