@@ -90,17 +90,17 @@ def create_app(testing=False, database_path='database.db'):
 
     # Configure email settings for Flask-Mail
     app.config.update(
-        MAIL_SERVER = 'smtp.gmail.com',
-        MAIL_PORT = 587,
-        MAIL_USE_TLS = True,
-        MAIL_USERNAME = os.environ.get('EMAIL_USER'),
-        MAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD'),
-        MAIL_DEFAULT_SENDER = os.environ.get('EMAIL_USER')
+        MAIL_SERVER='smtp.gmail.com',
+        MAIL_PORT=587,
+        MAIL_USE_TLS=True,
+        MAIL_USERNAME=os.environ.get('EMAIL_USER'),
+        MAIL_PASSWORD=os.environ.get('EMAIL_PASSWORD'),
+        MAIL_DEFAULT_SENDER=os.environ.get('EMAIL_USER')
     )
-    
+
     # Add BASE_URL for generating links in emails
     app.config['BASE_URL'] = os.environ.get('BASE_URL', '127.0.0.1:5000')
-    
+
     # Initialize Mail
     mail.init_app(app)
 
@@ -182,8 +182,8 @@ def create_app(testing=False, database_path='database.db'):
     @login_manager.user_loader
     def load_user(user_id):
         from .models import User
-        return db.session.get(User, int(user_id))
-    
+        return db.session.query(User).get(int(user_id))
+
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('404.html'), 404

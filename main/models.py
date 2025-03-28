@@ -1,3 +1,4 @@
+""" SQL MODELS """
 import logging
 from calendar import c
 from datetime import datetime, timedelta
@@ -12,15 +13,11 @@ from .s3_utils import init_s3
 db = SQLAlchemy()
 logger = logging.getLogger(__name__)
 
-# ---------------------------
-# Models
-# ---------------------------
-
 # Table for watched items
 user_watched_items = db.Table('user_watched_items',
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('item_id', db.Integer, db.ForeignKey('items.item_id'))
-)
+                              db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+                              db.Column('item_id', db.Integer, db.ForeignKey('items.item_id'))
+                              )
 
 # User Model
 class User(UserMixin, db.Model):
@@ -28,7 +25,7 @@ class User(UserMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     secret_key = db.Column(db.String(32), unique=True,
-                    default=lambda: uuid4().hex, nullable=False, index=True)
+                           default=lambda: uuid4().hex, nullable=False, index=True)
     username = db.Column(db.String(50), unique=True, nullable=False, index=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -40,24 +37,24 @@ class User(UserMixin, db.Model):
                            onupdate=datetime.now())
     failed_login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime, nullable=True)
-    
+
     # NEW, Stripe Customer ID field for saving card details securely on Stripe
     stripe_customer_id = db.Column(db.String(255), nullable=True)
 
     # Relationships to other tables:
-    items = db.relationship('Item', 
-                          backref='seller',
-                          lazy=True,
-                          foreign_keys='Item.seller_id')
+    items = db.relationship('Item',
+                            backref='seller',
+                            lazy=True,
+                            foreign_keys='Item.seller_id')
     bids = db.relationship('Bid', backref='bidder', lazy=True)
     authentication_requests = db.relationship('AuthenticationRequest', backref='requester', lazy=True)
     expert_assignments = db.relationship('ExpertAssignment', backref='expert', lazy=True)
     expert_availabilities = db.relationship('ExpertAvailability', backref='expert', lazy=True)
     messages_sent = db.relationship('Message', backref='sender', lazy=True)
     notifications = db.relationship('Notification', backref='user', lazy=True)
-    watched_items = db.relationship('Item', secondary=user_watched_items, 
-                                   backref=db.backref('watchers', lazy='dynamic'),
-                                   lazy='dynamic')
+    watched_items = db.relationship('Item', secondary=user_watched_items,
+                                    backref=db.backref('watchers', lazy='dynamic'),
+                                    lazy='dynamic')
 
     def __repr__(self):
         return f"<User {self.username}>"
@@ -75,7 +72,7 @@ class User(UserMixin, db.Model):
     def is_account_locked(self):
         # Check if the account is currently locked
         return self.locked_until is not None and self.locked_until > datetime.now()
-    
+
     def increment_login_attempts(self):
         # Increment failed login attempts and lock account if threshold reached
         self.failed_login_attempts += 1
@@ -83,7 +80,7 @@ class User(UserMixin, db.Model):
         if self.failed_login_attempts >= 5:
             # Lock for 15 minutes
             self.locked_until = datetime.now() + timedelta(minutes=15)
-    
+
     def reset_login_attempts(self):
         # Reset the failed login attempts counter and unlock account
         self.failed_login_attempts = 0
@@ -111,7 +108,7 @@ class User(UserMixin, db.Model):
         )
         db.session.add(notification)
         db.session.commit()
-        
+
         # Send welcome notification
         try:
             from app import socketio
@@ -122,13 +119,13 @@ class User(UserMixin, db.Model):
             }, room=f'user_{self.secret_key}')
         except Exception as e:
             logger.error(f"Failed to send welcome notification: {e}")
-            
+
         # Send welcome email
         try:
             send_notification_email(self, notification)
         except Exception as e:
             logger.error(f"Failed to send welcome email: {e}")
-        
+
         return notification
 
 # Item Model
@@ -159,7 +156,7 @@ class Item(db.Model):
     auth_fee = db.Column(db.Numeric(10, 2), nullable=False, default=5.00)
 
     winning_bid_id = db.Column(
-        db.Integer, 
+        db.Integer,
         db.ForeignKey('bids.bid_id', use_alter=True, name='fk_winning_bid'),
         nullable=True
     )
@@ -170,9 +167,9 @@ class Item(db.Model):
         post_update=True
     )
     bids = db.relationship(
-        'Bid', 
-        backref='item', 
-        lazy=True, 
+        'Bid',
+        backref='item',
+        lazy=True,
         foreign_keys='Bid.item_id',
         primaryjoin="Item.item_id==Bid.item_id"
     )
@@ -193,29 +190,29 @@ class Item(db.Model):
             self.base_fee = float(base_config.config_value)
         else:
             self.base_fee = 1.00
-            
+
         # Set authenticated item fee
         auth_config = ManagerConfig.query.filter_by(config_key=ManagerConfig.AUTHENTICATED_FEE_KEY).first()
         if auth_config:
             self.auth_fee = float(auth_config.config_value)
         else:
             self.auth_fee = 5.00
-    
+
     def __repr__(self):
         return f"<Item {self.title} (ID: {self.item_id})>"
-    
+
     def highest_bid(self):
         if not self.bids:
             return None
         return max(self.bids, key=lambda bid: bid.bid_amount)
-    
+
     def user_highest_bid(self, user_id):
         """Get the highest bid for a specific user on this item."""
         user_bids = [bid for bid in self.bids if bid.bidder_id == user_id]
         if not user_bids:
             return None
         return max(user_bids, key=lambda bid: bid.bid_amount)
-    
+
     # Send notification to the outbid user
     def notify_outbid(self, user):
         notification = Notification(
@@ -227,19 +224,19 @@ class Item(db.Model):
         )
         db.session.add(notification)
         db.session.commit()
-        
+
         # Send real-time notification
         try:
             from main import socketio
             socketio.emit('new_notification', {
                 'id': notification.id,
                 'message': notification.message,
-                'item_url': notification.item_url, 
+                'item_url': notification.item_url,
                 'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M')
             }, room=f'user_{user.secret_key}')
         except Exception as e:
             logger.error(f"Failed to send notification: {e}")
-            
+
         # Send email
         send_notification_email(user, notification)
 
@@ -247,7 +244,7 @@ class Item(db.Model):
     def notify_winner(self):
         if not self.winning_bid:
             return
-        
+
         winner = User.query.get(self.winning_bid.bidder_id)
         notification = Notification(
             user_id=winner.id,
@@ -258,7 +255,7 @@ class Item(db.Model):
         )
         db.session.add(notification)
         db.session.commit()
-        
+
         # Send real-time notification
         try:
             from main import socketio
@@ -270,7 +267,7 @@ class Item(db.Model):
             }, room=f'user_{winner.secret_key}')
         except Exception as e:
             logger.error(f"Failed to send notification: {e}")
-        
+
         # Send email
         send_notification_email(winner, notification)
 
@@ -278,13 +275,13 @@ class Item(db.Model):
     def notify_losers(self):
         if not self.winning_bid:
             return
-            
+
         # Get unique bidders excluding winner
         bidders = set()
         for bid in self.bids:
             if bid.bidder_id != self.winning_bid.bidder_id:
                 bidders.add(bid.bidder_id)
-        
+
         for bidder_id in bidders:
             bidder = User.query.get(bidder_id)
             notification = Notification(
@@ -296,7 +293,7 @@ class Item(db.Model):
             )
             db.session.add(notification)
             db.session.commit()
-            
+
             # Send real-time notification
             try:
                 from main import socketio
@@ -319,7 +316,7 @@ class Item(db.Model):
             # Notify winner and losers
             self.notify_winner()
             self.notify_losers()
-        
+
         # Notify the seller if the auction has bid or not
         self.notify_seller()
 
@@ -331,7 +328,7 @@ class Item(db.Model):
         else:
             message = f"Your auction for '{self.title}' has ended without any bids."
             notification_type = 6
-        
+
         # Create and save the notification
         notification = Notification(
             user_id=self.seller_id,
@@ -342,7 +339,7 @@ class Item(db.Model):
         )
         db.session.add(notification)
         db.session.commit()
-        
+
         # Send real-time notification
         try:
             from main import socketio
@@ -366,7 +363,7 @@ class Item(db.Model):
             if not seller:
                 logger.error(f"Failed to find seller with ID {self.seller_id} for payment notification")
                 return
-                
+
             # Create notification
             notification = Notification(
                 user_id=seller.id,
@@ -377,7 +374,7 @@ class Item(db.Model):
             )
             db.session.add(notification)
             db.session.commit()
-            
+
             # Send real-time notification
             try:
                 from app import socketio
@@ -390,7 +387,7 @@ class Item(db.Model):
                 logger.info(f"Sent payment notification to seller {seller.username} (ID: {seller.id})")
             except Exception as e:
                 logger.error(f"Failed to send real-time payment notification to seller: {e}")
-                
+
             # Send email notification
             try:
                 send_notification_email(seller, notification)
@@ -399,14 +396,14 @@ class Item(db.Model):
                 logger.error(f"Failed to send payment email to seller: {e}")
         except Exception as e:
             logger.error(f"Error in notify_payment for seller: {e}")
-        
+
         # Notify the buyer
         self.notify_payment_buyer()
 
     def notify_payment_buyer(self):
         if not self.winning_bid:
             return
-            
+
         buyer = User.query.get(self.winning_bid.bidder_id)
         notification = Notification(
             user_id=buyer.id,
@@ -417,7 +414,7 @@ class Item(db.Model):
         )
         db.session.add(notification)
         db.session.commit()
-        
+
         # Send real-time notification
         try:
             from app import socketio
@@ -429,7 +426,7 @@ class Item(db.Model):
             }, room=f'user_{buyer.secret_key}')
         except Exception as e:
             logger.error(f"Failed to send buyer payment notification: {e}")
-            
+
         # Send email
         send_notification_email(buyer, notification)
 
@@ -451,7 +448,7 @@ class Bid(db.Model):
 
     bid_id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(
-        db.Integer, 
+        db.Integer,
         db.ForeignKey('items.item_id', ondelete='CASCADE'),
         nullable=False
     )
@@ -528,7 +525,8 @@ class Message(db.Model):
     __tablename__ = 'messages'
 
     message_id = db.Column(db.Integer, primary_key=True)
-    authentication_request_id = db.Column(db.Integer, db.ForeignKey('authentication_requests.request_id'), nullable=False)
+    authentication_request_id = db.Column(db.Integer, db.ForeignKey(
+        'authentication_requests.request_id'), nullable=False)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     message_text = db.Column(db.Text, nullable=False)
     sent_at = db.Column(db.DateTime, default=datetime.now())
@@ -580,7 +578,6 @@ class Notification(db.Model):
     # 5 = Auction Ended (Sold), 6 = Auction Ended (Unsold)
     notification_type = db.Column(db.Integer, nullable=True, default=0)
 
-
     def __repr__(self):
         return f"<Notification {self.id} for user {self.user_id}>"
 
@@ -623,12 +620,12 @@ class ExpertCategory(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
 
     # Relationships to other tables
-    expert = db.relationship('User', 
-                           backref=db.backref('expert_categories', lazy=True),
-                           foreign_keys=[expert_id])
-    category = db.relationship('Category',
+    expert = db.relationship('User',
                              backref=db.backref('expert_categories', lazy=True),
-                             foreign_keys=[category_id])
+                             foreign_keys=[expert_id])
+    category = db.relationship('Category',
+                               backref=db.backref('expert_categories', lazy=True),
+                               foreign_keys=[category_id])
 
     def __repr__(self):
         return f"<ExpertCategory {self.id} for Expert {self.expert_id} in Category {self.category_id}>"

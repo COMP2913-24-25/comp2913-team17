@@ -14,7 +14,8 @@
     <!-- Title -->
     <div class="form-group">
       <label for="enter-title" class="form-label">Title*</label>
-      {{ form.title(class_="form-control required-field", placeholder="Enter item title", id_="enter-title", maxlength_="256") }}
+      {{ form.title(class_="form-control required-field", placeholder="Enter item title", id_="enter-title",
+      maxlength_="256") }}
       {% for error in form.title.errors %}
       <div class="alert alert-danger" role="alert">{{ error }}</div>
       {% endfor %}
@@ -25,13 +26,10 @@
       <select id="{{ form.category_id.id }}" name="{{ form.category_id.name }}" class="form-control" required>
         <option value="">Select a category</option>
         {% for value, text in form.category_id.choices %}
-          <option value="{{ value }}" 
-            {% if form.category_id.data|int == value %}selected{% endif %}
-            {% if value in form.category_descriptions %} 
-            title="{{ form.category_descriptions[value] }}"
-            {% endif %}>
-            {{ text }}
-          </option>
+        <option value="{{ value }}" {% if form.category_id.data|int==value %}selected{% endif %} {% if value in
+          form.category_descriptions %} title="{{ form.category_descriptions[value] }}" {% endif %}>
+          {{ text }}
+        </option>
         {% endfor %}
       </select>
       {% if form.category_id.errors %}
@@ -45,25 +43,28 @@
     <!-- Description -->
     <div class="form-group">
       <label for="enter-description" class="form-label">Description*</label>
-      {{ form.description(class_="form-control required-field", placeholder="Enter item description", id_="enter-description", rows="5") }}
+      {{ form.description(class_="form-control required-field", placeholder="Enter item description",
+      id_="enter-description", rows="5") }}
       {% for error in form.description.errors %}
       <div class="alert alert-danger" role="alert">{{ error }}</div>
       {% endfor %}
     </div>
     <!-- Auction End Time -->
-<div class="form-group">
-  <label for="enter-end-time" class="form-label">Auction End Time*</label>
-  {{ form.auction_end(class_="form-control required-field", id_="enter-end-time", type="datetime-local") }}
-  <!-- Countdown Display -->
-  <div id="countdown" class="mt-2 text-muted mb-4">Auction duration: <span id="timer">Select a date to see the countdown</span></div>
-  {% for error in form.auction_end.errors %}
-  <div class="alert alert-danger" role="alert">{{ error }}</div>
-  {% endfor %}
-</div>
+    <div class="form-group">
+      <label for="enter-end-time" class="form-label">Auction End Time*</label>
+      {{ form.auction_end(class_="form-control required-field", id_="enter-end-time", type="datetime-local") }}
+      <!-- Countdown Display -->
+      <div id="countdown" class="mt-2 text-muted mb-4">Auction duration: <span id="timer">Select a date to see the
+          countdown</span></div>
+      {% for error in form.auction_end.errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+    </div>
     <!-- Minimum Price -->
     <div class="form-group">
       <label for="enter-price" class="form-label">Minimum Price (£)</label>
-      {{ form.minimum_price(class_="form-control required-field", id_="enter-price", default_="0.00", min="0.00", step="0.01") }}
+      {{ form.minimum_price(class_="form-control required-field", id_="enter-price", default_="0.00", min="0.00",
+      step="0.01") }}
       {% for error in form.minimum_price.errors %}
       <div class="alert alert-danger" role="alert">{{ error }}</div>
       {% endfor %}
