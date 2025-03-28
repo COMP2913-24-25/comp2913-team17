@@ -1,38 +1,45 @@
 # COMP2913 Team 17: Antiques & Collectibles Auction System
 
-## Overview
+## Project Description
 
 This project implements an online auction platform specialised for antiques and collectibles. The system allows users to buy and sell items through a competitive bidding process, with built-in authentication services for verifying item authenticity.
 
 For more detailed documentation, please visit the [Wiki](https://github.com/COMP2913-24-25/comp2913-team17/wiki).
 
-## Core Features
+## Table of Contents
+1. [Description](#description)
+2. [Technology Stack](#technology-stack)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Credits](#credits)
+6. [License](#license)
+7. [How to Contribute](#how-to-contribute)
+8. [Testing](#tests)
 
-- User auction management (bidding, selling, tracking)
-- Item authentication system
-- Multi-role user system (Users, Experts, Managers)
-- Real-time notifications
-- Search and discovery tools
+## Technology Stack
+### **Frontend**
 
-## System Architecture
+- [jQuery](https://jquery.com/) - Simplifies event handling, DOM manipulation, and AJAX requests, enabling real-time updates and dynamic interactions on the frontend.
 
-The application follows a three-tier architecture with a web-based interface, backend server, and database system. It's designed to handle multiple simultaneous users and real-time updates.
+- [Bootstrap](https://getbootstrap.com/) - For responsive styling, maintaining accessibility for mobile users.
 
-## Project Management
-This project utilises GitHub's built-in tools for development tracking:
+### **Backend**
 
-- Issues for task management
-- Labels for releases
-- Wiki for documentation
-- Projects for sprint planning
-- Actions for continuous integration
+- [Flask](https://flask.palletsprojects.com/en/stable/) - A lightweight web application framework.
 
-## Installation Instructions
+- [SQLAlchemy](https://www.sqlalchemy.org/) - An SQL toolkit and ORM using Python.
 
-## Running the Application
+- [Stripe](https://stripe.com/gb) - Secure handling of payments.
+
+### **Testing**
+
+- [pytest](https://docs.pytest.org/en/stable/) - Facilitates writing and running tests for the backend.
+
+
+## Installation
 
 1. Insert an environment variable file named `.env` in the project root directory.
-   This should be in the following format with the keys and values filled in:
+   This should be in the following format with the key values filled in:
 
 ```bash
 SECRET_KEY=
@@ -49,13 +56,13 @@ STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 ```
 
-2. Create your virtual environment:
+2. Create your virtual environment (optional but recommended):
 
 ```bash
 python3 -m venv myenv
 ```
 
-3. Activate your virtual environment:
+3. Activate your virtual environment (optional but recommended):
 ```bash
 # For Linux/MacOS
 source myenv/bin/activate
@@ -67,12 +74,12 @@ myenv\Scripts\activate
 .\myenv\Scripts\Activate.ps1
 ```
 
-3. Install dependencies:
+4. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Run the Flask application in development mode:
+5. Run the Flask application in development mode:
 ```bash
 flask run --debug
 ```
@@ -88,226 +95,103 @@ set EMPTY_DB=1 && flask run --debug
 # For Windows PowerShell
 $env:EMPTY_DB=1; flask run --debug
 ```
+6. Set Up Stripe
 
-5. To accomodate payments, you will need to set up Stripe CLI, instructions can be found [here](https://docs.stripe.com/stripe-cli). Once you have set up Stripe CLI and populated the `.env` file with your Stripe API keys, you will need to run the following command:
+To accomodate payments, you will need to set up Stripe CLI, instructions can be found [here](https://docs.stripe.com/stripe-cli). Once you have set up Stripe CLI and populated the `.env` file with your Stripe API keys, you will need to run the following command:
 
 ```bash
 stripe listen --forward-to http://127.0.0.1:5000/item/stripe-webhook
 ```
 
-6. Access the application:
+7. Access the application:
 - Open the browser at: http://localhost:5000
 - Access any page at: http://localhost:5000/page
 
 A live version of the application can be found at: https://vintage-vault-aesv.onrender.com/
 
-# Security Features
+## Usage
 
-## 1. Authentication
-The application uses a secure authentication system to protect user accounts and data:
+### Features
 
-- OAuth integration: Uses Google OAuth 2.0 support for secure third-party authentication (`OAuthSignIn` classes)
+| Feature                            | Description                                                                                                         |
+|------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| **🧑‍💻 Account Creation**           | Users can create accounts using their email or signing in with Google, allowing them to create and bid on auctions.  |
+| **📦 Listing Items**               | Sellers can list items for auction, with durations up to 5 days.                                                   |
+| **💰 Bidding and Payment**         | Buyers can submit bids for a minimum of 1p above the current bid price. When a buyer wins an auction, they are instructed to complete payment by entering their card details, or choosing a saved card if this has been opted for before. |
+| **🔔 Notification System**         | Notifications are rendered in the browser for significant events such as account creation, winning bids, and payment prompts. Some important notifications are also sent via email to keep users updated who are not currently browsing the site. |
+| **🧑‍🔬 Experts**                   | "Expert" is a role for users who are able to authenticate items for given categories. These users are not able to bid on items and may only authenticate items they are assigned to. |
+| **⏰ Expert Availability**         | Experts can mark themselves as available/unavailable for work for various dates and times. This prevents an expert from being assigned for authentication of an item when they are not available. |
+| **📑 Authentication Requests**    | Sellers can request their items be authenticated by a designated Expert. This is supplemented by a Seller/Expert messaging system, where the seller can provide more details/photos at the expert's request. When an item is authenticated, the auction for it will feature an authenticated badge for buyer confidence. |
+| **👨‍💼 Managers**                  | "Manager" is a role dedicated for VintageVault staff, giving them access to user roles and platform statistics.        |
+| **⚙️ Manager Options**             | In the management dashboard, a manager can update the roles of users in real time. Managers are also tasked with assigning experts to auctions who have requested authentication. This can be set manually, or auto-assigned based on a recommendation algorithm which considers the niche of the expert and their availability. |
+| **📊 Platform Statistics/Configuration** | Managers can view sales information for the platform over a period of up to 6 months. Visible statistics include the number of paid auctions, projected revenue, commission income, and other relevant data to help with the platform's performance monitoring. Additionally, managers may update the platform fee percentages as well as the maximum auction duration possible for future listings. |
 
-Can be configured in `__init__.py` file
 
-## 2. Password Policy
-The application enforces strong password requirements (`RegisterForm`) to prevent common security issues:
 
-- Length: Passwords between 8 and 24 characters
-- Complexity: Requires at least one uppercase letter, one lowercase letter, one digit, and one special character
-- Password Confirmation: Prevent mistyped passwords by requiring users to confirm their password
-- Password Storage: Uses Werkzeug's `generate_password_hash` and `check_password_hash` to securely store passwords in the database (`models.py`)
+## Credits
 
-## 3. Rate Limiting
-The application implements rate limiting to protect against brute force attacks and API abuse:
+### Contributors
+- [@itsuf](https://github.com/itsuf)
+- [@jkhwarazmi](https://github.com/jkhwarazmi)
+- [@ldarnbr](https://github.com/ldarnbr)
+- [@nabiljefferson98](https://github.com/nabiljefferson98)
+- [@Nadia8844](https://github.com/Nadia8844)
+- [@zakwanmalik](https://github.com/zakwanmalik)
 
-- Login: Limited to 10 attempts per minute per IP address and 5 attempts per minute per account
-- Registration: Limited to 5 attempts per hour and 20 per day per IP address
-- Account updates: Limited to 10 attempts per hour per IP address
-- OAuth operations: Limited to 10 per hour per IP address
+### Coordinator
+- [@abbeloe](https://github.com/abbeloe)
 
-Rate limits can be configured in the `limiter_utils.py` file.
+### Organization
+- [University of Leeds](https://github.com/enterprises/the-university-of-leeds)
 
-## 4. CSRF Protection
-The application implements comprehensive Cross-Site Request Forgery (CSRF) protection:
+## How to contribute
 
-- **Server-Side Implementation**: Uses Flask-WTF's CSRFProtect extension (`extensions.py`) to generate and validate tokens
-- **Form-Based Protection**: Each HTML form includes a hidden CSRF token: `{{ form.csrf_token }}`
-- **AJAX Protection**: JavaScript utility `csrf.js` automatically adds CSRF tokens to all AJAX requests.
+Contributions after the final assessment deadline (01/04/2025) are welcome! To contribute, follow these steps to ensure your changes can be properly reviewed and integrated.
 
-This protection ensures that all state-changing operations (POST, PUT, DELETE) require a valid CSRF token, preventing attackers from tricking users into submitting unauthorized requests.
+1. Create a Fork
 
-## 5. WebSocket Security
-The application implements security measures for WebSocket connections:
+This can be done using the button at the top right of the [project homepage](https://github.com/COMP2913-24-25/comp2913-team17). Forking allows you to experiment with the project without affecting the original repository.
 
-- **Authentication Required**: Socket connections are authenticated using the same session as HTTP requests
-- **Room-based Authorization**: Users can only join rooms they have permission to access
-- **Origin Validation**: WebSockets validate connection origins to prevent cross-site WebSocket hijacking
-- **Connection Scope Limitation**: Users can only access resources they're authorized to via scoped room membership
+2. Clone Your Fork
 
-## 6. File Upload Security
-The application includes comprehensive file upload security mechanisms:
-
-- **File Type Validation**: Only permitted file extensions are allowed
-- **File Size Limits**: Maximum size for uploaded files is enforced
-- **Secure Filename Processing**: Sanitizing filenames to prevent directory traversal attacks
-- **External Storage**: Files are stored in AWS S3 rather than on the local filesystem
-- **Private File Access**: Authentication required with temporary signed URLs for accessing sensitive files
-
-## 7. Authorization
-The application implements a robust authorization system:
-
-- **Role-based Access Control**: Three-tier user roles system
-- **Function-level Authorization**: Routes check appropriate role permissions
-- **Resource Ownership Verification**: Users can only modify their own resources
-- **Granular Permissions**: Specific permissions for auction items, bids, authentication requests, etc.
-
-## 8. Account Lockout
-The application implements account lockout mechanisms to prevent brute force attacks:
-
-- **Progressive Lockout**: After 5 failed login attempts, the account is locked temporarily
-- **Account Recovery**: Automatic account unlocking after a set time period (15 minutes)
-- **Login Attempt Tracking**: Failed login attempts are tracked in the database
-- **Failed Attempt Reset**: Counter is reset upon successful login
-
-## 9. Secure Cookies
-The application enforces secure cookie policies:
-
-- **HTTP-Only Cookies**: Session cookies are set with the HttpOnly flag to prevent JavaScript access
-- **Secure Flag**: Cookies are only transmitted over HTTPS when in production
-- **SameSite Policy**: Cookies use `SameSite=Lax` to prevent CSRF attacks
-- **Session Timeout**: Sessions expire after a period of inactivity
-- **Session Invalidation**: On logout, sessions are properly invalidated and cookies cleared
-
-## 10. Security Scripts
-The application includes automated security tools and scripts:
-
-- **Bandit Static Analysis**: Automated security scanning of Python code
-- **Pre-commit Hooks**: Security checks run automatically before git commits
-- **Security Reporting**: Security issues are automatically reported and logged
-- **Vulnerability Scanning**: Regular scanning for known vulnerabilities in dependencies
-- **Security Header Configuration**: Proper security headers setup (HSTS, CSP, etc.)
-
-# How to add more features and test them
-
-## Project Structure (Not finalised yet)
+To create a local copy of your fork, use this command:
 ```
-bidding_project/
-├── main/
-│   ├── __init__.py
-│   ├── admin_page/
-│   ├── bidding_page/
-│   ├── home_page/
-│   ├── item_page/
-│   └── user_page/
-├── tests/
-├── app.py
-└── README.md
+git clone https://github.com/yourusername/repo-name
 ```
 
-## Adding New Features
+3. Create a Branch
 
-### 1. Create Blueprint Structure
-Create a new directory in `main/` with the following structure:
-```
-new_feature_page/
-├── __init__.py
-├── routes.py
-├── static/
-│   └── style.css
-└── templates/
-    └── new_feature.html
-```
-
-### 2. Set Up Blueprint
-In `new_feature_page/__init__.py`:
-```python
-from flask import Blueprint
-
-new_feature_page = Blueprint('new_feature_page', __name__,
-                           template_folder='templates',
-                           static_folder='static')
-
-from . import routes
-```
-
-### 3. Create Routes
-In `new_feature_page/routes.py`:
-```python
-from flask import render_template
-from . import new_feature_page
-
-@new_feature_page.route('/')
-def index():
-    return render_template('new_feature.html')
-```
-
-### 4. Create Template
-In `new_feature_page/templates/new_feature.html`:
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>New Feature</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>New Feature Page</h1>
-</body>
-</html>
-```
-
-### 5. Register Blueprint
-In `main/__init__.py`:
-```python
-from .new_feature_page import new_feature_page
-app.register_blueprint(new_feature_page, url_prefix='/new-feature')
-```
-
-## Testing Features
-
-### 1. Create Test Structure
-```
-tests/
-├── __init__.py
-├── conftest.py
-└── test_new_feature.py
-```
-
-### 2. Configure Tests
-In `tests/conftest.py`:
-```python
-import pytest
-from main import app
-
-@pytest.fixture
-def client():
-    app.config['TESTING'] = True
-    with app.test_client() as client:
-        yield client
-```
-
-### 3. Write Tests
-In `tests/test_new_feature.py`:
-```python
-def test_new_feature_page(client):
-    response = client.get('/new-feature/')
-    assert response.status_code == 200
-    assert b'New Feature Page' in response.data
-```
-### Optional: Create a virtual environment
 ```bash
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-source venv/bin/activate # Linux
-
-venv\Scripts\activate # Windows
+git checkout -b <issueId-issueDescription>
 ```
 
-### 4. Run Tests
+4. Push Your Changes
+
+This project follows the conventional commit structure, please see the [coding style guide](https://github.com/COMP2913-24-25/comp2913-team17/wiki/Coding-Style-Guide) in the [wiki](https://github.com/COMP2913-24-25/comp2913-team17/wiki) for more information. Your changes might be rejected if your commit messages don't follow this structure.
+
+```bash
+# To stage all changes you've made
+git add .
+
+# To save changes locally
+git commit -m "conventional commit message"
+
+# To upload to the remote repository
+git push
+```
+
+5. Create a Pull Request
+
+The pull request should be linked to an issue where possible using "Closes #<id>". This ensures that when your changes are merged, it will automatically close the issue it is linked with. Pull requests should be descriptive, with markdown headings breaking up sections. Images are always welcome especially for UI changes so we can see a before and after.
+
+6. Await Review
+
+Once the designated coordinator has looked over your changes and tested them, they will handle the merging process for you. After this, you have successfully contributed to the project! Thankyou 😃
+
+## Tests
+
+Testing is encouraged for all features, it allows us to maintain the integrity of the site and catch bugs early. Testing may seem to add more work, but actually prevents more work in the long run when diagnosing and fixing errors.
+
 ```bash
 # Run all tests
 pytest
@@ -320,105 +204,4 @@ pytest --cov=main tests/
 
 # Run with coverage and fail if coverage is below 80% (or any other value)
 pytest --cov=main tests/ --cov-fail-under=80
-```
-
-## Code Quality and Security Tools
-
-### Flake8
-Flake8 is a Python linting tool that checks your code against coding style (PEP 8), programming errors (like "library imported but unused" and "variable declared but not used"), and cyclomatic complexity.
-
-1. Install Flake8:
-```bash
-pip install flake8
-```
-
-2. Run Flake8:
-```bash
-# Check all Python files
-flake8 .
-
-# Check specific file
-flake8 main/routes.py
-
-# Run with specific configurations
-flake8 --max-line-length=120 --exclude=venv/
-```
-
-3. Common configurations (add to `setup.cfg` or `tox.ini`):
-```ini
-# filepath: /c:/Users/User/OneDrive/Desktop/bidding_project/setup.cfg
-[flake8]
-max-line-length = 120
-exclude = venv/,__pycache__/
-ignore = E203, W503
-```
-
-### Bandit
-Bandit is a security linter designed to find common security issues in Python code.
-
-1. Install Bandit:
-```bash
-pip install bandit
-```
-
-2. Basic Usage:
-```bash
-# Scan all Python files
-bandit -r .
-
-# Scan specific file
-bandit main/routes.py
-
-# Generate HTML report
-bandit -r . -f html -o security-report.html
-```
-
-3. Enhanced Security Scanning:
-```bash
-# Install the security scanning tools
-pip install bandit
-
-# Run the comprehensive security scan
-python scripts/security_scan.py
-
-# Install Git pre-commit hook for automatic scanning
-python scripts/install_hooks.py
-```
-
-4. Understanding Bandit Configuration:
-   - `bandit.yaml` contains comprehensive settings for security scanning
-   - The scan checks for SQL injections, command injections, weak cryptography, etc.
-   - Security reports are generated in both JSON and HTML formats
-   - High-severity issues will prevent commits when using the pre-commit hook
-
-5. Common Security Issues to Watch For:
-   - SQL Injection: Avoid string formatting in queries, use parameterized queries
-   - Command Injection: Never use user input directly in system commands
-   - Weak Cryptography: Avoid outdated hashing algorithms (MD5, SHA1)
-   - Hard-coded Secrets: Never store API keys, passwords or tokens in code
-   - Cross-Site Scripting: Always escape user input in templates
-
-### Adding to Development Workflow
-
-1. Add to requirements:
-```bash
-# filepath: /c:/Users/User/OneDrive/Desktop/bidding_project/requirements-dev.txt
-flake8>=6.1.0
-bandit>=1.7.5
-```
-
-2. Run as part of test suite:
-```bash
-# Run all quality checks
-flake8 . && bandit -r . && pytest
-```
-
-3. VS Code Integration:
-Install the "Python" extension in VS Code and add to settings.json:
-```json
-{
-    "python.linting.flake8Enabled": true,
-    "python.linting.enabled": true,
-    "python.linting.banditEnabled": true
-}
 ```
