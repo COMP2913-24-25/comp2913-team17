@@ -968,7 +968,7 @@ def update_dur():
 
     new_dur = request.json.get('days')
     if not isinstance(new_dur, int):
-        return jsonify({'error': 'Invalid fee'}), 400
+        return jsonify({'error': 'Invalid duration'}), 400
 
     if new_dur < 1:
         return jsonify({'error': 'Duration cannot be less than 1 day'}), 400

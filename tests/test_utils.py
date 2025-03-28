@@ -45,6 +45,7 @@ class MockUser:
         self.failed_login_attempts = 0
         self.locked_until = None
         self.secret_key = "mock_secret_key"
+        self.watched_items = MockWatchlist()
 
     def get_id(self):
         """Return user ID as string"""
@@ -66,6 +67,30 @@ class MockUser:
     def is_account_locked(self):
         """Check if account is locked"""
         return False
+
+class MockWatchlist:
+    """Mock watchlist class for testing watched_items functionality"""
+    
+    def __init__(self):
+        self.items = []
+        
+    def all(self):
+        """Return all items in watchlist"""
+        return self.items
+        
+    def append(self, item):
+        """Add an item to watchlist"""
+        if item not in self.items:
+            self.items.append(item)
+        
+    def remove(self, item):
+        """Remove an item from watchlist"""
+        if item in self.items:
+            self.items.remove(item)
+            
+    def __contains__(self, item):
+        """Check if item is in watchlist"""
+        return item in self.items
 
 @contextmanager
 def logged_in_user(client, user, remember=False):
@@ -398,3 +423,190 @@ def verify_flash_message(soup, message_class, expected_text):
     assert flash_message is not None
     assert expected_text in flash_message.text
     return flash_message
+
+# Item page helper functions
+def place_bid(client, item_url, bid_amount):
+    """Place a bid on an item"""
+    return client.post(f'/item/{item_url}/bid', 
+        data=json.dumps({'bid_amount': bid_amount}),
+        content_type='application/json')
+
+def watch_item(client, item_url):
+    """Add an item to user's watchlist"""
+    return client.post(f'/item/{item_url}/watch')
+
+def unwatch_item(client, item_url):
+    """Remove an item from user's watchlist"""
+    return client.post(f'/item/{item_url}/unwatch')
+
+def create_payment_intent(client, item_url):
+    """Create a payment intent for an item"""
+    return client.post(f'/item/{item_url}/create-payment-intent')
+
+def mark_as_won(client, item_url):
+    """Mark an item as won after payment"""
+    return client.post(f'/item/{item_url}/mark-won')
+
+def create_test_item_with_authentication(users, categories, authenticated=False, url=None):
+    """Create a test item with authentication request"""
+    now = datetime.datetime.now()
+    item_url = url or uuid.uuid4().hex
+    
+    # Create the item
+    item = Item(
+        seller_id=users[0].id,
+        category_id=categories[0].id,
+        url=item_url,
+        title=f"Authenticated Test Item",
+        description="This is a test item with authentication",
+        auction_start=now - datetime.timedelta(days=1),
+        auction_end=now + datetime.timedelta(days=1),
+        minimum_price=100.00,
+        auction_completed=False
+    )
+    db.session.add(item)
+    db.session.commit()
+    
+    # Add an authentication request
+    auth_request = AuthenticationRequest(
+        url=uuid.uuid4().hex,
+        item_id=item.id,
+        status=2 if authenticated else 1
+    )
+    db.session.add(auth_request)
+    db.session.commit()
+    
+    return item, auth_request
+
+def create_bid_sequence(item, users, start_amount=10.0, count=3, increment=5.0):
+    """Create a sequence of bids on an item"""
+    bids = []
+    amount = start_amount
+    now = datetime.datetime.now()
+    
+    for i in range(count):
+        # Skip the seller
+        user_index = (i % (len(users) - 1)) + 1 
+        bid_time = now - datetime.timedelta(hours=(count-i))
+        
+        bid = Bid(
+            bidder_id=users[user_index].id,
+            bid_amount=amount,
+            bid_time=bid_time,
+            item_id=item.id
+        )
+        db.session.add(bid)
+        bids.append(bid)
+        amount += increment
+    
+    db.session.commit()
+    return bids
+
+def verify_auction_display(soup, item):
+    """Verify that the auction display shows correct item information"""
+    # Check title
+    title = verify_element_exists(soup, 'h1', {'class': 'auction-page-title'})
+    assert item.title.lower() in title.text.lower()
+    
+    # Check seller info
+    seller_info = soup.find(string=lambda text: 'Posted by:' in text if text else False)
+    assert seller_info is not None
+    assert item.seller.username in seller_info
+    
+    # Check description
+    description = soup.find(string=lambda text: item.description in text if text else False)
+    assert description is not None
+    
+    # Check category
+    category_badge = verify_element_exists(soup, 'span', {'class': 'badge bg-info'})
+    assert item.category.name in category_badge.text
+    
+    return True
+
+def verify_price_display(soup, item):
+    """Verify that the price display shows correct information"""
+    price_section = verify_element_exists(soup, 'div', {'id': 'price-section'})
+    
+    if item.bids:
+        highest_bid = max([bid.bid_amount for bid in item.bids])
+        assert f"£{highest_bid:.2f}" in price_section.text
+        assert "Highest Bid" in price_section.text
+    else:
+        assert f"£{item.minimum_price:.2f}" in price_section.text
+        assert "Starting Price" in price_section.text
+    
+    return True
+
+def verify_countdown_display(soup, item):
+    """Verify that the countdown display shows correct information"""
+    now = datetime.datetime.now()
+    
+    if now < item.auction_end:
+        # Auction is ongoing
+        countdown = verify_element_exists(soup, 'span', {'class': 'countdown'})
+        assert countdown is not None
+        
+        end_date_text = soup.find(string=lambda text: 'Auction ends:' in text if text else False)
+        assert end_date_text is not None
+    else:
+        # Auction has ended
+        ended_text = soup.find(string=lambda text: 'Auction Ended:' in text if text else False)
+        assert ended_text is not None
+    
+    return True
+
+# Manager expert availability helper functions
+def verify_availability_table(soup, experts, day):
+    """Verify that the availability table shows correct expert information"""
+    table = soup.find('table', id='dailyTable')
+    assert table is not None
+    
+    # Check that each expert is in the table
+    for expert in experts:
+        expert_cell = table.find('td', string=expert.username)
+        assert expert_cell is not None
+    
+    return True
+
+def verify_weekly_table(soup, experts, days):
+    """Verify that the weekly table shows correct expert information"""
+    table = soup.find('table', id='weeklyTable')
+    assert table is not None
+    
+    # Check that each expert is in the table
+    for expert in experts:
+        expert_cell = table.find('td', string=expert.username)
+        assert expert_cell is not None
+    
+    # Check that each day is in the header
+    headers = table.find_all('th')
+    for day in days:
+        day_format = day.strftime('%a, %b %d')
+        header_present = any(day_format in header.get_text() for header in headers)
+        assert header_present
+    
+    return True
+
+def create_test_expert_availability(app, expert_id, days=None, available=True):
+    """Create test availability records for an expert"""
+    with app.app_context():
+        if days is None:
+            # Default to today and tomorrow
+            today = datetime.date.today()
+            days = [today, today + datetime.timedelta(days=1)]
+        
+        records = []
+        for day in days:
+            # Create availability record for 8am to 8pm
+            record = ExpertAvailability(
+                expert_id=expert_id,
+                day=day,
+                start_time=datetime.time(8, 0),
+                end_time=datetime.time(20, 0),
+                status=available
+            )
+            db.session.add(record)
+            records.append(record)
+        
+        db.session.commit()
+        return records
