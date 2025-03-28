@@ -4,36 +4,20 @@
 
 This project implements an online auction platform specialised for antiques and collectibles. The system allows users to buy and sell items through a competitive bidding process, with built-in authentication services for verifying item authenticity.
 
+![Screenshot of the Vintage Vault homepage](homepage.png)
+
 For more detailed documentation, please visit the [Wiki](https://github.com/COMP2913-24-25/comp2913-team17/wiki).
+
+You can access a live version of the application [here](https://vintage-vault-aesv.onrender.com/).
 
 ## Table of Contents
 1. [Description](#project-description)
-2. [Technology Stack](#technology-stack)
-3. [Installation](#installation)
-4. [Usage](#usage)
-5. [Credits](#credits)
-6. [How to Contribute](#how-to-contribute)
-7. [Tests](#tests)
-
-## Technology Stack
-### **Frontend**
-
-- [jQuery](https://jquery.com/) - Simplifies event handling, DOM manipulation, and AJAX requests, enabling real-time updates and dynamic interactions on the frontend.
-
-- [Bootstrap](https://getbootstrap.com/) - For responsive styling, maintaining accessibility for mobile users.
-
-### **Backend**
-
-- [Flask](https://flask.palletsprojects.com/en/stable/) - A lightweight web application framework.
-
-- [SQLAlchemy](https://www.sqlalchemy.org/) - An SQL toolkit and ORM using Python.
-
-- [Stripe](https://stripe.com/gb) - Secure handling of payments.
-
-### **Testing**
-
-- [pytest](https://docs.pytest.org/en/stable/) - Facilitates writing and running tests for the backend.
-
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Technology Stack](#technology-stack)
+5. [Tests](#tests)
+6. [Credits](#credits)
+7. [How to Contribute](#how-to-contribute)
 
 ## Installation
 
@@ -97,7 +81,7 @@ $env:EMPTY_DB=1; flask run --debug
 ```
 6. Set Up Stripe
 
-To accomodate payments, you will need to set up Stripe CLI, instructions can be found [here](https://docs.stripe.com/stripe-cli). Once you have set up Stripe CLI and populated the `.env` file with your Stripe API keys, you will need to run the following command:
+To accomodate payments, you will need to install Stripe CLI, instructions can be found [here](https://docs.stripe.com/stripe-cli). Once you have set up Stripe CLI and populated the `.env` file with your Stripe API keys, you will need to run the following command in a separate terminal window to forward Stripe events to your local server:
 
 ```bash
 stripe listen --forward-to http://127.0.0.1:5000/item/stripe-webhook
@@ -105,9 +89,6 @@ stripe listen --forward-to http://127.0.0.1:5000/item/stripe-webhook
 
 7. Access the application:
 - Open the browser at: http://localhost:5000
-- Access any page at: http://localhost:5000/page
-
-A live version of the application can be found at: https://vintage-vault-aesv.onrender.com/
 
 ## Usage
 
@@ -115,18 +96,63 @@ A live version of the application can be found at: https://vintage-vault-aesv.on
 
 | Feature                            | Description                                                                                                         |
 |------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| **🧑‍💻 Account Creation**           | Users can create accounts using their email or signing in with Google, allowing them to create and bid on auctions.  |
-| **📦 Listing Items**               | Sellers can list items for auction, with durations up to 5 days.                                                   |
+| **🧑‍💻 Account Creation**           | Users can create accounts using their email and sign in with Google, allowing them to create and bid on auctions.  |
+| **📦 Listing Items**               | Sellers can list items for auction, with durations up to 5 days by default.                                                   |
 | **💰 Bidding and Payment**         | Buyers can submit bids for a minimum of 1p above the current bid price. When a buyer wins an auction, they are instructed to complete payment by entering their card details, or choosing a saved card if this has been opted for before. |
-| **🔔 Notification System**         | Notifications are rendered in the browser for significant events such as account creation, winning bids, and payment prompts. Some important notifications are also sent via email to keep users updated who are not currently browsing the site. |
+| **🔔 Notification System**         | Notifications are rendered in the browser for significant events such as account creation, winning bids, and payment prompts. Some important notifications are also sent via email to keep users who are not currently browsing the site up to date. |
 | **🧑‍🔬 Experts**                   | "Expert" is a role for users who are able to authenticate items for given categories. These users are not able to bid on items and may only authenticate items they are assigned to. |
-| **⏰ Expert Availability**         | Experts can mark themselves as available/unavailable for work for various dates and times. This prevents an expert from being assigned for authentication of an item when they are not available. |
+| **⏰ Expert Availability**         | Experts can mark themselves as available/unavailable for work at various dates and times. This prevents an expert from being assigned to authenticate an item when they are not available. |
 | **📑 Authentication Requests**    | Sellers can request their items be authenticated by a designated Expert. This is supplemented by a Seller/Expert messaging system, where the seller can provide more details/photos at the expert's request. When an item is authenticated, the auction for it will feature an authenticated badge for buyer confidence. |
-| **👨‍💼 Managers**                  | "Manager" is a role dedicated for VintageVault staff, giving them access to user roles and platform statistics.        |
-| **⚙️ Manager Options**             | In the management dashboard, a manager can update the roles of users in real time. Managers are also tasked with assigning experts to auctions who have requested authentication. This can be set manually, or auto-assigned based on a recommendation algorithm which considers the niche of the expert and their availability. |
+| **👨‍💼 Managers**                  | "Manager" is a dedicated role for  Vintage Vault administrators, giving them access to user roles, platform statistics, and site configuration options.        |
+| **⚙️ Manager Options**             | In the management dashboard, a manager can update the roles of users in real time. Managers are also tasked with assigning experts to auctions with pending authentication requests. This can be set manually, or auto-assigned based on a recommendation algorithm which considers the niche of the expert and their availability. |
 | **📊 Platform Statistics/Configuration** | Managers can view sales information for the platform over a period of up to 6 months. Visible statistics include the number of paid auctions, projected revenue, commission income, and other relevant data to help with the platform's performance monitoring. Additionally, managers may update the platform fee percentages as well as the maximum auction duration possible for future listings. |
 
+## Technology Stack
+### **Frontend**
 
+- [jQuery](https://jquery.com/) - Simplifies event handling, DOM manipulation, and AJAX requests, enabling real-time updates and dynamic interactions on the frontend.
+
+- [Bootstrap](https://getbootstrap.com/) - For responsive styling and maintaining accessibility for mobile users.
+
+### **Backend**
+
+- [Flask](https://flask.palletsprojects.com/en/stable/) - A lightweight web application framework.
+
+- [SQLAlchemy](https://www.sqlalchemy.org/) - An SQL toolkit and ORM for Python.
+
+- [SQLite](https://www.sqlite.org/index.html) - A C library that provides a lightweight disk-based database.
+
+- [PostgreSQL](https://www.postgresql.org/) - An open-source relational database management system, used with the deployed application.
+
+### **Testing**
+
+- [pytest](https://docs.pytest.org/en/stable/) - Facilitates writing and running Python tests for the backend.
+
+### APIs
+
+- [Stripe](https://stripe.com/gb) - Secure handling of payments.
+
+- [Google OAuth](https://developers.google.com/identity/protocols/oauth2) - For user authentication and account creation.
+
+- [Google Mail](https://developers.google.com/gmail/api) - For sending emails.
+
+- [AWS S3](https://aws.amazon.com/s3/) - For storing images and other static files.
+
+### Deployment
+
+- [Render](https://render.com/) - A cloud platform for hosting web applications.
+
+## Tests
+
+Testing is encouraged for all features as it allows us to maintain the integrity of the site and catch bugs early. The following commands will allow you to run the project's unit tests:
+
+```bash
+# Run all tests
+pytest
+
+# Run a specific test file
+pytest tests/test_feature.py
+```
 
 ## Credits
 
@@ -146,7 +172,7 @@ A live version of the application can be found at: https://vintage-vault-aesv.on
 
 ## How to contribute
 
-Contributions after the final assessment deadline (01/04/2025) are welcome! To contribute, follow these steps to ensure your changes can be properly reviewed and integrated.
+Contributions after the final assessment deadline are welcome! To contribute, follow these steps to ensure your changes can be properly reviewed and integrated.
 
 1. Create a Fork
 
@@ -186,22 +212,4 @@ The pull request should be linked to an issue where possible using "Closes #<id>
 
 6. Await Review
 
-Once the designated coordinator has looked over your changes and tested them, they will handle the merging process for you. After this, you have successfully contributed to the project! Thankyou 😃
-
-## Tests
-
-Testing is encouraged for all features, it allows us to maintain the integrity of the site and catch bugs early. Testing may seem to add more work, but actually prevents more work in the long run when diagnosing and fixing errors.
-
-```bash
-# Run all tests
-pytest
-
-# Run specific test file
-pytest tests/test_new_feature.py
-
-# Run with coverage
-pytest --cov=main tests/
-
-# Run with coverage and fail if coverage is below 80% (or any other value)
-pytest --cov=main tests/ --cov-fail-under=80
-```
+Once the designated coordinator has looked over your changes and tested them, they will handle the merging process for you. After this, you have successfully contributed to the project! Thank you! 😃
