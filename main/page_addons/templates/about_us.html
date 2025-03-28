@@ -8,7 +8,7 @@
   <div class="row mb-5">
     <div class="col-lg-8 mx-auto text-center">
       <h1 class="display-4 mb-3">About Vintage Vault</h1>
-      <p class="lead">Connecting collectors with authentic treasures since 2022.</p>
+      <p class="lead">Connecting collectors with authentic treasures since 2025.</p>
       <hr class="my-4 w-25 mx-auto" style="border-top: 5px solid var(--accent-color);">
     </div>
   </div>
@@ -74,7 +74,7 @@
   <div class="row mb-5">
     <div class="col-12 text-center mb-4">
       <h2>Meet Our Team</h2>
-      <p class="lead">The students and enthusiasts behind this simple auction project</p>
+      <p class="lead">The students and enthusiasts behind this auction platform</p>
     </div>
 
     <div class="row justify-content-center mx-0">
@@ -243,12 +243,12 @@
           <i class="bi bi-search me-2"></i>Browse Auctions
         </a>
         {% if not current_user.is_authenticated %}
-        <a href="{{ url_for('auth_page.register') }}" class="btn btn-accent btn-lg px-4 py-3"
+        <a href="{{ url_for('auth_page.register') }}" class="btn btn-primary btn-lg px-4 py-3"
           style="font-size: 1.2rem; font-weight: 600;">
           <i class="bi bi-person-plus me-2"></i>Create Account
         </a>
         {% elif current_user.role == 1 %}
-        <a href="{{ url_for('create_page.index') }}" class="btn btn-accent btn-lg px-4 py-3"
+        <a href="{{ url_for('create_page.index') }}" class="btn btn-primary btn-lg px-4 py-3"
           style="font-size: 1.2rem; font-weight: 600;">
           <i class="bi bi-plus-circle me-2"></i>Create Auction
         </a>
