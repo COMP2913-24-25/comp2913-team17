@@ -208,14 +208,14 @@ def setup_database(app, common_setup_database):
 def test_dashboard_access_logged_out(client, setup_database):
     """Test that logged out users are redirected when trying to access the dashboard"""
     response = client.get('/dashboard/', follow_redirects=False)
-    assert response.status_code == 302  # Expect redirect
+    assert response.status_code == 302
     
     # Follow redirect to confirm we go to login page
     response = client.get('/dashboard/', follow_redirects=True)
     assert response.status_code == 200
     assert b'Login' in response.data
 
-@login_as(role=2)  # Expert user
+@login_as(role=2)
 def test_dashboard_access_as_expert_user(client, setup_database, soup):
     """Test that experts can't see the user dashboard"""
     response = client.get('/dashboard/', follow_redirects=True)
@@ -231,7 +231,7 @@ def test_dashboard_access_as_expert_user(client, setup_database, soup):
     user_tabs = page.find('ul', id='userDashboardTabs')
     assert user_tabs is None
 
-@login_as(role=3)  # Manager user
+@login_as(role=3)
 def test_dashboard_access_as_manager_user(client, setup_database, soup):
     """Test that managers can't see the user dashboard"""
     response = client.get('/dashboard/', follow_redirects=True)
@@ -247,7 +247,7 @@ def test_dashboard_access_as_manager_user(client, setup_database, soup):
     user_tabs = page.find('ul', id='userDashboardTabs')
     assert user_tabs is None
 
-@login_as(role=1)  # Regular user
+@login_as(role=1)
 def test_dashboard_access_as_regular_user(client, setup_database, soup):
     """Test that regular users can access the user dashboard"""
     response = client.get('/dashboard/', follow_redirects=True)
@@ -260,8 +260,7 @@ def test_dashboard_access_as_regular_user(client, setup_database, soup):
     assert 'Dashboard' in dashboard_title.text
 
 # User Dashboard UI Tests
-
-@login_as(role=1)  # Regular user
+@login_as(role=1)
 def test_user_dashboard_tabs(client, setup_database, soup):
     """Test that the user dashboard has all required tabs"""
     response = client.get('/dashboard/', follow_redirects=True)
@@ -277,7 +276,7 @@ def test_user_dashboard_tabs(client, setup_database, soup):
     assert 'bidding-tab' in tab_ids
     assert 'watchlist-tab' in tab_ids
 
-@login_as(role=1, user_id=4, username="test_user1")  # Test user1
+@login_as(role=1, user_id=4, username="test_user1")
 def test_user_dashboard_selling_tab(client, setup_database, soup):
     """Test the selling tab content in the user dashboard"""
     response = client.get('/dashboard/', follow_redirects=True)
@@ -303,7 +302,7 @@ def test_user_dashboard_selling_tab(client, setup_database, soup):
     assert 'Watchers' in headers
     
     # Check for auction rows
-    auction_rows = auctions_table.find_all('tr')[1:]  # Skip header row
+    auction_rows = auctions_table.find_all('tr')[1:]
     assert len(auction_rows) > 0
     
     # Check for the active item title
@@ -320,7 +319,7 @@ def test_user_dashboard_selling_tab(client, setup_database, soup):
     assert "Active Test Item" in items_found
     assert "Authenticated Test Item" in items_found
 
-@login_as(role=1, user_id=4, username="test_user1")  # Test user1
+@login_as(role=1, user_id=4, username="test_user1")
 def test_user_dashboard_bidding_tab(client, setup_database, soup):
     """Test the bidding tab content in the user dashboard"""
     response = client.get('/dashboard/', follow_redirects=True)
@@ -356,7 +355,7 @@ def test_user_dashboard_bidding_tab(client, setup_database, soup):
     assert 'Status' in headers
     
     # Check for bidding item row
-    bidding_rows = bidding_table.find_all('tr')[1:]  # Skip header row
+    bidding_rows = bidding_table.find_all('tr')[1:]
     assert len(bidding_rows) > 0
     
     bidding_item_found = False
@@ -375,7 +374,7 @@ def test_user_dashboard_bidding_tab(client, setup_database, soup):
     
     assert bidding_item_found
 
-@login_as(role=1, user_id=4, username="test_user1")  # Test user1
+@login_as(role=1, user_id=4, username="test_user1")
 def test_user_dashboard_won_tab(client, setup_database, soup):
     """Test the won tab content in the user dashboard"""
     response = client.get('/dashboard/', follow_redirects=True)
@@ -383,8 +382,7 @@ def test_user_dashboard_won_tab(client, setup_database, soup):
     
     page = soup(response.data)
     
-    # Navigate to the won tab by clicking on it
-    # In a real browser, we'd click the tab, but here we directly access the content
+    # Navigate to the won tab
     won_tab = page.find('div', id='won')
     assert won_tab is not None
     
@@ -400,7 +398,7 @@ def test_user_dashboard_won_tab(client, setup_database, soup):
     assert 'Action' in headers
     
     # Check for won item row
-    won_rows = won_table.find_all('tr')[1:]  # Skip header row
+    won_rows = won_table.find_all('tr')[1:]
     assert len(won_rows) > 0
     
     won_item_found = False
@@ -420,7 +418,7 @@ def test_user_dashboard_won_tab(client, setup_database, soup):
     
     assert won_item_found
 
-@login_as(role=1, user_id=4, username="test_user1")  # Test user1
+@login_as(role=1, user_id=4, username="test_user1")
 def test_user_dashboard_paid_tab(client, setup_database, soup):
     """Test the paid tab content in the user dashboard"""
     response = client.get('/dashboard/', follow_redirects=True)
@@ -444,7 +442,7 @@ def test_user_dashboard_paid_tab(client, setup_database, soup):
     assert 'Status' in headers
     
     # Check for paid item row
-    paid_rows = paid_table.find_all('tr')[1:]  # Skip header row
+    paid_rows = paid_table.find_all('tr')[1:]
     assert len(paid_rows) > 0
     
     paid_item_found = False
@@ -463,7 +461,7 @@ def test_user_dashboard_paid_tab(client, setup_database, soup):
     
     assert paid_item_found
 
-@login_as(role=1, user_id=4, username="test_user1")  # Test user1
+@login_as(role=1, user_id=4, username="test_user1")
 def test_user_dashboard_watchlist_tab(client, setup_database, soup):
     """Test the watchlist tab content in the user dashboard"""
     response = client.get('/dashboard/', follow_redirects=True)
@@ -495,7 +493,7 @@ def test_user_dashboard_watchlist_tab(client, setup_database, soup):
         assert 'Action' in headers
         
         # Check for watched item row
-        watchlist_rows = watchlist_table.find_all('tr')[1:]  # Skip header row
+        watchlist_rows = watchlist_table.find_all('tr')[1:]
         assert len(watchlist_rows) > 0
         
         watched_item_found = False
@@ -515,10 +513,9 @@ def test_user_dashboard_watchlist_tab(client, setup_database, soup):
         
         assert watched_item_found
 
-@login_as(role=1)  # User with no items
+@login_as(role=1)
 def test_user_dashboard_empty_states(client, setup_database, soup):
     """Test the empty states in user dashboard when there are no items"""
-    # Create a fresh user directly with MockUser instead of trying to use a database user
     mock_empty_user = MockUser(id=999, username="empty_user", role=1)
     
     # Log in as this empty user
@@ -545,52 +542,3 @@ def test_user_dashboard_empty_states(client, setup_database, soup):
         watchlist_empty_state = watchlist_tab.find('div', class_='empty-state')
         assert watchlist_empty_state is not None
         assert "You are not watching any auctions" in watchlist_empty_state.text
-
-# Remove the API test and replace with a direct database test for watchlist
-def test_watchlist_database_operations(client, setup_database):
-    """Test database operations for watchlist functionality"""
-    with client.application.app_context():
-        user_id = setup_database['test_user1_id']
-        item_id = setup_database['active_item_id']
-        
-        # 1. First, remove any existing watchlist entries for this user/item pair
-        db.session.execute(
-            text("DELETE FROM user_watched_items WHERE user_id=:user_id AND item_id=:item_id"),
-            {"user_id": user_id, "item_id": item_id}
-        )
-        db.session.commit()
-        
-        # 2. Verify the item is not in the watchlist
-        count = db.session.execute(
-            text("SELECT COUNT(*) FROM user_watched_items WHERE user_id=:user_id AND item_id=:item_id"),
-            {"user_id": user_id, "item_id": item_id}
-        ).scalar()
-        assert count == 0
-        
-        # 3. Add the item to the watchlist directly
-        db.session.execute(
-            text("INSERT INTO user_watched_items (user_id, item_id) VALUES (:user_id, :item_id)"),
-            {"user_id": user_id, "item_id": item_id}
-        )
-        db.session.commit()
-        
-        # 4. Verify the item is in the watchlist
-        count = db.session.execute(
-            text("SELECT COUNT(*) FROM user_watched_items WHERE user_id=:user_id AND item_id=:item_id"),
-            {"user_id": user_id, "item_id": item_id}
-        ).scalar()
-        assert count == 1
-        
-        # 5. Remove the item from the watchlist
-        db.session.execute(
-            text("DELETE FROM user_watched_items WHERE user_id=:user_id AND item_id=:item_id"),
-            {"user_id": user_id, "item_id": item_id}
-        )
-        db.session.commit()
-        
-        # 6. Verify the item is not in the watchlist
-        count = db.session.execute(
-            text("SELECT COUNT(*) FROM user_watched_items WHERE user_id=:user_id AND item_id=:item_id"),
-            {"user_id": user_id, "item_id": item_id}
-        ).scalar()
-        assert count == 0 

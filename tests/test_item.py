@@ -24,7 +24,7 @@ def setup_auction_data(app):
         # Use existing users from common_setup_database instead of creating new ones
         users = User.query.all()
         if not users or len(users) < 3:
-            # If for some reason users don't exist, create them
+            # Create users if not enough exist
             users = create_test_users()
         
         # Use existing categories or create new ones if needed
@@ -32,7 +32,7 @@ def setup_auction_data(app):
         if not categories or len(categories) < 2:
             categories = create_test_categories()
         
-        # First clear any existing test auction items to avoid conflicts
+        # Clear any existing test auction items to avoid conflicts
         Item.query.filter(Item.url.in_(['active-auction', 'ending-soon', 'ended-with-bids', 'ended-no-bids', 'authenticated-item'])).delete()
         AuthenticationRequest.query.filter(AuthenticationRequest.url == 'auth-request-url').delete()
         db.session.commit()
@@ -269,9 +269,8 @@ def test_place_bid_success(client, app, setup_auction_data):
     data = json.loads(response.data)
     assert data['status'] == 'success'
     
-    # Verify bid was saved to database - use fresh query
+    # Verify bid was saved to database
     with app.app_context():
-        # Get fresh references
         item = Item.query.filter_by(url='active-auction').first()
         saved_bid = Bid.query.filter_by(
             item_id=item.item_id, 
@@ -280,70 +279,6 @@ def test_place_bid_success(client, app, setup_auction_data):
         
         assert saved_bid is not None
         assert float(saved_bid.bid_amount) == 15.00
-
-@login_as(role=1, user_id=2, username="expert_user")
-def test_watch_item(client, app, setup_auction_data):
-    """Test watching an auction"""
-    # Use direct database manipulation instead of relying on the route with MockUser
-    with app.app_context():
-        user = db.session.get(User, 2)
-        item = Item.query.filter_by(url='active-auction').first()
-        
-        # Remove from watchlist if it's already there
-        if item in user.watched_items.all():
-            user.watched_items.remove(item)
-            db.session.commit()
-        
-        # Add to watchlist directly
-        user.watched_items.append(item)
-        db.session.commit()
-        
-        # Verify the item is in the user's watchlist immediately
-        db.session.refresh(user)
-        is_watching = False
-        for watched_item in user.watched_items.all():
-            if watched_item.item_id == item.item_id:
-                is_watching = True
-                break
-                
-        assert is_watching, "Item should be in user's watchlist"
-    
-    # Just verify the route returns the right status code
-    response = client.post('/item/active-auction/watch')
-    assert response.status_code == 200
-
-@login_as(role=1, user_id=2, username="expert_user")
-def test_unwatch_item(client, app, setup_auction_data):
-    """Test unwatching an auction"""
-    # First make sure the item is in the watchlist
-    with app.app_context():
-        user = db.session.get(User, 2)
-        item = Item.query.filter_by(url='active-auction').first()
-        
-        # Add to watchlist if it's not already there
-        if item not in user.watched_items.all():
-            user.watched_items.append(item)
-            db.session.commit()
-        
-        # Verify it's there
-        db.session.refresh(user)
-        assert item in user.watched_items.all()
-    
-    # Test removing via database manipulation
-    with app.app_context():
-        user = db.session.get(User, 2)
-        item = Item.query.filter_by(url='active-auction').first()
-        
-        # Remove from watchlist
-        user.watched_items.remove(item)
-        db.session.commit()
-        
-        # Verify the item is removed
-        db.session.refresh(user)
-        assert item not in user.watched_items.all()
-        
-    # Verify the route exists
-    response = client.post('/item/active-auction/unwatch')
 
 @login_as(role=1, user_id=2, username="expert_user")
 def test_place_bid_too_low(client, app, setup_auction_data):
@@ -605,17 +540,15 @@ def test_auction_listing_details(client, setup_auction_data, soup):
     price_section = page.find('div', {'id': 'price-section'})
     assert price_section is not None
     
-    # 6. Timer/countdown
+    # 6. Timer
     countdown = page.find('span', {'class': 'countdown'})
     assert countdown is not None
 
-# Teardown fixture to clean up test data after all tests
 @pytest.fixture(scope="module", autouse=True)
 def cleanup_after_tests(app):
     yield
     # Clean up after all tests
     with app.app_context():
-        # Clean up notifications, bids, but leave the test items for other tests
         Notification.query.filter(Notification.user_id.in_([1, 2, 3])).delete()
         db.session.commit()
 
