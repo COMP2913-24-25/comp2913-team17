@@ -4,6 +4,8 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-styles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manager-styles.css') }}">
+
 
 <!-- Header -->
 <div class="dashboard-header">
@@ -32,25 +34,16 @@
     <div class="dashboard-tabs-divider"></div>
   </div>
 
-  <!-- Category Filter -->
-  <div class="auth-card mt-4">
-    <div class="card-header">
-      <i class="fas fa-filter me-2"></i> Filter by Category
-    </div>
-    <div class="card-body">
-      <select class="form-select" id="categoryFilter">
-        <option value="">All Categories</option>
+  <div class="expert-search-container">
+    <div class="expert-search-wrapper">
+      <input type="text" id="expert-search" class="form-control expert-search-input" placeholder="SEARCH EXPERTS...">
+      <select id="expert-category-filter" class="form-select expert-filter-dropdown">
+        <option value="">ALL CATEGORIES</option>
         {% for category in categories %}
-        <option value="{{ category.id }}">{{ category.name }}</option>
+          <option value="{{ category.id }}">{{ category.name }}</option>
         {% endfor %}
       </select>
     </div>
-  </div>
-
-  <!-- Global expert search bar for daily and weekly views -->
-  <div class="input-group mb-3">
-    <span class="input-group-text"><i class="fas fa-search"></i></span>
-    <input type="text" id="expert-search" class="form-control" placeholder="Search experts...">
   </div>
 
   <div class="tab-content mt-4" id="expertAvailabilityTabsContent">
@@ -89,10 +82,10 @@
                   {% set slot_str = slot.strftime('%H:%M') %}
                   {% if slot_str == current_slot.strftime('%H:%M') %}
                   {% if avail and avail.status and slot >= avail.start_time and slot < avail.end_time %} <td
-                    data-label="{{ slot.strftime('%H:%M') }}" class="bg-success text-white text-center"
+                    data-label="{{ slot.strftime('%H:%M') }}" class="green-now text-white text-center"
                     title="Available at {{ slot.strftime('%H:%M') }}">Now</td>
                     {% else %}
-                    <td data-label="{{ slot.strftime('%H:%M') }}" class="bg-danger text-white text-center"
+                    <td data-label="{{ slot.strftime('%H:%M') }}" class="red-now text-white text-center"
                       title="Unavailable at {{ slot.strftime('%H:%M') }}">Now</td>
                     {% endif %}
                     {% else %}
