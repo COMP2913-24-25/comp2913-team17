@@ -345,8 +345,8 @@ def populate_db(app):
             seller_id=user1.id,
             title='Ferrari',
             description='A vintage sports car in pristine condition.',
-            upload_date=now - timedelta(days=1),
-            auction_start=now - timedelta(days=1),
+            upload_date=now - timedelta(days=2),
+            auction_start=now - timedelta(days=2),
             auction_end=now + timedelta(days=3),
             minimum_price=50000.00,
             category_id=cat9.id
@@ -392,7 +392,7 @@ def populate_db(app):
             item_id=auction11.item_id,
             bidder_id=user2.id,
             bid_amount=51000.00,
-            bid_time=now - timedelta(days=2)
+            bid_time=now - timedelta(days=1, hours=6)
         )
         bid2 = Bid(
             item_id=auction11.item_id,
