@@ -21,7 +21,7 @@
   height: 400px;
   overflow-y: auto;
   background-color: var(--tertiary-color);
-  box-shadow: 5px 5px 0 rgba(0,0,0,0.1);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.1);
 }
 
 #messages-tall {
@@ -51,7 +51,7 @@
   max-width: 70%;
   position: relative;
   font-family: var(--font-sans);
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
 }
 
 .other-messages {
@@ -61,7 +61,7 @@
 
 .my-messages {
   background-color: white;
-  border-right: 4px solid rgba(0,0,0,0.5);
+  border-right: 4px solid rgba(0, 0, 0, 0.5);
   margin-left: auto;
 }
 
@@ -71,8 +71,8 @@
   margin-top: 10px;
   padding-top: 5px;
   margin-bottom: -3px;
-  border-top: 1px solid rgba(0,0,0,0.1);
-  color: rgba(0,0,0,0.7);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.7);
 }
 
 /* Image gallery styling */
@@ -86,7 +86,7 @@
 .message-image {
   max-width: 175px;
   max-height: 175px;
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 0;
   transition: transform 0.2s;
   background-color: white;
@@ -101,7 +101,7 @@
   display: grid;
   grid-template-columns: 1fr 300px;
   grid-template-rows: auto auto;
-  grid-template-areas: 
+  grid-template-areas:
     "message-area upload-area"
     "message-area send-button";
   gap: 20px;
@@ -155,7 +155,7 @@
 }
 
 .image-upload-container small {
-  color: rgba(0,0,0,0.6);
+  color: rgba(0, 0, 0, 0.6);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   margin-bottom: 10px;
@@ -181,13 +181,20 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Font Awesome file icon */
 .selected-file:before {
-  content: "\f15b"; 
+  content: "\f15b";
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
   margin-right: 5px;
@@ -290,11 +297,11 @@
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .section-title {
     font-size: 1.8rem;
   }
-  
+
   .message {
     max-width: 85%;
     margin: 10px;
@@ -302,7 +309,7 @@
 
   #message-form {
     grid-template-columns: 1fr;
-    grid-template-areas: 
+    grid-template-areas:
       "message-area"
       "upload-area"
       "send-button";
@@ -314,16 +321,16 @@
     height: auto;
     min-height: 100px;
   }
-  
+
   #message-form button[type="submit"] {
     margin-top: 0;
     height: 45px;
   }
-  
+
   .expert-menu {
     flex-direction: column;
   }
-  
+
   .expert-menu button {
     width: 100%;
     margin: 5px 0;
@@ -334,18 +341,18 @@
   .messages {
     height: 350px;
   }
-  
+
   .message {
     max-width: 90%;
     padding: 10px;
     margin: 10px;
   }
-  
+
   .message-image {
     max-width: 120px;
     max-height: 120px;
   }
-  
+
   .search-container {
     padding: 1.25rem;
   }
