@@ -129,7 +129,8 @@ document.querySelectorAll('.checkout-button').forEach(button => {
         const data = await response.json();
 
         if (data.error) {
-          showErrorBanner(data.error);
+          alert(data.error);
+          window.location.reload();
           return;
         }
         

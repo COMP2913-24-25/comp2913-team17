@@ -1,7 +1,6 @@
 """Database utilities for resetting and recreating the database."""
 
 import logging
-import os
 from flask import current_app
 
 logger = logging.getLogger(__name__)

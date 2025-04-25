@@ -29,6 +29,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False, index=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    password_version = db.Column(db.Integer, default=1)
     # Roles: 1 = General User, 2 = Expert, 3 = Manager
     role = db.Column(db.Integer, nullable=False, default=1)
     created_at = db.Column(db.DateTime, default=datetime.now())
@@ -38,7 +39,7 @@ class User(UserMixin, db.Model):
     failed_login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime, nullable=True)
 
-    # NEW, Stripe Customer ID field for saving card details securely on Stripe
+    # Stripe Customer ID field for saving card details securely on Stripe
     stripe_customer_id = db.Column(db.String(255), nullable=True)
 
     # Relationships to other tables:
@@ -62,6 +63,12 @@ class User(UserMixin, db.Model):
     def set_password(self, password):
         # Set the password for the user
         self.password_hash = generate_password_hash(password, method="pbkdf2")
+        
+        # Increment the password version
+        if self.password_version is None:
+            self.password_version = 1
+        else:
+            self.password_version += 1
 
     def check_password(self, password):
         # Check the password for the user
@@ -104,14 +111,15 @@ class User(UserMixin, db.Model):
         notification = Notification(
             user_id=self.id,
             message=f"Welcome to Vintage Vault, {self.username}! Get started by browsing auctions or creating your own.",
-            notification_type=0
+            notification_type=0,
+            created_at=datetime.now()
         )
         db.session.add(notification)
         db.session.commit()
 
         # Send welcome notification
         try:
-            from app import socketio
+            from main import socketio
             socketio.emit('new_notification', {
                 'id': notification.id,
                 'message': notification.message,
@@ -217,10 +225,11 @@ class Item(db.Model):
     def notify_outbid(self, user):
         notification = Notification(
             user_id=user.id,
-            message=f"You have been outbid on '{self.title}'",
+            message=f"You have been outbid on '{self.title}'.",
             item_url=self.url,
             item_title=self.title,
-            notification_type=1
+            notification_type=1,
+            created_at=datetime.now()
         )
         db.session.add(notification)
         db.session.commit()
@@ -248,10 +257,11 @@ class Item(db.Model):
         winner = db.session.get(User, self.winning_bid.bidder_id)
         notification = Notification(
             user_id=winner.id,
-            message=f"Congratulations! You won the auction for '{self.title}'",
+            message=f"Congratulations! You won the auction for '{self.title}' with a bid of £{self.winning_bid.bid_amount}.",
             item_url=self.url,
             item_title=self.title,
-            notification_type=2
+            notification_type=2,
+            created_at=datetime.now()
         )
         db.session.add(notification)
         db.session.commit()
@@ -289,7 +299,8 @@ class Item(db.Model):
                 message=f"The auction for '{self.title}' has ended. Unfortunately, you didn't win.",
                 item_url=self.url,
                 item_title=self.title,
-                notification_type=3
+                notification_type=3,
+                created_at=datetime.now()
             )
             db.session.add(notification)
             db.session.commit()
@@ -335,7 +346,8 @@ class Item(db.Model):
             message=message,
             item_url=self.url,
             item_title=self.title,
-            notification_type=notification_type
+            notification_type=notification_type,
+            created_at=datetime.now()
         )
         db.session.add(notification)
         db.session.commit()
@@ -370,14 +382,15 @@ class Item(db.Model):
                 message=f"Payment received! {self.winning_bid.bidder.username} has paid £{self.winning_bid.bid_amount} for '{self.title}'.",
                 item_url=self.url,
                 item_title=self.title,
-                notification_type=7
+                notification_type=7,
+                created_at=datetime.now()
             )
             db.session.add(notification)
             db.session.commit()
 
             # Send real-time notification
             try:
-                from app import socketio
+                from main import socketio
                 socketio.emit('new_notification', {
                     'id': notification.id,
                     'message': notification.message,
@@ -410,14 +423,15 @@ class Item(db.Model):
             message=f"Payment successful! You have paid £{self.winning_bid.bid_amount} for '{self.title}'.",
             item_url=self.url,
             item_title=self.title,
-            notification_type=8
+            notification_type=8,
+            created_at=datetime.now()
         )
         db.session.add(notification)
         db.session.commit()
 
         # Send real-time notification
         try:
-            from app import socketio
+            from main import socketio
             socketio.emit('new_notification', {
                 'id': notification.id,
                 'message': notification.message,

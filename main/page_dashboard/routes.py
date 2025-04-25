@@ -27,6 +27,8 @@ def get_expert_availability(expert):
                 return "Currently available"
             elif now < avail.start_time:
                 delta = (datetime.combine(today, avail.start_time) - datetime.combine(today, now)).seconds // 3600
+                if delta == 0:
+                    return "Available now"
                 return f"Available in {delta} hour{'s' if delta != 1 else ''}"
             else:
                 return "Not available today"
@@ -42,12 +44,44 @@ def get_expertise(expert, item):
                 return 'Expert'
     return 'No Expertise'
 
+def is_expert_available_before_auction_end(expert, auction_end, now=datetime.now()):
+    # Check if the expert has availability up to 3 hours before the auction end
+    now_date = now.date()
+    auction_end_date = auction_end.date()
+    threshold_time = (auction_end - timedelta(hours=3)).time()
+    
+    # Get all availability records between now and auction end
+    avail_records = db.session.query(ExpertAvailability).filter(
+        ExpertAvailability.expert_id == expert.id,
+        ExpertAvailability.day >= now_date,
+        ExpertAvailability.day <= auction_end_date,
+        ExpertAvailability.status == True
+    ).all()
+    
+    for record in avail_records:
+        if not record.status:
+            continue
+        # If availability is before auction end day, it's valid
+        if record.day < auction_end_date:
+            return True
+        # If on auction end day, ensure it starts before threshold
+        elif record.day == auction_end_date and record.start_time < threshold_time:
+            return True
+            
+    return False
+
 def calculate_expert_suitability(expert, request, all_experts_assignments, now):
     # Calculate an expert's suitability score for a request.
     # Availability Score (40%)
     today = date.today()
     auction_end = request.item.auction_end.date()
+    end_date = request.item.auction_end
     avail_score = 0
+
+    # Negative score means unsuitable
+    if not is_expert_available_before_auction_end(expert, end_date, now):
+        return -1
+
     for avail in expert.expert_availabilities:
         if avail.day >= today and avail.day <= auction_end and avail.status:
             if avail.day == today:
@@ -168,7 +202,7 @@ def manager_authentications(manager, now):
             scores = [(expert, calculate_expert_suitability(expert, req, all_experts_assignments, now))
                       for expert in eligible_experts]
             max_score = max(score for _, score in scores) if scores else 0
-            best_experts = [expert for expert, score in scores if score == max_score]
+            best_experts = [expert for expert, score in scores if score == max_score and score > 0]
             # Pick randomly in case of tie
             recommended_expert = choice(best_experts) if best_experts else None
         else:
@@ -387,8 +421,20 @@ def handle_user(now):
     """Handle the dashboard for a user."""
     user = {}
 
-    # General User interface, all users can see their own auctions
-    user['auctions'] = Item.query.filter_by(seller_id=current_user.id).all()[::-1]
+    # Get incomplete auctions sorted by auction_end ascending
+    incomplete_auctions = Item.query.filter_by(seller_id=current_user.id)\
+        .filter(Item.auction_end > now)\
+        .order_by(Item.auction_end.asc())\
+        .all()
+
+    # Get completed auctions sorted by auction_end descending
+    completed_auctions = Item.query.filter_by(seller_id=current_user.id)\
+        .filter(Item.auction_end <= now)\
+        .order_by(Item.auction_end.desc())\
+        .all()
+
+    # Combine the results
+    user['auctions'] = incomplete_auctions + completed_auctions
 
     # Get auctions the user has participated in (via bidding, winning or paying)
     # Bidding: any open auction (status == 1) where the user has at least one bid.
@@ -396,17 +442,20 @@ def handle_user(now):
         Item.query.join(Bid, Item.item_id == Bid.item_id)
         .filter(Bid.bidder_id == current_user.id, Item.status == 1)
         .distinct()
+        .order_by(Item.auction_end.asc())
         .all()
     )
 
     # Won: auctions that are finalized (status == 2) where the user is the winner.
     won_items = (
         Item.query.filter(Item.status == 2, Item.winning_bid.has(bidder_id=current_user.id))
+        .order_by(Item.auction_end.asc())
         .all()
     )
     # Paid: auctions where the item is paid for (status == 3) and the user is the winner.
     paid_items = (
         Item.query.filter(Item.status == 3, Item.winning_bid.has(bidder_id=current_user.id))
+        .order_by(Item.auction_end.asc())
         .all()
     )
 
@@ -445,6 +494,19 @@ def update_user_role(user_id):
     if user is None:
         return jsonify({'error': 'User not found'}), 404
 
+    # Cannot change user with live auctions
+    if user.role == 1:
+        if Item.query.filter(Item.auction_end > datetime.now(), Item.seller_id == user.id).first():
+            return jsonify({'error': 'Cannot change role of user with live auctions'}), 400
+        
+    # Cannot change expert with pending authentications
+    if user.role == 2:
+        if ExpertAssignment.query.filter(
+            and_(ExpertAssignment.expert_id == user.id, ExpertAssignment.status == 1)
+        ).first():
+            return jsonify({'error': 'Cannot change role of expert with pending authentications'}), 400
+
+    # Cannot change manager role
     if user.role == 3:
         return jsonify({'error': 'Cannot change manager role'}), 403
 
@@ -463,8 +525,9 @@ def update_user_role(user_id):
     # Send notification to user whose role was changed
     notification = Notification(
         user_id=user.id,
-        message=f'Your role has been updated from {role_strings[old_role - 1]} to {role_strings[new_role - 1]}',
-        notification_type=0
+        message=f'Your role has been updated from {role_strings[old_role - 1]} to {role_strings[new_role - 1]}.',
+        notification_type=0,
+        created_at=time
     )
     db.session.add(notification)
     db.session.commit()
@@ -534,37 +597,8 @@ def assign_expert(request_id):
     # The expert must have at least one availability record between now and auction end day (inclusive)
     item = authentication_request.item  # Assumes relationship exists
     auction_end = item.auction_end        # Auction end as datetime
-    auction_end_date = auction_end.date()
-    threshold_time = (auction_end - timedelta(hours=3)).time()  # On auction end day
-
-    now_dt = datetime.now()
-    now_date = now_dt.date()
-
-    # Get all availability records for the expert between now and auction end date (inclusive)
-    avail_records = db.session.query(ExpertAvailability).filter(
-        ExpertAvailability.expert_id == expert,
-        ExpertAvailability.day >= now_date,
-        ExpertAvailability.day <= auction_end_date
-    ).all()
-
-    valid = False
-    for record in avail_records:
-        if not record.status:
-            continue
-        # If the availability is on a day before the auction end day, it's valid.
-        if record.day < auction_end_date:
-            valid = True
-            break
-        # If the availability is on the auction end day, then ensure it doesn't start too late.
-        elif record.day == auction_end_date:
-            # Calculate the threshold time (auction end time minus 3 hours)
-            threshold_time = (auction_end - timedelta(hours=3)).time()
-            # The expert's availability is valid only if it starts before the threshold.
-            if record.start_time < threshold_time:
-                valid = True
-                break
-
-    if not valid:
+    
+    if not is_expert_available_before_auction_end(user, auction_end, datetime.now()):
         return jsonify({'error': 'Expert is not available at any time before the last 3 hours of the auction'}), 400
 
     # All checks passed—create the assignment.
@@ -586,19 +620,21 @@ def assign_expert(request_id):
     # Send notification to expert and requester
     notification_expert = Notification(
         user_id=expert,
-        message=f'You have been assigned to authenticate an item',
+        message=f'You have been assigned to authenticate an item.',
         item_url=item.url,
         item_title=item.title,
-        notification_type=4
+        notification_type=4,
+        created_at=datetime.now()
     )
     db.session.add(notification_expert)
 
     notification_requester = Notification(
         user_id=authentication_request.requester_id,
-        message=f'An expert has been assigned to authenticate your item',
+        message=f'An expert has been assigned to authenticate your item.',
         item_url=item.url,
         item_title=item.title,
-        notification_type=4
+        notification_type=4,
+        created_at=datetime.now()
     )
     db.session.add(notification_requester)
     db.session.commit()
@@ -683,9 +719,11 @@ def auto_assign_expert(request_id):
     scores = [(expert, calculate_expert_suitability(expert, auth_request, all_experts_assignments, now))
               for expert in eligible_experts]
     max_score = max(score for _, score in scores)
-    best_experts = [expert for expert, score in scores if score == max_score]
+    best_experts = [expert for expert, score in scores if score == max_score and score > 0]
+    if not best_experts:
+        return jsonify({'error': 'No available experts'}), 400
+    
     best_expert_ids = set(expert.id for expert in best_experts)
-    print(best_expert_ids)
 
     # Preferentially pick the expert displayed in the recommendation
     if request.is_json and request.json.get('recommendation') and request.json.get('recommendation') in best_expert_ids:
@@ -709,17 +747,19 @@ def auto_assign_expert(request_id):
     # Send notifications
     notification_expert = Notification(
         user_id=recommended_expert.id,
-        message=f'You have been assigned to authenticate {auth_request.item.title}',
+        message=f'You have been assigned to authenticate {auth_request.item.title}.',
         item_url=auth_request.item.url,
         item_title=auth_request.item.title,
-        notification_type=4
+        notification_type=4,
+        created_at=now
     )
     notification_requester = Notification(
         user_id=auth_request.requester_id,
-        message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}',
+        message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}.',
         item_url=auth_request.item.url,
         item_title=auth_request.item.title,
-        notification_type=4
+        notification_type=4,
+        created_at=now
     )
     db.session.add_all([notification_expert, notification_requester])
     db.session.commit()
@@ -804,7 +844,9 @@ def bulk_auto_assign_experts():
         scores = [(expert, calculate_expert_suitability(expert, auth_request, all_experts_assignments, now))
                   for expert in eligible_experts]
         max_score = max(score for _, score in scores)
-        best_experts = [expert for expert, score in scores if score == max_score]
+        best_experts = [expert for expert, score in scores if score == max_score and score > 0]
+        if not best_experts:
+            continue
         recommended_expert = choice(best_experts)
 
         assignment = ExpertAssignment(request_id=request_id, expert_id=recommended_expert.id)
@@ -820,17 +862,19 @@ def bulk_auto_assign_experts():
 
         notification_expert = Notification(
             user_id=recommended_expert.id,
-            message=f'You have been assigned to authenticate {auth_request.item.title}',
+            message=f'You have been assigned to authenticate {auth_request.item.title}.',
             item_url=auth_request.item.url,
             item_title=auth_request.item.title,
-            notification_type=4
+            notification_type=4,
+            created_at=now
         )
         notification_requester = Notification(
             user_id=auth_request.requester_id,
-            message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}',
+            message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}.',
             item_url=auth_request.item.url,
             item_title=auth_request.item.title,
-            notification_type=4
+            notification_type=4,
+            created_at=now
         )
         db.session.add_all([notification_expert, notification_requester])
 
@@ -876,12 +920,12 @@ def bulk_auto_assign_experts():
             print(f'SocketIO Error: {e}')
 
         send_notification_email(expert, Notification(
-            user_id=expert.id, message=f'You have been assigned to authenticate {auth_request.item.title}',
-            item_url=auth_request.item.url, item_title=auth_request.item.title, notification_type=4))
+            user_id=expert.id, message=f'You have been assigned to authenticate {auth_request.item.title}.',
+            item_url=auth_request.item.url, item_title=auth_request.item.title, notification_type=4, created_at=now))
 
         send_notification_email(auth_request.requester, Notification(
-            user_id=auth_request.requester_id, message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}',
-            item_url=auth_request.item.url, item_title=auth_request.item.title, notification_type=4))
+            user_id=auth_request.requester_id, message=f'An expert has been assigned to authenticate your item: {auth_request.item.title}.',
+            item_url=auth_request.item.url, item_title=auth_request.item.title, notification_type=4, created_at=now))
 
     return jsonify({
         'message': 'Bulk auto-assignment successful',

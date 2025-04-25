@@ -126,30 +126,30 @@ def setup_expert_availability_data(app):
 # Access tests
 def test_availability_page_access_logged_out(client):
     """Test that logged-out users are redirected to login."""
-    response = client.get('/manager/expert_availability', follow_redirects=True)
+    response = client.get('/manager/expert-availability', follow_redirects=True)
     assert response.status_code == 200
     assert b'Please log in' in response.data or b'sign in' in response.data or b'Log in' in response.data
 
 @login_as(role=1, user_id=1, username="regular_user")
 def test_availability_page_access_as_regular_user(client):
     """Test that regular users are denied access."""
-    response = client.get('/manager/expert_availability', follow_redirects=True)
+    response = client.get('/manager/expert-availability', follow_redirects=True)
     assert response.status_code == 200
     # Check for redirection to home page
-    assert b'Welcome to Vintage Vault' in response.data or b'not authorized' in response.data
+    assert b'Welcome to Vintage Vault' in response.data or b'not authorised' in response.data
 
 @login_as(role=2, user_id=2, username="expert_user")
 def test_availability_page_access_as_expert_user(client):
     """Test that experts are denied access."""
-    response = client.get('/manager/expert_availability', follow_redirects=True)
+    response = client.get('/manager/expert-availability', follow_redirects=True)
     assert response.status_code == 200
     # Check for redirection to home page
-    assert b'Welcome to Vintage Vault' in response.data or b'not authorized' in response.data
+    assert b'Welcome to Vintage Vault' in response.data or b'not authorised' in response.data
 
 @login_as(role=3, user_id=3, username="manager_user")
 def test_availability_page_access_as_manager(client):
     """Test that managers can access the page."""
-    response = client.get('/manager/expert_availability')
+    response = client.get('/manager/expert-availability')
     assert response.status_code == 200
     assert b'Expert Availability Overview' in response.data
 
@@ -157,7 +157,7 @@ def test_availability_page_access_as_manager(client):
 @login_as(role=3, user_id=3, username="manager_user")
 def test_manager_dashboard_tabs(client, setup_expert_availability_data, soup):
     """Test that the dashboard tabs exist."""
-    response = client.get('/manager/expert_availability')
+    response = client.get('/manager/expert-availability')
     assert response.status_code == 200
     
     page = soup(response.data)
@@ -173,7 +173,7 @@ def test_manager_dashboard_tabs(client, setup_expert_availability_data, soup):
 @login_as(role=3, user_id=3, username="manager_user")
 def test_manager_availability_daily_view(client, setup_expert_availability_data, soup):
     """Test the daily view table and components."""
-    response = client.get('/manager/expert_availability')
+    response = client.get('/manager/expert-availability')
     assert response.status_code == 200
     
     page = soup(response.data)
@@ -199,7 +199,7 @@ def test_manager_availability_daily_view(client, setup_expert_availability_data,
 @login_as(role=3, user_id=3, username="manager_user")
 def test_manager_availability_weekly_view(client, setup_expert_availability_data, soup):
     """Test the weekly view table and components."""
-    response = client.get('/manager/expert_availability')
+    response = client.get('/manager/expert-availability')
     assert response.status_code == 200
     
     page = soup(response.data)
@@ -230,7 +230,7 @@ def test_manager_availability_weekly_view(client, setup_expert_availability_data
 @login_as(role=3, user_id=3, username="manager_user")
 def test_category_filter(client, setup_expert_availability_data, soup):
     """Test the category filter component."""
-    response = client.get('/manager/expert_availability')
+    response = client.get('/manager/expert-availability')
     assert response.status_code == 200
     
     page = soup(response.data)
@@ -241,26 +241,26 @@ def test_category_filter(client, setup_expert_availability_data, soup):
     # Verify it contains the default "All Categories" option
     all_option = category_filter.find('option', value='')
     assert all_option is not None
-    assert 'ALL CATEGORIES' in all_option.text
+    assert 'All Categories' in all_option.text
     
     assert category_filter is not None
 
 @login_as(role=3, user_id=3, username="manager_user")
 def test_expert_search(client, setup_expert_availability_data, soup):
     """Test the expert search component."""
-    response = client.get('/manager/expert_availability')
+    response = client.get('/manager/expert-availability')
     assert response.status_code == 200
     
     page = soup(response.data)
     
     # Verify expert search input exists
     search_input = verify_element_exists(page, 'input', {'id': 'expert-search'})
-    assert search_input['placeholder'] == 'SEARCH EXPERTS...'
+    assert search_input['placeholder'] == 'SEARCH EXPERTS'
 
 @login_as(role=3, user_id=3, username="manager_user")
 def test_expert_availability_data(client, setup_expert_availability_data, soup):
     """Test that expert availability data is correctly passed to the template."""
-    response = client.get('/manager/expert_availability')
+    response = client.get('/manager/expert-availability')
     assert response.status_code == 200
     
     page = soup(response.data)
@@ -280,7 +280,7 @@ def test_expert_availability_data(client, setup_expert_availability_data, soup):
 @login_as(role=3, user_id=3, username="manager_user")
 def test_time_slots_generated(client, setup_expert_availability_data, soup):
     """Test that time slots are correctly generated."""
-    response = client.get('/manager/expert_availability')
+    response = client.get('/manager/expert-availability')
     assert response.status_code == 200
     
     page = soup(response.data)
@@ -300,7 +300,7 @@ def test_time_slots_generated(client, setup_expert_availability_data, soup):
 @login_as(role=3, user_id=3, username="manager_user")
 def test_toggle_filter_button(client, setup_expert_availability_data, soup):
     """Test that the toggle filter button exists."""
-    response = client.get('/manager/expert_availability')
+    response = client.get('/manager/expert-availability')
     assert response.status_code == 200
     
     page = soup(response.data)
@@ -312,7 +312,7 @@ def test_toggle_filter_button(client, setup_expert_availability_data, soup):
 @login_as(role=3, user_id=3, username="manager_user")
 def test_current_time_display(client, setup_expert_availability_data, soup):
     """Test that the current time is displayed."""
-    response = client.get('/manager/expert_availability')
+    response = client.get('/manager/expert-availability')
     assert response.status_code == 200
     
     page = soup(response.data)

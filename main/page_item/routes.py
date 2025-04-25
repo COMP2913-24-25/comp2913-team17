@@ -113,7 +113,8 @@ def unwatch_item(url):
 @item_page.route('/<url>/bid', methods=['POST'])
 @login_required
 def place_bid(url):
-    item = Item.query.filter_by(url=url).first_or_404()
+    # Prevent race conditions by locking the item row for update
+    item = Item.query.with_for_update().filter_by(url=url).first_or_404()
 
     # Prevent the seller from bidding on their own auction.
     if current_user.id == item.seller_id:
@@ -149,6 +150,15 @@ def place_bid(url):
 
         if bid_amount < item.minimum_price:
             return jsonify({'error': 'Your bid must be at least the minimum price.'}), 400
+        
+        # Check for identical recent bids to prevent duplicate bids
+        conflicting_bid = Bid.query.filter(
+            Bid.item_id == item.item_id,
+            Bid.bid_amount >= bid_amount
+        ).first()
+        
+        if conflicting_bid:
+            return jsonify({'error': 'Please try again with a higher bid amount.'}), 409
 
         new_bid = Bid(
             item_id=item.item_id,
@@ -186,10 +196,11 @@ def place_bid(url):
 def notify_outbid(self, user):
     notification = Notification(
         user_id=user.id,
-        message=f"You have been outbid on '{self.title}'",
+        message=f"You have been outbid on '{self.title}'.",
         item_url=self.url,
         item_title=self.title,
-        notification_type=1
+        notification_type=1,
+        created_at=datetime.now()
     )
     db.session.add(notification)
     db.session.commit()
@@ -216,10 +227,11 @@ def notify_winner(self):
     winner = db.session.get(User, self.winning_bid.bidder_id)
     notification = Notification(
         user_id=winner.id,
-        message=f"Congratulations! You won the auction for '{self.title}'",
+        message=f"Congratulations! You won the auction for '{self.title}' with a bid of £{self.winning_bid.bid_amount}.",
         item_url=self.url,
         item_title=self.title,
-        notification_type=2
+        notification_type=2,
+        created_at=datetime.now()
     )
     db.session.add(notification)
     db.session.commit()
@@ -253,7 +265,8 @@ def notify_losers(self):
             message=f"The auction for '{self.title}' has ended. Unfortunately, you didn't win.",
             item_url=self.url,
             item_title=self.title,
-            notification_type=3
+            notification_type=3,
+            created_at=datetime.now()
         )
         db.session.add(notification)
         db.session.commit()
@@ -281,7 +294,8 @@ def notify_seller(self):
         message=message,
         item_url=self.url,
         item_title=self.title,
-        notification_type=notification_type
+        notification_type=notification_type,
+        created_at=datetime.now()
     )
     db.session.add(notification)
     db.session.commit()
@@ -322,7 +336,8 @@ def check_ended_auctions():
                     message=f"Your authentication request for '{item.title}' has been cancelled as the auction has ended.",
                     item_url=item.url,
                     item_title=item.title,
-                    notification_type=4
+                    notification_type=4,
+                    created_at=datetime.now()
                 )
                 db.session.add(notification_user)
                 db.session.commit()
@@ -354,7 +369,8 @@ def check_ended_auctions():
                         message=f"The authentication request for '{item.title}' has been cancelled as the auction has ended.",
                         item_url=item.url,
                         item_title=item.title,
-                        notification_type=4
+                        notification_type=4,
+                        created_at=datetime.now()
                     )
                     db.session.add(notification_expert)
                     db.session.commit()
@@ -434,6 +450,11 @@ def create_payment_intent(url):
     is_winner = current_user.is_authenticated and item.highest_bid() and item.highest_bid().bidder_id == current_user.id
     if not is_auction_over or not is_winner:
         flash("You are not authorised to access the payment page.", "danger")
+        return redirect(url_for('item_page.index', url=url))
+    
+    # Check if the item has been paid for
+    if item.status == 3:
+        flash("This item has already been paid for.", "danger")
         return redirect(url_for('item_page.index', url=url))
 
     # Ensure the current user has an associated Stripe Customer
@@ -525,6 +546,10 @@ def create_checkout_session(url):
     if not is_auction_over or not is_winner:
         flash("You are not authorised to access the payment page.", "danger")
         return redirect(url_for('item_page.index', url=url))
+    
+    # Check if the item has been paid for
+    if item.status == 3:
+        return jsonify({'error': 'This item has already been paid for.'}), 400
 
     # Get return URL from request data if available
     data = request.get_json() or {}
@@ -566,7 +591,8 @@ def create_checkout_session(url):
             saved_payment_method_options={
                 'payment_method_save': 'enabled'
             },
-            metadata={'item_id': str(item.item_id)}
+            metadata={'item_id': str(item.item_id)},
+            idempotency_key=f'checkout_session_{current_user.id}_{item.item_id}'
         )
 
         return jsonify({'checkoutUrl': session.url})

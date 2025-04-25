@@ -30,19 +30,19 @@ $(document).ready(function() {
           
       const data = await response.json();
       
-      // Cannot edit managers, remove from table
-      if (newRole === '3') {
-        row.fadeOut(300, function() {
-          row.remove();
-          // Re-apply filters after removing row
-          if (typeof window.filterDashboardUsers === 'function') {
-            window.filterDashboardUsers();
-          }
-        });
-      } else if (data && data.new_role) {
+      if (data && data.new_role) {
         const oldRoleValue = row.find('.role-cell .badge').hasClass('bg-success') ? 2 : 1;
-        
-        if (data.new_role === 2) {
+
+        // Cannot edit managers, remove from table
+        if (data.new_role === 3) {
+          row.fadeOut(300, function() {
+            row.remove();
+            // Re-apply filters after removing row
+            if (typeof window.filterDashboardUsers === 'function') {
+              window.filterDashboardUsers();
+            }
+          });
+        } else if (data.new_role === 2) {
           row.find('.role-cell').html(`
             <div class="badge bg-success authentication-status">
               <i class="fas fa-user-graduate me-1"></i> EXPERT
@@ -71,6 +71,8 @@ $(document).ready(function() {
         if (typeof window.filterDashboardUsers === 'function') {
           window.filterDashboardUsers();
         }
+      } else {
+        alert('Error: Unable to update user role. ' + data.error);
       }
       
       // Restore button

@@ -172,7 +172,7 @@
                 <tr data-request-id="{{ request.request_id }}">
                   <td data-label="Select"><input type="checkbox" class="request-checkbox"></td>
                   <td data-label="Requester" class="seller-name">
-                    <i class="fas fa-user me-1"></i> {{ request.requester.username }}
+                    {{ request.requester.username }}
                   </td>
                   <td data-label="Item" class="item-title">
                     <a href="/item/{{ request.item.url }}">
@@ -192,7 +192,7 @@
                       <i class="fas fa-user-check me-1"></i> Auto-Assign
                     </button>
                     {% else %}
-                    None
+                    No available experts
                     {% endif %}
                   </td>
                   <td data-label="Assign Expert">

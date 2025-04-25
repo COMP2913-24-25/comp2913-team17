@@ -227,8 +227,12 @@ $(document).ready(function() {
 
     // Update suggested bid
     if (bidAmount.length) {
-      bidAmount.val((parseFloat(data.bid_amount) + 0.01).toFixed(2));
       bidAmount.attr('min', (parseFloat(data.bid_amount) + 0.01).toFixed(2));
+
+      // Don't reset the bid amount if the user has already entered a higher amount or if the modal is open to prevent accidental bids
+      if (!$('.place-bid-modal').hasClass('show') && parseFloat(bidAmount.val()) <= parseFloat(data.bid_amount)) {
+        bidAmount.val((parseFloat(data.bid_amount) + 0.01).toFixed(2));
+      }
     }
 
     // Update max bid alert
@@ -242,6 +246,17 @@ $(document).ready(function() {
       maxBidAlert = $('.max-bid-alert');
     } else {
       maxBidAlert.hide();
+    }
+  });
+
+  $('.place-bid-modal').on('hidden.bs.modal', function() {
+    // When the modal is closed, check if the bid is less than minimum
+    const minBid = parseFloat(bidAmount.attr('min'));
+    const currentBid = parseFloat(bidAmount.val());
+    
+    // If the current bid is less than minimum or invalid, set it to the minimum
+    if (isNaN(currentBid) || currentBid < minBid) {
+      bidAmount.val(minBid.toFixed(2));
     }
   });
 

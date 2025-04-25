@@ -4,12 +4,12 @@ from flask_login import current_user, login_required
 from ..models import User, ExpertAvailability, Category
 from . import manager_page
 
-@manager_page.route('/expert_availability')
+@manager_page.route('/expert-availability')
 @login_required
 def expert_availability():
     # Only allow managers (role 3)
     if current_user.role != 3:
-        flash("You are not authorized to access this page.", "error")
+        flash("You are not authorised to access this page.", "error")
         return redirect(url_for("home_page.index"))
     
     today = date.today()

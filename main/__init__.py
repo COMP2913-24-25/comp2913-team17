@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_mail import Mail
-from flask_wtf.csrf import CSRFProtect
-from flask_socketio import SocketIO, join_room
+from flask_socketio import SocketIO
 from flask_apscheduler import APScheduler
+from datetime import timedelta
+from logging.handlers import RotatingFileHandler
 from .models import db
 from .init_db import populate_db
 from .limiter_utils import configure_limiter
@@ -57,13 +58,33 @@ def create_app(testing=False, database_path='database.db'):
     else:
         # Testing SQLite database
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, database_path)
+
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # Set the SQLAlchemy engine options per environment
+    if os.environ.get('RENDER') != 'true':
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'connect_args': {
+                # Seconds to wait if db is locked
+                'timeout': 30
+            },
+            'pool_recycle': 120,
+            'pool_pre_ping': True
+        }
+    else:
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_recycle': 120,
+        'pool_pre_ping': True
+    }
 
     # Initialise security features
     csrf.init_app(app)
     login_manager = LoginManager(app)
     login_manager.login_view = 'auth_page.login'
     login_manager.login_message = 'Please log in to access this page'
+
+    # Set session life to 1 hour of inactivity
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
 
     # Configure OAuth2 providers
     app.config['OAUTH2_PROVIDERS'] = {
@@ -99,9 +120,9 @@ def create_app(testing=False, database_path='database.db'):
     )
 
     # Add BASE_URL for generating links in emails
-    app.config['BASE_URL'] = os.environ.get('BASE_URL', '127.0.0.1:5000')
-
-    # Initialize Mail
+    app.config['BASE_URL'] = os.environ.get('BASE_URL', '127.0.0.1:5000/')
+    
+    # Initialise Mail
     mail.init_app(app)
 
     # Configure logging
@@ -109,8 +130,14 @@ def create_app(testing=False, database_path='database.db'):
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.StreamHandler(),  # Console handler
-            logging.FileHandler("auction_system.log")  # File handler
+            # Console handler
+            logging.StreamHandler(),
+            # Set max logfile size to 5MB and keep up to 3 backups
+            RotatingFileHandler(
+                "auction_system.log", 
+                maxBytes=1024 * 1024 * 5,
+                backupCount=3
+            )
         ]
     )
 
@@ -182,13 +209,40 @@ def create_app(testing=False, database_path='database.db'):
     @login_manager.user_loader
     def load_user(user_id):
         from .models import User
-        return db.session.query(User).get(int(user_id))
+        return db.session.get(User, int(user_id))
+    
+    # Checks if the password has been changed and forces a logout if so
+    @app.before_request
+    def check_password_version():
+        from flask_login import current_user, logout_user
+        from flask import session, redirect, url_for, flash
 
+        session.permanent = True
+
+        if current_user.is_authenticated:
+            password_version = session.get('password_version')
+            if password_version is None:
+                # Set initial version
+                session['password_version'] = current_user.password_version
+            elif password_version != current_user.password_version:
+                # Password changed, force logout
+                logout_user()
+                flash('Your password has been changed. Please log in again.', 'info')
+                return redirect(url_for('auth_page.login'))
+    
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('404.html'), 404
 
     # Initialise rate limiter
     configure_limiter(app)
+
+    # Send pending notifications on startup
+    with app.app_context():
+        from .page_item.routes import check_ended_auctions
+        try:
+            check_ended_auctions()
+        except Exception as e:
+            print(f'Error checking ended auctions on startup: {str(e)}')
 
     return app

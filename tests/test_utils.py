@@ -39,6 +39,7 @@ class MockUser:
         self.username = username
         self.email = f"{username}@test.com" if username else "user@test.com"
         self.is_authenticated = is_authenticated
+        self.password_version = 1
         self.role = role
         self.is_active = True
         self.is_anonymous = False
@@ -196,7 +197,7 @@ def logout_user(client):
 
 def update_username(client, new_username, current_password="Password@123"):
     """Update user's username"""
-    return client.post('/update_user', data={
+    return client.post('/update-user', data={
         'new_username': new_username,
         'current_password': current_password,
         'submit': 'Update Username'
@@ -204,7 +205,7 @@ def update_username(client, new_username, current_password="Password@123"):
 
 def update_email(client, new_email, current_password="Password@123"):
     """Update user's email"""
-    return client.post('/update_user', data={
+    return client.post('/update-user', data={
         'new_email': new_email,
         'current_password': current_password,
         'submit': 'Update Email'
@@ -212,7 +213,7 @@ def update_email(client, new_email, current_password="Password@123"):
 
 def update_password(client, current_password="Password@123", new_password="NewPassword123!", confirm_password="NewPassword123!"):
     """Update user's password"""
-    return client.post('/update_user', data={
+    return client.post('/update-user', data={
         'current_password': current_password,
         'new_password': new_password,
         'confirm_password': confirm_password,

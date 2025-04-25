@@ -56,7 +56,7 @@ cover/
 *.pot
 
 # Django stuff:
-*.log
+*.log*
 log/
 logs/
 local_settings.py
