@@ -36,9 +36,9 @@
 
   <div class="expert-search-container">
     <div class="expert-search-wrapper">
-      <input type="text" id="expert-search" class="form-control expert-search-input" placeholder="SEARCH EXPERTS...">
+      <input type="text" id="expert-search" class="form-control expert-search-input" placeholder="SEARCH EXPERTS">
       <select id="expert-category-filter" class="form-select expert-filter-dropdown">
-        <option value="">ALL CATEGORIES</option>
+        <option value="">All Categories</option>
         {% for category in categories %}
           <option value="{{ category.id }}">{{ category.name }}</option>
         {% endfor %}
@@ -107,6 +107,7 @@
             Current time: {{ current_time.strftime('%H:%M') }}
           </div>
         </div>
+        <div id="dailyTableSpacer" class="table-spacer"></div>
       </div>
 
       <!-- Weekly View -->
@@ -145,6 +146,7 @@
             </table>
           </div>
         </div>
+        <p id="weeklyTableSpacer" class="table-spacer">&nbsp;</p>
       </div>
     </div>
   </div>

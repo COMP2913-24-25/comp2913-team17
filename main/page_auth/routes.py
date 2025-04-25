@@ -61,8 +61,9 @@ def login():
             user.reset_login_attempts()
             db.session.commit()
 
+            # Log in and store current password version in session
             login_user(user)
-            flash('Successfully logged in!', 'success')
+            session['password_version'] = user.password_version
             next_page = request.args.get('next')
             return redirect(next_page or url_for('home_page.index'))
         else:
@@ -119,7 +120,7 @@ def register():
             return redirect(url_for('home_page.index'))
     return render_template('register.html', form=form)
 
-@auth_page.route('/update_user', methods=['GET', 'POST'])
+@auth_page.route('/update-user', methods=['GET', 'POST'])
 @limiter.limit("100 per hour", methods=["POST"], error_message="Too many update attempts. Please try again later.")
 def update_user():
     """Render the update page and update user details."""
@@ -138,81 +139,77 @@ def update_user():
     else:
         masked_email = '*' * (len(mask_start)) + '@' + domain
 
-    ### Username Change ###
-    # Check 1: Username isn't already taken
-    # Check 2: User knows current password
-    # Check 3: Username is different to current username
-    if update_username_form.validate_on_submit():
-        current_password = update_username_form.current_password.data
-        new_username = update_username_form.new_username.data
+    # Check which form was submitted by checking the submit button
+    if request.method == 'POST':
+        form_name = request.form.get('submit', '')
 
-        # Check 2
-        if not current_user.check_password(current_password):
-            flash("Incorrect current password", "danger")
-        # Check 3
-        elif new_username == current_user.username:
-            flash('New username must be different to the current username', 'danger')
-        # Check 1
-        elif db.session.query(User).filter(User.username == new_username, User.id != current_user.id).first():
-            flash('Username already taken', 'danger')
-        else:
-            current_user.username = new_username
-            db.session.commit()
-            flash('Username updated successfully', 'success')
-            return redirect(url_for('auth_page.update_user'))
+        # Handle Username Update
+        if 'Update Username' in form_name and update_username_form.validate_on_submit():
+            current_password = update_username_form.current_password.data
+            new_username = update_username_form.new_username.data
 
-    ### Email Change ###
-    # Check 1: Email isn't already in use
-    # Check 2: User knows current password
-    # Check 3: Email is different to current email
-    elif update_email_form.validate_on_submit():
-        current_password = update_email_form.current_password.data
-        new_email = update_email_form.new_email.data
+            # Check 1 - Wrong password
+            if not current_user.check_password(current_password):
+                flash("Incorrect current password", "danger")
+            # Check 2 - Username is the same as current username
+            elif new_username == current_user.username:
+                flash('New username must be different to the current username', 'danger')
+            # Check 3 - Username already taken
+            elif db.session.query(User).filter(User.username == new_username, User.id != current_user.id).first():
+                flash('Username already taken', 'danger')
+            else:
+                current_user.username = new_username
+                db.session.commit()
+                flash('Username updated successfully', 'success')
+                return redirect(url_for('auth_page.update_user'))
 
-        # Check 2
-        if not current_user.check_password(current_password):
-            flash("Incorrect current password", "danger")
-        # Check 3
-        elif new_email == current_user.email:
-            flash('New email must be different to current email', 'danger')
-        # Check 1
-        elif db.session.query(User).filter(User.email == new_email, User.id != current_user.id).first():
-            flash('Email already taken', 'danger')
-        else:
-            # Update the email
-            current_user.email = new_email
-            db.session.commit()
-            flash('Email updated successfully', 'success')
-            return redirect(url_for('auth_page.update_user'))
+        # Handle Email Update
+        elif 'Update Email' in form_name:
+            if update_email_form.validate_on_submit():
+                current_password = update_email_form.current_password.data
+                new_email = update_email_form.new_email.data
 
-    ### Password Change ###
-    # Check 1: User knows current password
-    # Check 2: New password is different to current password
-    # Check 3: New password has been confirmed a second time
-    elif update_password_form.validate_on_submit():
-        current_password = update_password_form.current_password.data
-        new_password = update_password_form.new_password.data
-        confirm_password = update_password_form.confirm_password.data
+                # Check 1 - Wrong password
+                if not current_user.check_password(current_password):
+                    flash("Incorrect current password", "danger")
+                # Check 2 - Email is the same as current email
+                elif new_email == current_user.email:
+                    flash('New email must be different to current email', 'danger')
+                # Check 3 - Email already taken
+                elif db.session.query(User).filter(User.email == new_email, User.id != current_user.id).first():
+                    flash('Email already taken', 'danger')
+                else:
+                    # Update the email
+                    current_user.email = new_email
+                    db.session.commit()
+                    flash('Email updated successfully', 'success')
+                    return redirect(url_for('auth_page.update_user'))
 
-        # Check 1
-        if not current_user.check_password(current_password):
-            flash("Incorrect current password", "danger")
-        # Check 2
-        elif current_user.check_password(new_password):
-            flash('New password must not be a password you have used before')
-        # Check 3
-        elif new_password != confirm_password:
-            flash('Passwords do not match', 'danger')
-        else:
-            # Update the password
-            current_user.set_password(new_password)
-            db.session.commit()
-            flash('Password updated successfully', 'success')
+        # Handle Password Update
+        elif 'Update Password' in form_name:
+            if update_password_form.validate_on_submit():
+                current_password = update_password_form.current_password.data
+                new_password = update_password_form.new_password.data
+                confirm_password = update_password_form.confirm_password.data
 
-            logout_user()
-            flash('Please log in again with your updated password.', 'info')
+                # Check 1 - Wrong password
+                if not current_user.check_password(current_password):
+                    flash("Incorrect current password", "danger")
+                # Check 2 - New password is the same as current password
+                elif current_user.check_password(new_password):
+                    flash('New password must be different to your current password', 'danger')
+                # Check 3 - Passwords don't match
+                elif new_password != confirm_password:
+                    flash('Passwords do not match', 'danger')
+                else:
+                    # Update the password
+                    current_user.set_password(new_password)
+                    db.session.commit()
 
-            return redirect(url_for('auth_page.login'))
+                    logout_user()
+                    flash('Password updated successfully. Please log in with your updated password.', 'info')
+
+                    return redirect(url_for('auth_page.login'))
 
     return render_template(
         'update_user.html',
@@ -325,4 +322,5 @@ def oauth2_callback(provider):
     user.reset_login_attempts()
     db.session.commit()
     login_user(user)
+    session['password_version'] = user.password_version
     return redirect(url_for('home_page.index'))

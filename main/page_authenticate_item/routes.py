@@ -111,7 +111,8 @@ def accept(url):
         message=f'Your item has been authenticated!',
         item_url=authentication.item.url,
         item_title=authentication.item.title,
-        notification_type=4
+        notification_type=4,
+        created_at=datetime.now()
     )
     db.session.add(notification)
     db.session.commit()
@@ -161,7 +162,8 @@ def reject(url):
         message=f'Your item authentication has been declined.',
         item_url=authentication.item.url,
         item_title=authentication.item.title,
-        notification_type=4
+        notification_type=4,
+        created_at=datetime.now()
     )
     db.session.add(notification)
     db.session.commit()
@@ -233,15 +235,14 @@ def new_message(url):
     if not message_text:
         return jsonify({'error': 'Message content is required.'}), 400
 
-    # Create the message
+    # Create the message without committing yet to preserve message order with long uploads
     message = Message(
         authentication_request_id=authentication.request_id,
         sender_id=current_user.id,
-        message_text=message_text,
-        sent_at=datetime.now()
+        message_text=message_text
     )
     db.session.add(message)
-    db.session.commit()
+    db.session.flush()
 
     # Upload image if provided
     files = request.files.getlist('files[]')
@@ -270,11 +271,14 @@ def new_message(url):
                 image_key=path
             )
             db.session.add(message_image)
-            db.session.commit()
-
+            
             # Get image URL for real-time messaging
             image_url = message_image.get_url()
             image_urls.append(image_url)
+    
+    # Set timestamp after all processing is done
+    message.sent_at = datetime.now()
+    db.session.commit()
 
     # Send real-time message
     try:
@@ -301,7 +305,8 @@ def new_message(url):
             message=f'You have received a new message regarding an item authentication request.',
             item_url=authentication.item.url,
             item_title=authentication.item.title,
-            notification_type=0
+            notification_type=0,
+            created_at=datetime.now()
         )
         db.session.add(notification)
         db.session.commit()

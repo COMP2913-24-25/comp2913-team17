@@ -21,7 +21,12 @@ You can access a live version of the application [here](https://vintage-vault-ae
 
 ## Installation
 
-1. Insert an environment variable file named `.env` in the project root directory.
+1. Clone the repository:
+```bash
+git clone https://github.com/COMP2913-24-25/comp2913-team17.git
+```
+
+2. Insert an environment variable file named `.env` in the project root directory.
    This should be in the following format with the key values filled in:
 
 ```bash
@@ -39,13 +44,15 @@ STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 ```
 
-2. Create your virtual environment (optional but recommended):
+You can find more detailed documentation on how to populate your `.env` file [here](https://github.com/COMP2913-24-25/comp2913-team17/wiki/Installation-Guide).
+
+3. Create your virtual environment (optional but recommended):
 
 ```bash
 python3 -m venv myenv
 ```
 
-3. Activate your virtual environment (optional but recommended):
+4. Activate your virtual environment (optional but recommended):
 ```bash
 # For Linux/MacOS
 source myenv/bin/activate
@@ -57,17 +64,17 @@ myenv\Scripts\activate
 .\myenv\Scripts\Activate.ps1
 ```
 
-4. Install dependencies:
+5. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-5. Run the Flask application in development mode:
+6. Run the Flask application in development mode:
 ```bash
 flask run --debug
 ```
 
-By default, the application will use an existing SQLite database file named `database.db` in the main directory. If this file is not present, the application will create a new database file populated with dummy data. To run the application with no initial data, use the following command:
+By default, the application will use an existing SQLite database file named `database.db` in the main directory. If this file is empty or not present, the application will create a new database file populated with dummy data. To run the application with no initial data, use the following command:
 
 ```bash
 # For Linux/MacOS
@@ -79,7 +86,7 @@ set EMPTY_DB=1 && flask run --debug
 # For Windows PowerShell
 $env:EMPTY_DB=1; flask run --debug
 ```
-6. Set Up Stripe
+7. Set Up Stripe
 
 To accomodate payments, you will need to install Stripe CLI, instructions can be found [here](https://docs.stripe.com/stripe-cli). Once you have set up Stripe CLI and populated the `.env` file with your Stripe API keys, you will need to run the following command in a separate terminal window to forward Stripe events to your local server:
 
@@ -87,7 +94,7 @@ To accomodate payments, you will need to install Stripe CLI, instructions can be
 stripe listen --forward-to http://127.0.0.1:5000/item/stripe-webhook
 ```
 
-7. Access the application:
+8. Access the application:
 - Open the browser at: http://localhost:5000
 
 ## Usage
@@ -134,9 +141,9 @@ stripe listen --forward-to http://127.0.0.1:5000/item/stripe-webhook
 
 - [Google OAuth](https://developers.google.com/identity/protocols/oauth2) - For user authentication during login.
 
-- [Google Mail](https://developers.google.com/gmail/api) - For sending emails.
+- [Google Mail](https://developers.google.com/gmail/api) - For sending notification emails.
 
-- [AWS S3](https://aws.amazon.com/s3/) - For storing images and other static files.
+- [AWS S3](https://aws.amazon.com/s3/) - For storing auction and authentication images.
 
 ### Deployment
 
@@ -144,7 +151,7 @@ stripe listen --forward-to http://127.0.0.1:5000/item/stripe-webhook
 
 ## Tests
 
-Testing is encouraged for all features as it allows us to maintain the integrity of the site and catch bugs early. The following commands will allow you to run the project's unit tests:
+Testing is encouraged for all features as it allows us to maintain the integrity of the site and catch bugs early. After activating your virtual environment, enter the following commands in the root directory to run the project's unit tests:
 
 ```bash
 # Run all tests
@@ -167,7 +174,7 @@ pytest tests/test_feature.py
 ### Coordinator
 - [@abbeloe](https://github.com/abbeloe)
 
-### Organization
+### Organisation
 - [University of Leeds](https://github.com/enterprises/the-university-of-leeds)
 
 ## How to contribute
@@ -181,7 +188,7 @@ This can be done using the button at the top right of the [project homepage](htt
 2. Clone Your Fork
 
 To create a local copy of your fork, use this command:
-```
+```bash
 git clone https://github.com/yourusername/repo-name
 ```
 

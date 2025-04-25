@@ -49,7 +49,7 @@ class CreateAuctionForm(FlaskForm):
 
     images = MultipleFileField(
     'Upload Images',
-    validators=[Optional(), Length(max=5, message='You can upload up to 5 images only.')]
+    validators=[DataRequired(), Length(max=5, message='You can upload up to 5 images only.')]
     )
 
     authenticate_item = BooleanField("Authenticate Item", default=False)
