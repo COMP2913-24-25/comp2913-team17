@@ -57,9 +57,9 @@ $(document).ready(function() {
     const row = $(this).closest('tr');
     const newVal = row.find('.dur-input').val();
 
-    if (newVal < 1) {
+    if (newVal < 1 || newVal > 365) {
       row.find('.dur-input').val(row.find('.dur-cell').text());
-      alert('Invalid auction duration: must be at least 1 day');
+      alert('Invalid auction duration: must be between 1 and 365 days');
       return;
     }
       

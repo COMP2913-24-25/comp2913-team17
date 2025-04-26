@@ -55,8 +55,11 @@ def index():
         db.session.flush()
 
         # checks that the user has uploaded an image and skips db entry if not
-        for image in images:
+        for i, image in enumerate(images):
             if image.filename == '':
+                if i == 0:
+                    flash('No images uploaded. Please upload at least one image.', 'danger')
+                    return redirect(url_for('create_page.index'))
                 continue
             filename = secure_filename(image.filename)
             image_filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{filename}'

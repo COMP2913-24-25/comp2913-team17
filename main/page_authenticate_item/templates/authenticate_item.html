@@ -33,7 +33,7 @@
         id="{% if authentication != 1 or not (is_expert or is_creator) %}messages-tall{% elif is_creator%}messages-mid{% else %}messages-short{% endif %}">
         {% for message in messages %}
         <div
-          class="message {% if message.sender_id == current_user.id or (current_user.role == 3 and message.sender.role == 1) %}my-messages{% else %}other-messages{% endif %}">
+          class="message {% if current_user.role == message.sender.role or (current_user.role == 3 and message.sender.role == 1) %}my-messages{% else %}other-messages{% endif %}">
           <p>{{ message.message_text }}</p>
           {% if message.image_urls %}
           <div class="image-gallery">

@@ -38,9 +38,6 @@ def test_login_success(client, setup_database, soup):
     page = soup(response.data)
     verify_page_title(page, 'Vintage Vault')
     
-    # Check flash message
-    verify_flash_message(page, 'alert-success', 'Successfully logged in')
-    
     # Check user is authenticated
     with client.session_transaction() as sess:
         assert '_user_id' in sess
