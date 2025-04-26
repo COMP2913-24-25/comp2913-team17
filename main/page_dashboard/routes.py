@@ -318,10 +318,14 @@ def manager_stats(manager, now):
         manager['revenue_data']['week']['paid']['labels'].append(start_date.strftime('%a'))
 
     # 1 Month (weekly revenue for last 4 weeks)
-    for i in range(3, -1, -1):
-        start_date = (now - timedelta(days=i * 7)).replace(hour=0, minute=0, second=0, microsecond=0)
-        end_date = start_date + timedelta(days=7)
+    # Get Monday of current week
+    current_week_start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
 
+    # From 3 weeks ago to current week
+    for i in range(4):
+        start_date = current_week_start - timedelta(days=7 * (3 - i))
+        end_date = start_date + timedelta(days=7)
+        
         # Projected (all completed auctions)
         weekly_projected_auctions = db.session.query(Item.item_id, func.max(Bid.bid_amount).label('highest_bid'))\
             .join(Bid, Item.item_id == Bid.item_id)\
@@ -351,8 +355,10 @@ def manager_stats(manager, now):
 
         manager['revenue_data']['month']['projected']['values'].append(weekly_projected_revenue)
         manager['revenue_data']['month']['paid']['values'].append(weekly_paid_revenue)
-        manager['revenue_data']['month']['projected']['labels'].append(f"Week {4 - i}")
-        manager['revenue_data']['month']['paid']['labels'].append(f"Week {4 - i}")
+
+        week_label = f"{start_date.strftime('%d %b')} - {(end_date - timedelta(days=1)).strftime('%d %b')}"
+        manager['revenue_data']['month']['projected']['labels'].append(week_label)
+        manager['revenue_data']['month']['paid']['labels'].append(week_label)
 
     # 6 Months (monthly revenue for last 6 months)
     for i in range(5, -1, -1):

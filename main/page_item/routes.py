@@ -592,7 +592,7 @@ def create_checkout_session(url):
                 'payment_method_save': 'enabled'
             },
             metadata={'item_id': str(item.item_id)},
-            idempotency_key=f'checkout_session_{current_user.id}_{item.item_id}'
+            idempotency_key=f'checkout_session_{current_user.secret_key}_{item.url}'
         )
 
         return jsonify({'checkoutUrl': session.url})

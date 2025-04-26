@@ -94,7 +94,7 @@ def register():
 
     # Pre-fill the email field if it was provided in the query string
     form = RegisterForm()
-    if request.args.get('email'):
+    if request.method == 'GET' and request.args.get('email'):
         form.email.data = request.args['email']
 
     if form.validate_on_submit():
