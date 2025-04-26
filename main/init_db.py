@@ -195,9 +195,9 @@ def populate_db(app):
             seller_id=user4.id,
             title='Modern Sculpture',
             description='A unique modern sculpture.',
-            upload_date=now - timedelta(days=3),
-            auction_start=now - timedelta(days=3),
-            auction_end=now - timedelta(hours=1),
+            upload_date=now - timedelta(days=33),
+            auction_start=now - timedelta(days=33),
+            auction_end=now - timedelta(days=30,hours=1),
             minimum_price=3000.00,
             category_id=cat2.id
         )
@@ -245,7 +245,7 @@ def populate_db(app):
             description='A stylish designer jacket in excellent condition.',
             upload_date=now - timedelta(days=4),
             auction_start=now - timedelta(days=4),
-            auction_end=now + timedelta(hours=6),
+            auction_end=now + timedelta(minutes=15),
             minimum_price=250.00,
             category_id=cat4.id
         )
@@ -340,7 +340,7 @@ def populate_db(app):
         items.append(auction10)
         images.append(image18)
 
-        # Auction 11: Sports Car (ended)
+        # Auction 11: Sports Car
         auction11 = Item(
             seller_id=user1.id,
             title='Ferrari',
@@ -404,7 +404,7 @@ def populate_db(app):
         db.session.commit()
 
         # -------------------------
-        # Add Additional Fake Bids for Auctions (except Antique Desk and Electric Guitar)
+        # Add Additional Fake Bids for Auctions (except specific items)
         # -------------------------
         regular_users = [user1, user2, user3, user4, user5]
         for auction in items:
@@ -423,7 +423,7 @@ def populate_db(app):
             current_bid = auction.highest_bid().bid_amount if auction.highest_bid() else auction.minimum_price
 
             # Set the initial bid time to 5 hours ago.
-            last_bid_time = now - timedelta(hours=5)
+            last_bid_time = auction.auction_start + timedelta(hours=5)
 
             for _ in range(additional_bids):
                 possible_bidders = [u for u in regular_users if u.id != auction.seller_id]
@@ -448,6 +448,28 @@ def populate_db(app):
                 # Update the last_bid_time and current_bid for the next iteration.
                 last_bid_time = new_bid_time
                 current_bid = new_bid_amount
+                
+        # Alice wins 2 auctions to demo saving card details
+        for auction in items:
+            if auction.title in ['Moby Dick: A First Edition', 'Modern Sculpture']:
+                highest_bid = auction.highest_bid()
+                
+                # Only add Alice's bid if she's not already the highest bidder
+                if highest_bid.bidder_id != user1.id:
+                    # Make Alice's bid 20% higher than the current highest bid
+                    alice_bid_amount = highest_bid.bid_amount * Decimal('1.2')
+                    alice_bid_time = auction.auction_end - timedelta(minutes=1)
+                    
+                    # Create Alice's winning bid
+                    alice_bid = Bid(
+                        item_id=auction.item_id,
+                        bidder_id=user1.id,  # Alice
+                        bid_amount=alice_bid_amount,
+                        bid_time=alice_bid_time
+                    )
+                    db.session.add(alice_bid)
+        
+        db.session.commit()
 
         # Authentication Requests for auctions (except certain titles)
         excluded_titles = ['Luxury Rolex', 'Rare Comic Book', 'Ferrari', 'Moby Dick: A First Edition',
@@ -457,7 +479,7 @@ def populate_db(app):
                 auth_req = AuthenticationRequest(
                     item_id=auction.item_id,
                     requester_id=auction.seller_id,
-                    request_date=now
+                    request_date=auction.auction_start
                 )
                 db.session.add(auth_req)
         db.session.commit()
@@ -480,8 +502,8 @@ def populate_db(app):
             else:
                 expert_assignment_art = ExpertAssignment(
                     request_id=auth_req_art.request_id,
-                    expert_id=user6.id,  # Assign Charlie for example
-                    assigned_date=now,
+                    expert_id=user6.id,  # Assign Charlie for art painting
+                    assigned_date=auth_req_art.request_date + timedelta(hours=1),
                     status=2
                 )
                 db.session.add(expert_assignment_art)
@@ -492,20 +514,20 @@ def populate_db(app):
                 authentication_request_id=auth_req_art.request_id,
                 sender_id=user6.id,
                 message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
-                sent_at=now - timedelta(hours=1, minutes=30)
+                sent_at=auth_req_art.request_date + timedelta(hours=1)
             )
             message_seller_art = Message(
                 authentication_request_id=auth_req_art.request_id,
                 sender_id=auction2.seller_id,
                 message_text="Here are more details about my artwork. Please see the attached image for reference.",
-                sent_at=now - timedelta(hours=1)
+                sent_at=auth_req_art.request_date + timedelta(hours=1, minutes=45)
             )
             db.session.add_all([message_expert_art1, message_seller_art])
             db.session.commit()
 
             message_image_art = MessageImage(
                 message_id=message_seller_art.message_id,
-                image_key="message_attachments/20250321_130844_ARTJPG.jpg"  # S3 key for the Art image
+                image_key="message_attachments/20250321_130844_ARTJPG.jpg"
             )
             db.session.add(message_image_art)
             db.session.commit()
@@ -515,7 +537,7 @@ def populate_db(app):
                 authentication_request_id=auth_req_art.request_id,
                 sender_id=user6.id,
                 message_text="Thank you for the information. Your artwork is now authenticated.",
-                sent_at=now - timedelta(minutes=15)
+                sent_at=auth_req_art.request_date + timedelta(hours=2, minutes=15)
             )
             db.session.add(message_expert_art)
             db.session.commit()
@@ -524,7 +546,7 @@ def populate_db(app):
         auth_req_sculpt = AuthenticationRequest(
             item_id=auction4.item_id,
             requester_id=auction4.seller_id,
-            request_date=now,
+            request_date=auction4.auction_start,
             status=2  # Authenticated
         )
         db.session.add(auth_req_sculpt)
@@ -532,7 +554,7 @@ def populate_db(app):
         expert_assignment_sculpt = ExpertAssignment(
             request_id=auth_req_sculpt.request_id,
             expert_id=user7.id,   # Assign Emma for sculpture
-            assigned_date=now,
+            assigned_date=auction4.auction_start + timedelta(days=1),
             status=2
         )
         db.session.add(expert_assignment_sculpt)
@@ -543,13 +565,13 @@ def populate_db(app):
             authentication_request_id=auth_req_sculpt.request_id,
             sender_id=user7.id,
             message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
-            sent_at=now - timedelta(hours=1, minutes=30)
+            sent_at=auth_req_sculpt.request_date + timedelta(days=1)
         )
         message_seller_sculpt = Message(
             authentication_request_id=auth_req_sculpt.request_id,
             sender_id=auction4.seller_id,
             message_text="Please find attached a detailed view of my sculpture.",
-            sent_at=now - timedelta(hours=1)
+            sent_at=auth_req_sculpt.request_date + timedelta(days=1, minutes=30)
         )
         db.session.add_all([message_expert_sculpt1, message_seller_sculpt])
 
@@ -557,7 +579,7 @@ def populate_db(app):
 
         message_image_sculpt = MessageImage(
             message_id=message_seller_sculpt.message_id,
-            image_key="message_attachments/20250321_130846_SCULPTURE.jpg"  # S3 key for the Sculpture image
+            image_key="message_attachments/20250321_130846_SCULPTURE.jpg"
         )
         db.session.add(message_image_sculpt)
         db.session.commit()
@@ -567,7 +589,7 @@ def populate_db(app):
             authentication_request_id=auth_req_sculpt.request_id,
             sender_id=user7.id,
             message_text="Thank you for the details. Your sculpture is authenticated.",
-            sent_at=now - timedelta(minutes=15)
+            sent_at=auth_req_sculpt.request_date + timedelta(days=1, hours=2, minutes=15)
         )
         db.session.add(message_expert_sculpt)
         db.session.commit()
@@ -576,7 +598,7 @@ def populate_db(app):
         auth_req_moby = AuthenticationRequest(
             item_id=auction9.item_id,
             requester_id=auction9.seller_id,
-            request_date=now,
+            request_date=auction9.auction_start,
             status=2  # Authenticated
         )
         db.session.add(auth_req_moby)
@@ -584,7 +606,7 @@ def populate_db(app):
         expert_assignment_moby = ExpertAssignment(
             request_id=auth_req_moby.request_id,
             expert_id=user8.id,   # Assign Oliver for Moby Dick
-            assigned_date=now,
+            assigned_date=auction9.auction_start + timedelta(minutes=5),
             status=2
         )
         db.session.add(expert_assignment_moby)
@@ -594,21 +616,21 @@ def populate_db(app):
             authentication_request_id=auth_req_moby.request_id,
             sender_id=user8.id,
             message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
-            sent_at=now - timedelta(hours=1, minutes=30)
+            sent_at=auth_req_moby.request_date + timedelta(minutes=5)
         )
         # Add seller message with image for Moby Dick
         message_seller_moby = Message(
             authentication_request_id=auth_req_moby.request_id,
             sender_id=auction9.seller_id,
             message_text="Please see the attached close-up of my rare first edition.",
-            sent_at=now - timedelta(hours=1)
+            sent_at=auth_req_moby.request_date + timedelta(minutes=50)
         )
         db.session.add_all([message_expert_moby1, message_seller_moby])
         db.session.commit()
 
         message_image_moby = MessageImage(
             message_id=message_seller_moby.message_id,
-            image_key="message_attachments/20250321_130846_MOBYDICK.jpg"  # S3 key for the Moby Dick image
+            image_key="message_attachments/20250321_130846_MOBYDICK.jpg"
         )
         db.session.add(message_image_moby)
         db.session.commit()
@@ -618,7 +640,7 @@ def populate_db(app):
             authentication_request_id=auth_req_moby.request_id,
             sender_id=user8.id,
             message_text="Thank you for providing the image and details. Your item is authenticated.",
-            sent_at=now - timedelta(minutes=15)
+            sent_at=auth_req_moby.request_date + timedelta(minutes=55)
         )
         db.session.add(message_expert_moby)
         db.session.commit()
@@ -627,7 +649,7 @@ def populate_db(app):
         auth_req_ferrari = AuthenticationRequest(
             item_id=auction11.item_id,
             requester_id=auction11.seller_id,
-            request_date=now,
+            request_date=auction11.auction_start,
             status=2  # Authenticated
         )
         db.session.add(auth_req_ferrari)
@@ -635,7 +657,7 @@ def populate_db(app):
         expert_assignment_ferrari = ExpertAssignment(
             request_id=auth_req_ferrari.request_id,
             expert_id=user6.id,   # Assign Charlie for Ferrari
-            assigned_date=now,
+            assigned_date=auction11.auction_start + timedelta(minutes=5),
             status=2
         )
         db.session.add(expert_assignment_ferrari)
@@ -645,21 +667,21 @@ def populate_db(app):
             authentication_request_id=auth_req_ferrari.request_id,
             sender_id=user6.id,
             message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
-            sent_at=now - timedelta(hours=1, minutes=30)
+            sent_at=auth_req_ferrari.request_date + timedelta(minutes=5)
         )
         # Add seller message with image for Ferrari
         message_seller_ferrari = Message(
             authentication_request_id=auth_req_ferrari.request_id,
             sender_id=auction11.seller_id,
             message_text="Attached is a detailed image of my car's interior and exterior.",
-            sent_at=now - timedelta(hours=1)
+            sent_at=auth_req_ferrari.request_date + timedelta(hours=1)
         )
         db.session.add_all([message_expert_ferrari1, message_seller_ferrari])
         db.session.commit()
 
         message_image_ferrari = MessageImage(
             message_id=message_seller_ferrari.message_id,
-            image_key="message_attachments/20250321_130845_FERARIJPG.jpg"  # S3 key for the Ferrari image
+            image_key="message_attachments/20250321_130845_FERARIJPG.jpg"
         )
         db.session.add(message_image_ferrari)
         db.session.commit()
@@ -669,7 +691,7 @@ def populate_db(app):
             authentication_request_id=auth_req_ferrari.request_id,
             sender_id=user6.id,
             message_text="Thank you for the information. Your Ferrari has been authenticated.",
-            sent_at=now - timedelta(minutes=15)
+            sent_at=auth_req_ferrari.request_date + timedelta(hours=2)
         )
         db.session.add(message_expert_ferrari)
         db.session.commit()
@@ -678,7 +700,7 @@ def populate_db(app):
         auth_req_book = AuthenticationRequest(
             item_id=auction8.item_id,
             requester_id=auction8.seller_id,
-            request_date=now,
+            request_date=auction8.auction_start + timedelta(hours=5),
             status=3  # 3 = Declined/Denied
         )
         db.session.add(auth_req_book)
@@ -687,7 +709,7 @@ def populate_db(app):
         expert_assignment_book = ExpertAssignment(
             request_id=auth_req_book.request_id,
             expert_id=user6.id,   # Assign Charlie
-            assigned_date=now,
+            assigned_date=auth_req_book.request_date + timedelta(hours=5, minutes=25),
             status=2  # Mark assignment as completed/responded
         )
         db.session.add(expert_assignment_book)
@@ -697,7 +719,7 @@ def populate_db(app):
             authentication_request_id=auth_req_book.request_id,
             sender_id=user6.id,
             message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
-            sent_at=now - timedelta(hours=2, minutes=30)
+            sent_at=auth_req_book.request_date + timedelta(hours=5, minutes=25)
         )
 
         db.session.add(message_expert_comic)
@@ -708,14 +730,14 @@ def populate_db(app):
             authentication_request_id=auth_req_book.request_id,
             sender_id=auction8.seller_id,
             message_text="Please see the attached image of my comic book.",
-            sent_at=now - timedelta(hours=2)
+            sent_at=auth_req_book.request_date + timedelta(hours=6)
         )
         db.session.add(message_seller_comic)
         db.session.commit()
 
         message_image_comic = MessageImage(
             message_id=message_seller_comic.message_id,
-            image_key="message_attachments/20250322_132008_Dover.jpg"  # Replace with your S3 key for the comic image
+            image_key="message_attachments/20250322_132008_Dover.jpg"
         )
         db.session.add(message_image_comic)
         db.session.commit()
@@ -726,7 +748,7 @@ def populate_db(app):
             sender_id=user6.id,
             message_text="The image you provided looks lovely. "
             "However, it is not the expected comic book. Authentication denied.",
-            sent_at=now - timedelta(hours=1, minutes=30)
+            sent_at=auth_req_book.request_date + timedelta(hours=7)
         )
         db.session.add(message_expert_comic)
         db.session.commit()
@@ -735,7 +757,7 @@ def populate_db(app):
         auth_req_rolex = AuthenticationRequest(
             item_id=auction10.item_id,
             requester_id=auction10.seller_id,
-            request_date=now,
+            request_date=auction10.auction_start,
             status=1
         )
         db.session.add(auth_req_rolex)
@@ -744,7 +766,7 @@ def populate_db(app):
         expert_assignment_rolex = ExpertAssignment(
             request_id=auth_req_rolex.request_id,
             expert_id=user6.id,   # Assign Charlie
-            assigned_date=now,
+            assigned_date=auth_req_rolex.request_date + timedelta(hours=2),
             status=1
         )
         db.session.add(expert_assignment_rolex)
@@ -754,7 +776,7 @@ def populate_db(app):
             authentication_request_id=auth_req_rolex.request_id,
             sender_id=user6.id,
             message_text="Hi, I have been assigned to authenticate this item. To expedite the process, please provide any relevant information or documentation.",
-            sent_at=now - timedelta(hours=2, minutes=30)
+            sent_at=auth_req_rolex.request_date + timedelta(hours=2)
         )
 
         db.session.add(message_expert_rolex)
@@ -846,7 +868,7 @@ def populate_db(app):
                     user_id=winner.id,
                     message=f"Congratulations! Your bid on '{auction.title}' has been accepted.",
                     is_read=False,
-                    created_at=now,
+                    created_at=highest.bid_time,
                     item_url=auction.url,
                     item_title=auction.title,
                     notification_type=0  # standard notification
@@ -861,7 +883,7 @@ def populate_db(app):
                             user_id=other_user.id,
                             message=f"You have been outbid on '{auction.title}'.",
                             is_read=False,
-                            created_at=now,
+                            created_at=highest.bid_time,
                             item_url=auction.url,
                             item_title=auction.title,
                             notification_type=1  # outbid notification
